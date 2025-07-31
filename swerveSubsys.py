@@ -1,8 +1,10 @@
 import commands2,phoenix6,wpimath,navx
 from math import pi
+import wpimath.controller
 import wpimath.geometry
 import wpimath.kinematics
 from wpilib import AnalogEncoder
+import wpimath.trajectory
 from robotConfig import swerveStuff
 class swerveSubsys():
     def __init__(self,driveID,turnID,turnSensorID=None):
@@ -61,8 +63,6 @@ class driveTrainSubsys(commands2.Subsystem):
         for i in range(4):
             exec(str("swerveNumbers["+str(i)+"].optimize(wpimath.geometry.Rotation2d(self.swerve"+str(i)+".getRot()*2*pi))"))
             exec(str("self.swerve"+str(i)+".setState(swerveNumbers["+str(i)+"].angle.degrees()/360,swerveNumbers["+str(i)+"].speed_fps/3.18)"))
-    def setFieldOrientState(self,fb,lr,rot):
-        swerveNumbers=self.swerveKinematics.toSwerveModuleStates(wpimath.kinematics.ChassisSpeeds.fromFieldRelativeSpeeds(lr,fb,rot,self.navX.getRotation2d()))
     def getState(self):
         self.swerve0.getState()
 class joystickSubsys(commands2.Subsystem):
@@ -90,10 +90,19 @@ class driveTrainCommand(commands2.Command):
         self.driveTrain,self.joystick=driveSubsys,joySubsys
     def execute(self):
         #print(self.joystick.getX(),self.joystick.getY(),self.joystick.getZ())
-        self.driveTrain.setState(self.joystick.getY(),self.joystick.getX(),self.joystick.getZ()*2)#self.joystick.getZ()*2)
+        self.driveTrain.setState(self.joystick.getY()*5,self.joystick.getX()*5,self.joystick.getZ()*10)#self.joystick.getZ()*2)
 class autoDriveTrainCommand(commands2.Command):
-    def __init__(self,driveSubsys:driveTrainSubsys,joySubsys:hotasSubsys):
+    def __init__(self,driveSubsys:driveTrainSubsys):
+        self.addRequirements(driveSubsys)
+        cont=wpimath.controller
+        wpigeo=wpimath.geometry
         super().__init__()
-        
-    def execute(self):
-        pass
+        config = wpimath.trajectory.TrajectoryConfig.fromFps(12, 12)
+        #config.setReversed(True)
+        #IMPORTANT STUFF
+        startPos=wpigeo.Pose2d.fromFeet(0,0,wpigeo.Rotation2d.fromDegrees(0))
+        endPos=wpigeo.Pose2d.fromFeet(0,5,wpigeo.Rotation2d.fromDegrees(0))
+        self.holoCont=cont.HolonomicDriveController(cont.PIDController(0.1,0,0),cont.PIDController(0.1,0,0),cont.ProfiledPIDControllerRadians(0.1,0,0))
+        wpimath.trajectory.TrajectoryGenerator.generateTrajectory(startPos,end=endPos,config=config)
+    def execute(self,desCoord):
+        self.holoCont.calculate(None,)
