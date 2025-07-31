@@ -34,11 +34,14 @@ class swerveSubsys():
             self.hasSensor=True
             self.turnSensor=AnalogEncoder(turnSensorID)
             self.turnVariable=self.turnSensor.get()
+        self.turnMotor.set_position(self.turnSensor.get()-swerveStuff.offsetList[turnSensorID])
     def setState(self,desRot,desSpeed):
         self.turnMotor.set_control(self.postion.with_position(desRot))
         self.driveMotor.set_control(self.dutyCycle.with_velocity(desSpeed*8.14))
     def getRot(self):
         return self.turnMotor.get_position().value
+    def tempFunc(self):
+        return self.turnSensor.get()
     def reZero(self,id):
         self.turnMotor.set_position(self.turnSensor.get()-swerveStuff.offsetList[id])
 class driveTrainSubsys(commands2.Subsystem):
@@ -52,9 +55,9 @@ class driveTrainSubsys(commands2.Subsystem):
         self.navX=navx.AHRS(navx.AHRS.NavXComType.kMXP_SPI)
         self.swerveKinematics=wpimath.kinematics.SwerveDrive4Kinematics(wpimath.geometry.Translation2d(0.26,0.32),wpimath.geometry.Translation2d(0.26,-0.32),wpimath.geometry.Translation2d(-0.26,-0.32),wpimath.geometry.Translation2d(-0.26,0.32))
     def setState(self,fb,lr,rot):
-        swerveNumbers=self.swerveKinematics.toSwerveModuleStates(wpimath.kinematics.ChassisSpeeds(fb,lr,rot))
-        swerveStuff.offsetList
-        #swerveNumbers=self.swerveKinematics.toSwerveModuleStates(wpimath.kinematics.ChassisSpeeds.fromFieldRelativeSpeeds(fb,lr,rot,self.navX.getRotation2d()))
+        #swerveNumbers=self.swerveKinematics.toSwerveModuleStates(wpimath.kinematics.ChassisSpeeds(fb,lr,rot))
+        #print(self.swerve0.tempFunc(),self.swerve1.tempFunc(),self.swerve2.tempFunc(),self.swerve3.tempFunc())
+        swerveNumbers=self.swerveKinematics.toSwerveModuleStates(wpimath.kinematics.ChassisSpeeds.fromFieldRelativeSpeeds(fb,lr,rot,self.navX.getRotation2d()))
         for i in range(4):
             exec(str("swerveNumbers["+str(i)+"].optimize(wpimath.geometry.Rotation2d(self.swerve"+str(i)+".getRot()*2*pi))"))
             exec(str("self.swerve"+str(i)+".setState(swerveNumbers["+str(i)+"].angle.degrees()/360,swerveNumbers["+str(i)+"].speed_fps/3.18)"))
@@ -87,5 +90,10 @@ class driveTrainCommand(commands2.Command):
         self.driveTrain,self.joystick=driveSubsys,joySubsys
     def execute(self):
         #print(self.joystick.getX(),self.joystick.getY(),self.joystick.getZ())
-        self.driveTrain.setState(self.joystick.getY(),self.joystick.getX(),self.joystick.getZ())#self.joystick.getZ()*2)
-        #self.driveTrain.getState()
+        self.driveTrain.setState(self.joystick.getY(),self.joystick.getX(),self.joystick.getZ()*2)#self.joystick.getZ()*2)
+class autoDriveTrainCommand(commands2.Command):
+    def __init__(self,driveSubsys:driveTrainSubsys,joySubsys:hotasSubsys):
+        super().__init__()
+        
+    def execute(self):
+        pass
