@@ -2,10 +2,10 @@ from swerveSubsys import driveTrainCommand,joystickSubsys,driveTrainSubsys,hotas
 import wpilib,commands2
 class robotContainer():
     def __init__(self):
-        self.controller=commands2.button.CommandXboxController(0)
+        self.controller=commands2.button.CommandJoystick(0)
         #Declare Subystems
         self.driveSubsystem=driveTrainSubsys()
-        self.joystick=joystickSubsys(self.controller)
+        self.joystick=hotasSubsys(self.controller)
         #self.joystick.setDefaultCommand(testDefCommand(self.joystick))
         self.driveSubsystem.setDefaultCommand(driveTrainCommand(self.driveSubsystem,self.joystick))
         print("containerInited")
