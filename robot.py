@@ -6,4 +6,6 @@ class myRobot(commands2.TimedCommandRobot):
     def robotInit(self):
         self.rContainer=robotContainer()
     def teleopInit(self):
-        pass
+        self.rContainer.teleopInit()
+    def autonomousInit(self):
+        self.rContainer.autoInit()

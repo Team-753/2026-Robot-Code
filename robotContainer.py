@@ -1,8 +1,8 @@
-from swerveSubsys import driveTrainCommand,joystickSubsys,driveTrainSubsys,hotasSubsys
+from swerveSubsys import driveTrainCommand,joystickSubsys,driveTrainSubsys,hotasSubsys,autoDriveTrainCommand
 import wpilib,commands2
 class robotContainer():
     def __init__(self):
-        self.controller=commands2.button.CommandJoystick(1)
+        self.controller=commands2.button.CommandJoystick(0)
         #Declare Subystems
         self.driveSubsystem=driveTrainSubsys()
         self.joystick=hotasSubsys(self.controller)
@@ -10,5 +10,9 @@ class robotContainer():
         self.driveSubsystem.setDefaultCommand(driveTrainCommand(self.driveSubsystem,self.joystick))
         print("containerInited")
         self.buttonBindings()
+    def teleopInit(self):
+        self.driveSubsystem.setDefaultCommand(driveTrainCommand(self.driveSubsystem,self.joystick))
+    def autoInit(self):
+        self.driveSubsystem.setDefaultCommand(autoDriveTrainCommand(self.driveSubsystem))
     def buttonBindings(self):
         print("bindings configed")
