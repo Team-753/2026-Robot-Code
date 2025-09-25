@@ -85,7 +85,7 @@ class driveTrainSubsys(commands2.Subsystem):
 
         #DOES NOT USE GYRO DATA, REPLACE WITH ESTIMATOR
         #self.poseEstimator=wpimath.estimator.SwerveDrive4PoseEstimator(self.swerveKinematics,wpimath.geometry.Rotation2d.fromDegrees(self.navX.getRotation2d().degrees),self.getSwerveState(),wpimath.geometry.Pose2d(wpimath.geometry.Translation2d(0,0),wpimath.geometry.Rotation2d(0)))
-        self.odometry=wpimath.kinematics.SwerveDrive4Odometry(self.swerveKinematics,wpimath.geometry.Rotation2d.fromDegrees(self.navX.getRotation2d().degrees),self.getSwerveState(),wpimath.geometry.Pose2d(wpimath.geometry.Translation2d(0,0),wpimath.geometry.Rotation2d(0)))
+        self.odometry=wpimath.kinematics.SwerveDrive4Odometry(self.swerveKinematics,wpimath.geometry.Rotation2d.fromDegrees(self.navX.getRotation2d().degrees()),self.getSwerveState(),wpimath.geometry.Pose2d(wpimath.geometry.Translation2d(0,0),wpimath.geometry.Rotation2d(0)))
     def setState(self,fb,lr,rot):       
         #self.swerveNumbers=self.swerveKinematics.toSwerveModuleStates(wpimath.kinematics.ChassisSpeeds(fb,lr,rot))
         #print(self.swerve0.getRot(),self.swerve1.getRot(),self.swerve2.getRot(),self.swerve3.getRot())
@@ -136,7 +136,7 @@ class driveTrainCommand(commands2.Command):
         #print(self.joystick.getX(),self.joystick.getY(),self.joystick.getZ())
               #,self.driveTrain.getSwerveState())
         print(self.driveTrain.getPoseState())
-        self.driveTrain.setState(-self.joystick.getY()*2,self.joystick.getX()*2,-self.joystick.getZ()*4)#self.joystick.getZ()*2)
+        self.driveTrain.setState(-self.joystick.getY()*swerveConfig.swerveSpeed,self.joystick.getX()*swerveConfig.swerveSpeed,-self.joystick.getZ()*swerveConfig.swerveTurnSpeed)#self.joystick.getZ()*2)
 class autoDriveTrainCommand(commands2.Command):
     def __init__(self,driveSubsys:driveTrainSubsys):
         self.addRequirements(driveSubsys)
