@@ -1,4 +1,14 @@
+# ____           _____ _____ _____    _____ ____  _   _ ______ _____ _____ 
+#|  _ \   /\    / ____|_   _/ ____|  / ____/ __ \| \ | |  ____|_   _/ ____|
+#| |_) | /  \  | (___   | || |      | |   | |  | |  \| | |__    | || |  __ 
+#|  _ < / /\ \  \___ \  | || |      | |   | |  | | . ` |  __|   | || | |_ |
+#| |_) / ____ \ ____) |_| || |____  | |___| |__| | |\  | |     _| || |__| |
+#|____/_/    \_\_____/|_____\_____|  \_____\____/|_| \_|_|    |_____\_____|\
 
+swerveSpeed=4
+swerveTurnSpeed=2
+                                                                           
+                                                                           
 #ROTATION OFFSETS FOR SWERVE ROTATION SENSORS 
     #HOW DO I GET THESE NUMBERS?
     #I MANUALLY SET THE SWERVES TO THE FORWARD POSITION AND THEN PRINTED OUT THE OFFSETS OF EACH ENCODER AND RECORDED THEM
