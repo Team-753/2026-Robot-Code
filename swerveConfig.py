@@ -1,3 +1,4 @@
+
 # ____           _____ _____ _____    _____ ____  _   _ ______ _____ _____ 
 #|  _ \   /\    / ____|_   _/ ____|  / ____/ __ \| \ | |  ____|_   _/ ____|
 #| |_) | /  \  | (___   | || |      | |   | |  | |  \| | |__    | || |  __ 
@@ -5,11 +6,11 @@
 #| |_) / ____ \ ____) |_| || |____  | |___| |__| | |\  | |     _| || |__| |
 #|____/_/    \_\_____/|_____\_____|  \_____\____/|_| \_|_|    |_____\_____|
 
-swerveSpeed=4
-swerveTurnSpeed=2
+driveSpeed=4
+driveTurnSpeed=2
 
-swerveController="XboxController" #Options:XboxController,Joystick
-swerveControllerSlot=0
+driveController="Joystick" #Options:XboxController,Joystick
+driveControllerSlot=0
 
 
 

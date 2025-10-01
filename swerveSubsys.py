@@ -128,14 +128,14 @@ class JoystickSubsys(commands2.Subsystem):
     def getY(self):
         return self.myJoy.getRawAxis(axis=1)
 class driveTrainCommand(commands2.Command):
-    def __init__(self,driveSubsys:driveTrainSubsys,joySubsys):
+    def __init__(self,driveSubsys:driveTrainSubsys,joySubsys:globals()[swerveConfig.driveController+"Subsys"]):
        super().__init__()
        self.addRequirements(driveSubsys,joySubsys)
        self.driveTrain,self.joystick=driveSubsys,joySubsys
     def execute(self):
         #print(self.joystick.getX(),self.joystick.getY(),self.joystick.getZ())
               #,self.driveTrain.getSwerveState())
-        self.driveTrain.setState(-self.joystick.getY()*swerveConfig.swerveSpeed,self.joystick.getX()*swerveConfig.swerveSpeed,-self.joystick.getZ()*swerveConfig.swerveTurnSpeed)#self.joystick.getZ()*2)
+        self.driveTrain.setState(-self.joystick.getY()*swerveConfig.driveSpeed,self.joystick.getX()*swerveConfig.driveSpeed,-self.joystick.getZ()*swerveConfig.driveTurnSpeed)#self.joystick.getZ()*2)
 class autoDriveTrainCommand(commands2.Command):
     def __init__(self,driveSubsys:driveTrainSubsys):
         self.addRequirements(driveSubsys)
