@@ -48,6 +48,10 @@ class SwerveModule:
         turn_config.feedback.feedback_sensor_source = (
             signals.FeedbackSensorSourceValue.REMOTE_CANCODER
         )
+        if rc.Swerve.ModuleConstants.turningGearRatio:
+            turn_config.feedback.sensor_to_mechanism_ratio = (
+                rc.Swerve.ModuleConstants.turningGearRatio
+            )
         turn_config.closed_loop_general.continuous_wrap = True
         turn_config.motor_output.neutral_mode = signals.NeutralModeValue.COAST
         self.turn_motor.configurator.apply(turn_config)

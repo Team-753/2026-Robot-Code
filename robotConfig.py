@@ -9,7 +9,7 @@ class InputDevices:
             rotationAxis = 0.0
 
         class Mappings:
-            pass
+            brakeButton = 1
 
     class AuxController:
         usbId = 1
