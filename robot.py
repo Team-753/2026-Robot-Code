@@ -1,12 +1,15 @@
 import commands2
 
+from robotContainer import RobotContainer
+
+
 class MyRobot(commands2.TimedCommandRobot):
     def __init__(self, period=.02):
         super().__init__(period)
+        self.robot_container = RobotContainer()
 
 
-    #Please note, various periodic commands are not in this file. Please refer to the docs if you want periodic comamands. 
-
+    
     def robotInit(self):
         pass
     

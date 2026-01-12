@@ -1,62 +1,80 @@
-#Joystick and Aux Controller
-class Joystick:
-    USB_ID = 0 #USB ID for the joystick, this is the one that is used by the driver station
-    xDeadband = 0.1 #deadband in the x of the joystick
-    yDeadband = 0.1 #deadband on the y of the joystick
-    thetaDeadband = 0.2 #deadband for theta of the joystick
+# Input devices and operator controls
+class InputDevices:
+    class DriverJoystick:
+        usbId = 0
+
+        class Deadbands:
+            xAxis = 0.0
+            yAxis = 0.0
+            rotationAxis = 0.0
+
+        class Mappings:
+            pass
+
+    class AuxController:
+        usbId = 1
+
+        class Mappings:
+            pass
 
 
-class AuxController:
-    USB_ID = 1
+# Swerve drivetrain configuration
+class Swerve:
+    class Geometry:
+        trackWidthMeters = 0.0
+        wheelBaseMeters = 0.0
 
-# Robot
-class robotDimensions:
-    width = 0.7366 #pretty sure this is the width between swerve modules
-    length = 0.7366 #prolly length between modules
+    class Speeds:
+        maxLinearSpeedMetersPerSecond = 0.0
+        maxAngularSpeedRadiansPerSecond = 0.0
 
-# Swerve Modules
-class SwerveModules: 
-    drivingGearRatio: 0 #gear ratio for the driving motor
-    turningGearRatio: 0 #gear ratio for the turning motor
-    wheelDiameter: 0 #diameter of the wheel in meters
+    class ModuleConstants:
+        driveGearRatio = 0.0
+        turningGearRatio = 0.0
+        wheelDiameterMeters = 0.0
 
-    class frontRight:
-        moduleName = "Front Right"
-        drivingMotorID = 0 # ID for the driving motor
-        turningMotorID = 0 # ID for the turning motor
-        turningEncoderID = 0 # ID for the turning encoder
-        turningEncoderOffset = 0.0 # Offset for the turning encoder
+    class PoseEstimation:
+        stateStdDevs = (0.0, 0.0, 0.0)
+        visionStdDevs = (0.0, 0.0, 0.0)
 
     class frontLeft:
         moduleName = "Front Left"
-        drivingMotorID = 0 # ID for the driving motor
-        turningMotorID = 0 # ID for the turning motor
-        turningEncoderID = 0 # ID for the turning encoder
-        turningEncoderOffset = 0.0 # Offset for the turning encoder
+        driveMotorId = 0
+        turningMotorId = 0
+        turningEncoderId = 0
+        turningEncoderOffset = 0.0
 
-    class backRight:
-        moduleName = "Back Right"
-        drivingMotorID = 0 # ID for the driving motor
-        turningMotorID = 0 # ID for the turning motor
-        turningEncoderID = 0 # ID for the turning encoder
-        turningEncoderOffset = 0.0 # Offset for the turing encoder
+    class frontRight:
+        moduleName = "Front Right"
+        driveMotorId = 0
+        turningMotorId = 0
+        turningEncoderId = 0
+        turningEncoderOffset = 0.0
 
-    class backLeft:
-        moduleName = "Back Left"
-        drivingMotorID = 0 # ID for the driving motor
-        turningMotorID = 0 # ID for the turning motor
-        turningEncoderID = 0 # ID for the turning encoder
-        turningEncoderOffset = 0.0 # Offset for the turning encoder
+    class rearLeft:
+        moduleName = "Rear Left"
+        driveMotorId = 0
+        turningMotorId = 0
+        turningEncoderId = 0
+        turningEncoderOffset = 0.0
 
-#Vision
-class Vision: 
-    
-    class limelight: 
+    class rearRight:
+        moduleName = "Rear Right"
+        driveMotorId = 0
+        turningMotorId = 0
+        turningEncoderId = 0
+        turningEncoderOffset = 0.0
+
+
+# Vision
+class Vision:
+    class Limelight:
         limelightName = "Limelight Name Placeholder"
-        
-    class protonCamera:
+
+    class ProtonCamera:
         protonCameraName = "Proton Camera Name Placeholder"
 
-#Pneumatics
-class Pneumatics: 
+
+# Pneumatics
+class Pneumatics:
     pass
