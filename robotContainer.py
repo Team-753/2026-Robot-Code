@@ -1,42 +1,47 @@
 import commands2
-import wpilib
-import driveTrain 
 
 import robotConfig as rc
+from swerve.driveTrain import DriveTrainSubSystem
 
 
 class RobotContainer:
     def __init__(self) -> None:
 
+        self.drive_train = DriveTrainSubSystem()
+
+        #Define Joystick 
         self.driver_joystick = commands2.button.CommandJoystick(
             rc.InputDevices.DriverJoystick.usbId
         )
 
-        self.driveTrain = DriveTrainSubSystem()
+        #Define Aux Controller
+        self.aux_controller = commands2.button.CommandXboxController(
+            rc.InputDevices.AuxController.usbId
+        )
 
-        self.driver_joystick.button(0).onTrue(driveTrain.set_drive_brake_enabled)
+        #Apply Button Bindings
+        self.configureButtonBindings()
 
+        # Default drive command uses joystick input with configured deadbands.
+        self.drive_train.setDefaultCommand(
+            commands2.RunCommand(
+                lambda: self.drive_train.drive_with_joystick(self.driver_joystick),
+                self.drive_train,
+            )
+        )
 
-        self._brake_enabled = False
-        wpilib.SmartDashboard.putBoolean("Drive Brake: ", self._brake_enabled)
+    def configureButtonBindings(self) -> None:
 
+        #Define Brake Button
         brake_button = self.driver_joystick.button(
-            rc.InputDevices.DriverJoystick.Mappings.brake
-        )
-        brake_button.onTrue(
-            commands2.InstantCommand(lambda: self.set_brake_enabled(True))
-        )
-        brake_button.onFalse(
-            commands2.InstantCommand(lambda: self.set_brake_enabled(False))
+            rc.InputDevices.DriverJoystick.Mappings.brakeButton
         )
 
-
-
-
-
-
-    def set_brake_enabled(self, enabled: bool) -> None:
-        if self._brake_enabled == enabled:
-            return
-        self._brake_enabled = enabled
-        wpilib.SmartDashboard.putBoolean("Drive Brake: ", enabled)
+        #While Brake Button is held, enable Brake Mode
+        brake_button.whileTrue(
+            commands2.StartEndCommand(
+                lambda: self.drive_train.set_drive_brake_enabled(True), #When Pressed, Enable
+                lambda: self.drive_train.set_drive_brake_enabled(False), #When Released, Disable
+                self.drive_train,
+            )
+        )
