@@ -4,6 +4,7 @@ import commands2
 import wpilib
 from phoenix6 import hardware
 from wpimath import estimator, geometry, kinematics
+import wpimath
 
 import robotConfig as rc
 from swerve.swerveModules import SwerveModule
@@ -135,6 +136,23 @@ class DriveTrainSubSystem(commands2.Subsystem):
         self.front_right.set_state(states[1])
         self.rear_left.set_state(states[2])
         self.rear_right.set_state(states[3])
+
+    def drive_with_joystick(
+        self,
+        joystick: commands2.button.CommandJoystick,
+        field_relative: bool = True,
+    ) -> None:
+        deadbands = rc.InputDevices.DriverJoystick.Deadbands
+        x_input = wpimath.applyDeadband(joystick.getX(), deadbands.xAxis)
+        y_input = wpimath.applyDeadband(joystick.getY(), deadbands.yAxis)
+        z_input = wpimath.applyDeadband(joystick.getZ(), deadbands.rotationAxis)
+
+        # WPILib joystick Y is typically inverted; negate for forward-positive.
+        x_speed = -y_input * rc.Swerve.Speeds.maxLinearSpeedMetersPerSecond
+        y_speed = x_input * rc.Swerve.Speeds.maxLinearSpeedMetersPerSecond
+        omega = -z_input * rc.Swerve.Speeds.maxAngularSpeedRadiansPerSecond
+
+        self.set_swerve_states(x_speed, y_speed, omega, field_relative)
 
     def periodic(self) -> None:
         #Telemetry for now; drivetrain motion logic comes later.

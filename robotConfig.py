@@ -4,9 +4,9 @@ class InputDevices:
         usbId = 0
 
         class Deadbands:
-            xAxis = 0.0
-            yAxis = 0.0
-            rotationAxis = 0.0
+            xAxis = 0.1
+            yAxis = 0.1
+            rotationAxis = 0.1
 
         class Mappings:
             brakeButton = 1
@@ -21,20 +21,20 @@ class InputDevices:
 # Swerve drivetrain configuration
 class Swerve:
     class Geometry:
-        trackWidthMeters = 0.0
-        wheelBaseMeters = 0.0
+        trackWidthMeters = 0.6
+        wheelBaseMeters = 0.6
 
     class Speeds:
-        maxLinearSpeedMetersPerSecond = 0.0
-        maxAngularSpeedRadiansPerSecond = 0.0
+        maxLinearSpeedMetersPerSecond = 4.8
+        maxAngularSpeedRadiansPerSecond = 4.8
 
     class ModuleConstants:
         driveGearRatio = 6.2
         turningGearRatio = 0.0
-        wheelDiameterMeters = 0.0
+        wheelDiameterMeters = 0.04
 
     class PoseEstimation:
-        stateStdDevs = (0.0, 0.0, 0.0)
+        stateStdDevs = (1.0, 1.0, 1.0)
         visionStdDevs = (0.0, 0.0, 0.0)
 
     class IMU:
@@ -43,30 +43,30 @@ class Swerve:
 
     class frontLeft:
         moduleName = "Front Left"
-        driveMotorId = 0
-        turningMotorId = 0
-        turningEncoderId = 0
+        driveMotorId = 7
+        turningMotorId = 9
+        turningEncoderId = 8
         turningEncoderOffset = 0.0
 
     class frontRight:
         moduleName = "Front Right"
-        driveMotorId = 0
-        turningMotorId = 0
-        turningEncoderId = 0
+        driveMotorId = 4
+        turningMotorId = 6
+        turningEncoderId = 5
         turningEncoderOffset = 0.0
 
     class rearLeft:
         moduleName = "Rear Left"
-        driveMotorId = 0
-        turningMotorId = 0
-        turningEncoderId = 0
+        driveMotorId = 10
+        turningMotorId = 12
+        turningEncoderId = 11
         turningEncoderOffset = 0.0
 
     class rearRight:
         moduleName = "Rear Right"
-        driveMotorId = 0
-        turningMotorId = 0
-        turningEncoderId = 0
+        driveMotorId = 1
+        turningMotorId = 3
+        turningEncoderId = 2
         turningEncoderOffset = 0.0
 
 

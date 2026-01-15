@@ -75,15 +75,11 @@ class SwerveModule:
         return kinematics.SwerveModuleState(speed_mps, self._get_turn_angle())
 
     def set_state(self, desired_state: kinematics.SwerveModuleState) -> None:
-        # Optimize to minimize wheel rotation (may flip drive direction).
-        optimized = kinematics.SwerveModuleState.optimize(
-            desired_state,
-            self._get_turn_angle(),
-        )
+        optimized = desired_state
         drive_rps = 0.0
         if self._wheel_circumference_m:
             drive_rps = optimized.speed / self._wheel_circumference_m
-        turn_rotations = optimized.angle.rotations()
+        turn_rotations = optimized.angle.radians() / math.tau
         self.drive_motor.set_control(self._drive_request.with_velocity(drive_rps))
         self.turn_motor.set_control(self._turn_request.with_position(turn_rotations))
 
