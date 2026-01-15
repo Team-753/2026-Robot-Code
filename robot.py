@@ -26,5 +26,9 @@ class MyRobot(commands2.TimedCommandRobot):
     def disabledInit(self):
         pass
     
-    
-    
+    def disabledPeriodic(self):
+        pass
+
+    def robotPeriodic(self):
+        """Runs every robot packet, no matter the mode. Use for items like diagnostics that you want ran during disabled, auto, and teleop."""
+        pass

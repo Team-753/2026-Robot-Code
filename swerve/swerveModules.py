@@ -1,13 +1,12 @@
 import math
-
 import wpilib
 from phoenix6 import configs, controls, hardware, signals
 from wpimath import geometry, kinematics
-
 import robotConfig as rc
 
 
 class SwerveModule:
+
     def __init__(
         self,
         drive_motor_id: int,
@@ -37,6 +36,7 @@ class SwerveModule:
         self.turn_encoder.configurator.apply(encoder_config)
 
         drive_config = configs.TalonFXConfiguration()
+        # Drive motor reports in motor rotations; ratio maps to wheel rotations.
         drive_config.feedback.sensor_to_mechanism_ratio = (
             rc.Swerve.ModuleConstants.driveGearRatio
         )
@@ -44,14 +44,11 @@ class SwerveModule:
         self.drive_motor.configurator.apply(drive_config)
 
         turn_config = configs.TalonFXConfiguration()
+        # Use the CANCoder as the absolute turn feedback sensor.
         turn_config.feedback.feedback_remote_sensor_id = turning_encoder_id
         turn_config.feedback.feedback_sensor_source = (
             signals.FeedbackSensorSourceValue.REMOTE_CANCODER
         )
-        if rc.Swerve.ModuleConstants.turningGearRatio:
-            turn_config.feedback.sensor_to_mechanism_ratio = (
-                rc.Swerve.ModuleConstants.turningGearRatio
-            )
         turn_config.closed_loop_general.continuous_wrap = True
         turn_config.motor_output.neutral_mode = signals.NeutralModeValue.COAST
         self.turn_motor.configurator.apply(turn_config)
@@ -67,6 +64,7 @@ class SwerveModule:
         )
 
     def get_position(self) -> kinematics.SwerveModulePosition:
+        # Distance in meters is wheel rotations * circumference.
         drive_rotations = self.drive_motor.get_position().value
         distance_m = drive_rotations * self._wheel_circumference_m
         return kinematics.SwerveModulePosition(distance_m, self._get_turn_angle())
@@ -77,6 +75,7 @@ class SwerveModule:
         return kinematics.SwerveModuleState(speed_mps, self._get_turn_angle())
 
     def set_state(self, desired_state: kinematics.SwerveModuleState) -> None:
+        # Optimize to minimize wheel rotation (may flip drive direction).
         optimized = kinematics.SwerveModuleState.optimize(
             desired_state,
             self._get_turn_angle(),

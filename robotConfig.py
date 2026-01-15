@@ -29,13 +29,17 @@ class Swerve:
         maxAngularSpeedRadiansPerSecond = 0.0
 
     class ModuleConstants:
-        driveGearRatio = 0.0
+        driveGearRatio = 6.2
         turningGearRatio = 0.0
         wheelDiameterMeters = 0.0
 
     class PoseEstimation:
         stateStdDevs = (0.0, 0.0, 0.0)
         visionStdDevs = (0.0, 0.0, 0.0)
+
+    class IMU:
+        # Pigeon2 CAN device ID.
+        pigeonId = 0
 
     class frontLeft:
         moduleName = "Front Left"
@@ -69,7 +73,7 @@ class Swerve:
 # Vision
 class Vision:
     class Limelight:
-        limelightName = "Limelight Name Placeholder"
+        limelightName = "Jamal"
 
     class ProtonCamera:
         protonCameraName = "Proton Camera Name Placeholder"

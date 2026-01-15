@@ -1,8 +1,8 @@
 import math
 
 import commands2
-import navx
 import wpilib
+from phoenix6 import hardware
 from wpimath import estimator, geometry, kinematics
 
 import robotConfig as rc
@@ -43,8 +43,8 @@ class DriveTrainSubSystem(commands2.Subsystem):
             rc.Swerve.rearRight.turningEncoderOffset,
         )
 
-        #NavX gyro (USB) for heading.
-        self.navx = navx.AHRS(navx.AHRS.NavXComType.kUSB1, 200)
+        # Pigeon2 gyro (CAN) for heading.
+        self.pigeon = hardware.Pigeon2(rc.Swerve.IMU.pigeonId)
 
         #Geometry + kinematics
         self.track_width = rc.Swerve.Geometry.trackWidthMeters
@@ -56,10 +56,10 @@ class DriveTrainSubSystem(commands2.Subsystem):
             geometry.Translation2d(-self.track_width / 2.0, -self.wheel_base / 2.0),
         )
 
-        #Pose estimation (no vision fused yet, but ready for it).
+        # Pose estimation fuses gyro + module odometry; vision can be added later.
         self.pose_estimator = estimator.SwerveDrive4PoseEstimator(
             self.kinematics,
-            self.get_navx_rotation(),
+            self.get_gyro_rotation(),
             self.get_module_positions(),
             geometry.Pose2d(),
             rc.Swerve.PoseEstimation.stateStdDevs,
@@ -83,11 +83,12 @@ class DriveTrainSubSystem(commands2.Subsystem):
         wpilib.SmartDashboard.putBoolean("Drive Brake Enabled", enabled)
         print(f"Drive brake enabled set to {enabled}.")
 
-    def get_navx_rotation(self) -> geometry.Rotation2d:
-        #Invert if your gyro yaw is reversed relative to module angles.
-        return geometry.Rotation2d(math.tau - self.navx.getRotation2d().radians())
+    def get_gyro_rotation(self) -> geometry.Rotation2d:
+        # Use Pigeon yaw (degrees) and keep the same inversion as prior code.
+        yaw_deg = self.pigeon.get_yaw().value
+        return geometry.Rotation2d.fromDegrees(360.0 - yaw_deg)
 
-    def get_module_positions(self) -> tuple[kinematics.SwerveModulePosition, ...]:
+    def get_module_positions(self) -> tuple[kinematics.SwerveModulePosition, ...]: #Check This
         return (
             self.front_left.get_position(),
             self.front_right.get_position(),
@@ -100,7 +101,7 @@ class DriveTrainSubSystem(commands2.Subsystem):
 
     def reset_pose(self, pose: geometry.Pose2d) -> None:
         self.pose_estimator.resetPosition(
-            self.get_navx_rotation(),
+            self.get_gyro_rotation(),
             self.get_module_positions(),
             pose,
         )
@@ -112,6 +113,7 @@ class DriveTrainSubSystem(commands2.Subsystem):
         omega: float,
         field_relative: bool = True,
     ) -> None:
+        # Convert desired chassis motion into module states.
         if field_relative:
             chassis_speeds = kinematics.ChassisSpeeds.fromFieldRelativeSpeeds(
                 x_speed,
@@ -123,7 +125,8 @@ class DriveTrainSubSystem(commands2.Subsystem):
             chassis_speeds = kinematics.ChassisSpeeds(x_speed, y_speed, omega)
 
         states = self.kinematics.toSwerveModuleStates(chassis_speeds)
-        kinematics.SwerveDrive4Kinematics.desaturateWheelSpeeds(
+        # Limit wheel speeds to the configured max.
+        kinematics.SwerveDrive4Kinematics.desaturateWheelSpeeds( #Might not be needed for this robot
             states,
             rc.Swerve.Speeds.maxLinearSpeedMetersPerSecond,
         )
@@ -136,7 +139,7 @@ class DriveTrainSubSystem(commands2.Subsystem):
     def periodic(self) -> None:
         #Telemetry for now; drivetrain motion logic comes later.
         current_pose = self.pose_estimator.update(
-            self.get_navx_rotation(),
+            self.get_gyro_rotation(),
             self.get_module_positions(),
         )
         self.field.setRobotPose(current_pose)
