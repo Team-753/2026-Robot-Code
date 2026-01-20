@@ -1,11 +1,16 @@
-import commands2,phoenix6,wpimath
+import commands2,phoenix6,wpimath,wpilib
 from math import pi
 import math
 import wpimath.controller
 import wpimath.geometry
 import wpimath.kinematics
-import wpimath.estimator
-from wpilib import AnalogEncoder,Timer
+from wpimath.estimator import SwerveDrive4PoseEstimator
+
+from limelight import LimelightCamera
+
+from wpimath import estimator
+
+from wpilib import AnalogEncoder,Timer, Field2d
 import wpimath.trajectory
 import swerveConfig
 from customFunctions import curveControl
@@ -17,6 +22,8 @@ class swerveSubsys():
         self.driveMotor=phoenix6.hardware.TalonFX(driveID)
         self.turnMotor=phoenix6.hardware.TalonFX(turnID)
         turnSensorType=swerveConfig.swerveEncoderType
+
+        
 
         #DRIVE CONFIG
         driveConfig=phoenix6.configs.TalonFXConfiguration()
@@ -98,12 +105,30 @@ class driveTrainSubsys(commands2.Subsystem):
             self.compass.reset()
             self.robotRotation=self.compass.getRotation2d()
     
-        widthN=swerveConfig.swerveBaseWidth/2
-        lengthN=swerveConfig.swerveBaseLength/2
-        self.swerveKinematics=wpimath.kinematics.SwerveDrive4Kinematics(wpimath.geometry.Translation2d(widthN/2,lengthN/2),wpimath.geometry.Translation2d(widthN/2,-lengthN/2),wpimath.geometry.Translation2d(-widthN/2,-lengthN/2),wpimath.geometry.Translation2d(-widthN/2,lengthN/2))
-        #self.a=wpimath.estimator.SwerveDrive4PoseEstimator(self.swerveKinematics,self.compass.getRotation2d(),(wpimath.geometry.Translation2d(widthN/2,lengthN/2),wpimath.geometry.Translation2d(widthN/2,-lengthN/2),wpimath.geometry.Translation2d(-widthN/2,-lengthN/2),wpimath.geometry.Translation2d(-widthN/2,lengthN/2)))
-        #DOES NOT USE GYRO DATA, REPLACE WITH ESTIMATOR
-        self.odometry=wpimath.kinematics.SwerveDrive4Odometry(self.swerveKinematics,self.robotRotation,self.getSwerveState(),wpimath.geometry.Pose2d(wpimath.geometry.Translation2d(0,0),wpimath.geometry.Rotation2d(0)))
+
+        #Vision (Ryan)
+        self.limeLight = LimelightCamera(swerveConfig.cameraName)
+
+        #Pose Setup for Estimator (Ryan)
+        self.field = Field2d() #creates a field on shuffleboard, useful for debugging autos
+
+        widthN = swerveConfig.swerveBaseWidth/2
+        lengthN = swerveConfig.swerveBaseLength/2
+
+        self.swerveKinematics = wpimath.kinematics.SwerveDrive4Kinematics(wpimath.geometry.Translation2d(widthN/2,lengthN/2),wpimath.geometry.Translation2d(widthN/2,-lengthN/2),wpimath.geometry.Translation2d(-widthN/2,-lengthN/2),wpimath.geometry.Translation2d(-widthN/2,lengthN/2))
+
+        self.poseEstimator = estimator.SwerveDrive4PoseEstimator(
+            self.swerveKinematics,
+            self.robotRotation,
+            self.getSwerveState(),
+            wpimath.geometry.Pose2d(
+                wpimath.geometry.Translation2d(5, 0),
+                wpimath.geometry.Rotation2d(0),
+            ),
+            swerveConfig.wheelDistrustLevel,
+            swerveConfig.visionDistrustLevel,
+        )
+    
     def setState(self,fb,lr,rot):       
         
         self.swerveNumbers=self.swerveKinematics.toSwerveModuleStates(wpimath.kinematics.ChassisSpeeds.fromFieldRelativeSpeeds(fb,lr,rot,-self.compass.getRotation2d()))#FIELD ALIGN
@@ -115,9 +140,25 @@ class driveTrainSubsys(commands2.Subsystem):
     def getPoseState(self):
         odo=self.odometry.getPose()
         return odo
+
     def periodic(self):
-        self.odometry.update(self.compass.getRotation2d(),self.getSwerveState())
-        return super().periodic()
+
+        time = Timer.getFPGATimestamp()
+
+        if  self.limeLight.hasDetection() == True:
+            #check to see if the robot can see an april tag
+
+            posedata,latency = self.limeLight.getPoseData()
+
+            lockTime = time - (latency/1000) #Take the locktime minus the latency (in miliseconds) to know how long in the past locking was
+            self.poseEstimator.addVisionMeasurement(posedata,lockTime)
+        currentPose = self.poseEstimator.update(self.compass.getRotation2d(), self.getSwerveState())
+        #update the pose estimator with our most up to date info on where the robot is from all the systems
+
+
+        self.field.setRobotPose(currentPose) #update the position of the robot on the field in shuffleboard for debugging
+
+    #    return super().periodic()
     def getSwerveState(self):
         string=[]
         for i in range(4):

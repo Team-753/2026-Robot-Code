@@ -41,3 +41,11 @@ swerveTurnRatio=(1)  #NECECCARY IF NOT USING AN ENCODER #quack 12.8
 #MEASURE FROM POINT WHEEL CONTACTS GROUND
 swerveBaseWidth=(0.64) #METERS
 swerveBaseLength=(0.64) #METERS
+
+#ODOMETRY TRUST Levels 
+#0-1 scale that is used in the Kalman filter. 0 is full trust, while 1 is full distrust. Hence, the distrust level
+visionDistrustLevel = 0.5,0.5,0.5
+wheelDistrustLevel = 0.5,0.5,0.5 
+
+#Limelight Camera Name and Settings 
+cameraName = ("limelight-jamal")
