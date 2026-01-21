@@ -111,6 +111,7 @@ class driveTrainSubsys(commands2.Subsystem):
 
         #Pose Setup for Estimator (Ryan)
         self.field = Field2d() #creates a field on shuffleboard, useful for debugging autos
+        wpilib.SmartDashboard.putData("Field", self.field)
 
         widthN = swerveConfig.swerveBaseWidth/2
         lengthN = swerveConfig.swerveBaseLength/2
@@ -138,25 +139,28 @@ class driveTrainSubsys(commands2.Subsystem):
             exec(str("self.swerveNumbers["+str(i)+"].optimize(wpimath.geometry.Rotation2d.fromRotations(self.swerve"+str(i)+".getRot()))"))
             exec(str("self.swerve"+str(i)+".setState(self.swerveNumbers["+str(i)+"].angle.degrees()/360,self.swerveNumbers["+str(i)+"].speed_fps)"))
     def getPoseState(self):
-        odo=self.odometry.getPose()
-        return odo
+        return self.poseEstimator.getEstimatedPosition()
 
     def periodic(self):
 
         time = Timer.getFPGATimestamp()
 
-        if  self.limeLight.hasDetection() == True:
+        if self.limeLight.hasDetection():
             #check to see if the robot can see an april tag
 
-            posedata,latency = self.limeLight.getPoseData()
-
-            lockTime = time - (latency/1000) #Take the locktime minus the latency (in miliseconds) to know how long in the past locking was
-            self.poseEstimator.addVisionMeasurement(posedata,lockTime)
+            posedata, latency = self.limeLight.getPoseData()
+            if posedata is not None and latency is not None:
+                lockTime = time - (latency/1000) #Take the locktime minus the latency (in miliseconds) to know how long in the past locking was
+                self.poseEstimator.addVisionMeasurement(posedata,lockTime)
         currentPose = self.poseEstimator.update(self.compass.getRotation2d(), self.getSwerveState())
         #update the pose estimator with our most up to date info on where the robot is from all the systems
 
 
         self.field.setRobotPose(currentPose) #update the position of the robot on the field in shuffleboard for debugging
+        wpilib.SmartDashboard.putNumber("Pose X", currentPose.X())
+        wpilib.SmartDashboard.putNumber("Pose Y", currentPose.Y())
+        wpilib.SmartDashboard.putNumber("Pose Deg", currentPose.rotation().degrees())
+        wpilib.SmartDashboard.putNumber("Gyro degrees", self.compass.getRotation2d().degrees())
 
     #    return super().periodic()
     def getSwerveState(self):
@@ -209,7 +213,7 @@ class driveTrainCommand(commands2.Command):
 
     def execute(self):
         self.driveTrain.setState(curveControl(self.joystick.getY(),2.5)*swerveConfig.driveSpeed,-curveControl(self.joystick.getX(),2.5)*swerveConfig.driveSpeed,curveControl(-self.joystick.getZ(),2)*swerveConfig.driveTurnSpeed)
-        print(self.driveTrain.odometry.getPose(),self.driveTrain.compass.getRotation2d())
+        pass
 
 class fieldOrientReorient(commands2.Command):
     def __init__(self,driveSubsys:driveTrainSubsys,joySubsys:globals()[swerveConfig.driveController+"Subsys"]):
@@ -222,7 +226,7 @@ class autoDriveTrainCommand(commands2.Command):
         cont=wpimath.controller
         wpigeo=wpimath.geometry
         super().__init__()
-        aconfig = wpimath.trajectory.TrajectoryConfig(1,1)
+        config = wpimath.trajectory.TrajectoryConfig(1,1)
 
         #config.setReversed(True)
         #IMPORTANT STUFF

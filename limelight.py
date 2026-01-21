@@ -23,6 +23,7 @@ class LimelightCamera(Subsystem):
         self.tx = self.table.getDoubleTopic("tx").getEntry(0.0)
         self.ty = self.table.getDoubleTopic("ty").getEntry(0.0)
         self.ta = self.table.getDoubleTopic("ta").getEntry(0.0)
+        self.tv = self.table.getDoubleTopic("tv").getEntry(0.0)
         self.hb = self.table.getIntegerTopic("hb").getEntry(0)
         self.lastHeartbeat = 0
         self.lastHeartbeatTime = 0
@@ -47,14 +48,20 @@ class LimelightCamera(Subsystem):
         return self.hb.get()
 
     def hasDetection(self):
-        if self.getX() != 0.0 and self.heartbeating:
-            return True
+        if not self.heartbeating:
+            return False
+        return self.tv.get(0.0) == 1.0
         
 
-    def getPoseData(self) -> tuple[geometry.Pose2d, float]:
-        """ Returns the *last* calculated robot Pose2D and the pipeline latency """
+    def getPoseData(self) -> tuple[geometry.Pose2d | None, float | None]:
+        """ Returns the *last* calculated robot Pose2D and the pipeline latency, or (None, None) if unavailable """
         bot_pose_data = self.table.getEntry("botpose_wpiblue").getDoubleArray([])
-        pose_2d = geometry.Pose2d(geometry.Translation2d(bot_pose_data[0], bot_pose_data[1]), geometry.Rotation2d(bot_pose_data[5]))
+        if len(bot_pose_data) < 7:
+            return (None, None)
+        pose_2d = geometry.Pose2d(
+            geometry.Translation2d(bot_pose_data[0], bot_pose_data[1]),
+            geometry.Rotation2d.fromDegrees(bot_pose_data[5]),
+        )
         latency = bot_pose_data[6]
         return (pose_2d, latency)
 

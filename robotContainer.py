@@ -11,7 +11,7 @@ class robotContainer():
         self.driveSubsystem=driveTrainSubsys()
         exec("self.joystick="+str(swerveConfig.driveController)+"Subsys(self.controller)")
         #self.joystick.setDefaultCommand(testDefCommand(self.joystick))
-        exec("self.driveSubsystem.setDefaultCommand(driveTrainCommand(self.driveSubsystem,joySubsys="+str(swerveConfig.driveController)+"Subsys))")
+        self.driveSubsystem.setDefaultCommand(driveTrainCommand(self.driveSubsystem, self.joystick))
         print("containerInited")
         self.buttonBindings()
     def teleopInit(self):

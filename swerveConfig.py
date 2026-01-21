@@ -8,7 +8,7 @@
 driveSpeed=15
 driveTurnSpeed=15
 
-driveController="VKBJoystick" #Options:XboxController,Joystick,VKBJoystick
+driveController="Joystick" #Options:XboxController,Joystick,VKBJoystick
 driveControllerSlot=0 #USB NUMBER IN DRIVESTATION
 
 
