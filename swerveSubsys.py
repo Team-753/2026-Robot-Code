@@ -13,7 +13,7 @@ from wpimath import estimator
 from wpilib import AnalogEncoder,Timer, Field2d
 import wpimath.trajectory
 import swerveConfig
-from customFunctions import curveControl
+from customFunctions import curveControl,vectorCurve
 class swerveSubsys():
     def __init__(self,driveID,turnID,turnSensorID=None):
 
@@ -186,11 +186,11 @@ class JoystickSubsys(commands2.Subsystem):
         self.myJoy=joystick
         super().__init__()
     def getX(self):
-        return self.myJoy.getRawAxis(axis=0)
+        return wpimath.applyDeadband(self.myJoy.getRawAxis(axis=0),0.05)
     def getZ(self):
-        return self.myJoy.getRawAxis(axis=2)
+        return wpimath.applyDeadband(self.myJoy.getRawAxis(axis=2),0.05)
     def getY(self):
-        return self.myJoy.getRawAxis(axis=1)
+        return wpimath.applyDeadband(self.myJoy.getRawAxis(axis=1),0.05)
 
 class VKBJoystickSubsys(commands2.Subsystem):
     def __init__(self,joystick=commands2.button.CommandJoystick):
@@ -212,7 +212,8 @@ class driveTrainCommand(commands2.Command):
        self.driveTrain,self.joystick=driveSubsys,joySubsys
 
     def execute(self):
-        self.driveTrain.setState(curveControl(self.joystick.getY(),2.5)*swerveConfig.driveSpeed,-curveControl(self.joystick.getX(),2.5)*swerveConfig.driveSpeed,curveControl(-self.joystick.getZ(),2)*swerveConfig.driveTurnSpeed)
+        curvedDriveValues=vectorCurve(-self.joystick.getX(),self.joystick.getY(),2.5,swerveConfig.driveSpeed)
+        self.driveTrain.setState(curvedDriveValues[0],curvedDriveValues[1],curveControl(-self.joystick.getZ(),2)*swerveConfig.driveTurnSpeed)
         pass
 
 class fieldOrientReorient(commands2.Command):
@@ -234,9 +235,11 @@ class autoDriveTrainCommand(commands2.Command):
         endPos=wpigeo.Pose2d.fromFeet(-3,0,wpigeo.Rotation2d.fromDegrees(0))
         self.holoCont=cont.HolonomicDriveController(cont.PIDController(1,0,0),cont.PIDController(1,0,0),cont.ProfiledPIDControllerRadians(0.3,0,0,wpimath.trajectory.TrapezoidProfileRadians.Constraints(pi,pi)))
         self.trajectory=wpimath.trajectory.TrajectoryGenerator.generateTrajectory([startPos,endPos],config=config)
+        self.clock=wpilib.Timer()
+        self.clock.start()
     def execute(self):
         self.goal=self.trajectory.sample(self.clock.get())
         speeds=self.holoCont.calculate(self.driveSubsys.getPoseState(),self.goal,wpimath.geometry.Rotation2d(0))
         #print(self.driveSubsys.getPoseState())#,self.driveSubsys.getPoseState().y_feet)
-        print(speeds.vx,speeds.vy,speeds.omega,self.clock.get())
+        print(speeds.vx,speeds.vy)
         self.driveSubsys.setState(speeds.vx,speeds.vy,speeds.omega)
