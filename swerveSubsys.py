@@ -87,7 +87,7 @@ class swerveSubsys():
             return self.turnSensor.get_absolute_position().value
 
     def getState(self):
-        return wpimath.kinematics.SwerveModulePosition(self.driveMotor.get_position().value*0.095*pi,wpimath.geometry.Rotation2d.fromRotations(-self.turnMotor.get_position().value))
+        return wpimath.kinematics.SwerveModulePosition(-self.driveMotor.get_position().value*0.095*pi,wpimath.geometry.Rotation2d.fromRotations(-self.turnMotor.get_position().value))
 
     def debug(self):
         return self.turnSensor.get_position().value
@@ -123,7 +123,7 @@ class driveTrainSubsys(commands2.Subsystem):
             self.robotRotation,
             self.getSwerveState(),
             wpimath.geometry.Pose2d(
-                wpimath.geometry.Translation2d(5, 0),
+                wpimath.geometry.Translation2d(0, 0),
                 wpimath.geometry.Rotation2d(0),
             ),
             swerveConfig.wheelDistrustLevel,
@@ -157,8 +157,8 @@ class driveTrainSubsys(commands2.Subsystem):
 
 
         self.field.setRobotPose(currentPose) #update the position of the robot on the field in shuffleboard for debugging
-        wpilib.SmartDashboard.putNumber("Pose X", currentPose.X())
-        wpilib.SmartDashboard.putNumber("Pose Y", currentPose.Y())
+        wpilib.SmartDashboard.putNumber("Pose X", currentPose.x_feet)
+        wpilib.SmartDashboard.putNumber("Pose Y", currentPose.y_feet)
         wpilib.SmartDashboard.putNumber("Pose Deg", currentPose.rotation().degrees())
         wpilib.SmartDashboard.putNumber("Gyro degrees", self.compass.getRotation2d().degrees())
 
@@ -232,8 +232,8 @@ class autoDriveTrainCommand(commands2.Command):
         #config.setReversed(True)
         #IMPORTANT STUFF
         startPos=wpigeo.Pose2d.fromFeet(0,0,wpigeo.Rotation2d.fromDegrees(0))
-        endPos=wpigeo.Pose2d.fromFeet(-3,0,wpigeo.Rotation2d.fromDegrees(0))
-        self.holoCont=cont.HolonomicDriveController(cont.PIDController(1,0,0),cont.PIDController(1,0,0),cont.ProfiledPIDControllerRadians(0.3,0,0,wpimath.trajectory.TrapezoidProfileRadians.Constraints(pi,pi)))
+        endPos=wpigeo.Pose2d.fromFeet(1,0,wpigeo.Rotation2d.fromDegrees(0))
+        self.holoCont=cont.HolonomicDriveController(cont.PIDController(2.5,0.1,0),cont.PIDController(2.5,0.1,0),cont.ProfiledPIDControllerRadians(0.3,0,0,wpimath.trajectory.TrapezoidProfileRadians.Constraints(pi,pi)))
         self.trajectory=wpimath.trajectory.TrajectoryGenerator.generateTrajectory([startPos,endPos],config=config)
         self.clock=wpilib.Timer()
         self.clock.start()
@@ -242,4 +242,4 @@ class autoDriveTrainCommand(commands2.Command):
         speeds=self.holoCont.calculate(self.driveSubsys.getPoseState(),self.goal,wpimath.geometry.Rotation2d(0))
         #print(self.driveSubsys.getPoseState())#,self.driveSubsys.getPoseState().y_feet)
         print(speeds.vx,speeds.vy)
-        self.driveSubsys.setState(speeds.vx,speeds.vy,speeds.omega)
+        self.driveSubsys.setState(-speeds.vx,speeds.vy,speeds.omega)
