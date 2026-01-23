@@ -95,11 +95,11 @@ class swerveSubsys():
 class driveTrainSubsys(commands2.Subsystem):
     def __init__(self):
         super().__init__()
-        #self.swerveSubsystems = []
+        self.swerveModules = []
         for i in range(4):
-            #self.swerveSubsystems.append(swerveSubsys())
-            string=str("self.swerve"+str(i)+"=swerveSubsys("+str(swerveConfig.swerveDriveIds[i])+","+str(swerveConfig.swerveTurnIds[i])+","+str(swerveConfig.swerveEncoderIds[i])+")")
-            exec(string)
+            self.swerveModules.append(swerveSubsys(swerveConfig.swerveDriveIds[i],swerveConfig.swerveTurnIds[i],swerveConfig.swerveEncoderIds[i]))
+            #string=str("self.swerve"+str(i)+"=swerveSubsys("+str(swerveConfig.swerveDriveIds[i])+","+str(swerveConfig.swerveTurnIds[i])+","+str(swerveConfig.swerveEncoderIds[i])+")")
+            #exec(string)
         if swerveConfig.robotCompassType=="pidgeon":
             self.compass=phoenix6.hardware.Pigeon2(swerveConfig.robotCompassId)
             self.compass.reset()
@@ -136,8 +136,10 @@ class driveTrainSubsys(commands2.Subsystem):
         
         for i in range(4):
             #IF JITTERING WITH CORRECT PID, REVERSE OPTIMIZE ANGLE INPUT
-            exec(str("self.swerveNumbers["+str(i)+"].optimize(wpimath.geometry.Rotation2d.fromRotations(self.swerve"+str(i)+".getRot()))"))
-            exec(str("self.swerve"+str(i)+".setState(self.swerveNumbers["+str(i)+"].angle.degrees()/360,self.swerveNumbers["+str(i)+"].speed_fps)"))
+            self.swerveNumbers[i].optimize(wpimath.geometry.Rotation2d.fromRotations(self.swerveModules[i].getRot()))
+            self.swerveModules[i].setState(self.swerveNumbers[i].angle.radians()/(2*pi),self.swerveNumbers[i].speed_fps)
+            #exec(str("self.swerveNumbers["+str(i)+"].optimize(wpimath.geometry.Rotation2d.fromRotations(self.swerve"+str(i)+".getRot()))"))
+            #exec(str("self.swerve"+str(i)+".setState(self.swerveNumbers["+str(i)+"].angle.degrees()/360,self.swerveNumbers["+str(i)+"].speed_fps)"))
     def getPoseState(self):
         return self.poseEstimator.getEstimatedPosition()
 
@@ -166,7 +168,8 @@ class driveTrainSubsys(commands2.Subsystem):
     def getSwerveState(self):
         string=[]
         for i in range(4):
-            exec("string.append(self.swerve"+str(i)+".getState())")
+            #string.append(self.swerve"+str(i)+".getState())")
+            string.append(self.swerveModules[i].getState())
         return string
 
 ##DIFFERENT INPUT DEVICE CONFIGS
@@ -220,26 +223,3 @@ class fieldOrientReorient(commands2.Command):
     def __init__(self,driveSubsys:driveTrainSubsys,joySubsys:globals()[swerveConfig.driveController+"Subsys"]):
         self.addRequirements(driveSubsys,joySubsys)
 
-class autoDriveTrainCommand(commands2.Command):
-    def __init__(self,driveSubsys:driveTrainSubsys):
-        self.addRequirements(driveSubsys)
-        self.driveSubsys=driveSubsys
-        cont=wpimath.controller
-        wpigeo=wpimath.geometry
-        super().__init__()
-        config = wpimath.trajectory.TrajectoryConfig(1,1)
-
-        #config.setReversed(True)
-        #IMPORTANT STUFF
-        startPos=wpigeo.Pose2d.fromFeet(0,0,wpigeo.Rotation2d.fromDegrees(0))
-        endPos=wpigeo.Pose2d.fromFeet(20,0,wpigeo.Rotation2d.fromDegrees(0))
-        self.holoCont=cont.HolonomicDriveController(cont.PIDController(2.5,0.1,0),cont.PIDController(2.5,0.1,0),cont.ProfiledPIDControllerRadians(0.3,0,0,wpimath.trajectory.TrapezoidProfileRadians.Constraints(pi,pi)))
-        self.trajectory=wpimath.trajectory.TrajectoryGenerator.generateTrajectory([startPos,endPos],config=config)
-        self.clock=wpilib.Timer()
-        self.clock.start()
-    def execute(self):
-        self.goal=self.trajectory.sample(self.clock.get())
-        speeds=self.holoCont.calculate(self.driveSubsys.getPoseState(),self.goal,wpimath.geometry.Rotation2d(0))
-        #print(self.driveSubsys.getPoseState())#,self.driveSubsys.getPoseState().y_feet)
-        print(speeds.vx,speeds.vy)
-        self.driveSubsys.setState(-speeds.vx,speeds.vy,speeds.omega)

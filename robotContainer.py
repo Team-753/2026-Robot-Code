@@ -1,4 +1,5 @@
-from Drivetrain.swerveSubsys import driveTrainCommand,JoystickSubsys,driveTrainSubsys,XboxControllerSubsys,autoDriveTrainCommand,VKBJoystickSubsys
+from Drivetrain.swerveSubsys import driveTrainCommand,JoystickSubsys,driveTrainSubsys,XboxControllerSubsys,VKBJoystickSubsys
+from Drivetrain.autonomousDriveSubsys import autoDriveTrainCommand
 import wpilib,commands2,Drivetrain.swerveConfig as swerveConfig
 class robotContainer():
     def __init__(self):
