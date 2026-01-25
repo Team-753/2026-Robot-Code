@@ -6,14 +6,14 @@ import wpimath.geometry
 import wpimath.kinematics
 from wpimath.estimator import SwerveDrive4PoseEstimator
 
-from limelight import LimelightCamera
+from Drivetrain.limelight import LimelightCamera
 
 from wpimath import estimator
 
 from wpilib import AnalogEncoder,Timer, Field2d
 import wpimath.trajectory
-import swerveConfig
-from customFunctions import curveControl
+import Drivetrain.swerveConfig as swerveConfig
+from customFunctions import curveControl,vectorCurve
 class swerveSubsys():
     def __init__(self,driveID,turnID,turnSensorID=None):
 
@@ -87,7 +87,7 @@ class swerveSubsys():
             return self.turnSensor.get_absolute_position().value
 
     def getState(self):
-        return wpimath.kinematics.SwerveModulePosition(self.driveMotor.get_position().value*0.095*pi,wpimath.geometry.Rotation2d.fromRotations(-self.turnMotor.get_position().value))
+        return wpimath.kinematics.SwerveModulePosition(-self.driveMotor.get_position().value*0.095*pi,wpimath.geometry.Rotation2d.fromRotations(-self.turnMotor.get_position().value))
 
     def debug(self):
         return self.turnSensor.get_position().value
@@ -95,11 +95,11 @@ class swerveSubsys():
 class driveTrainSubsys(commands2.Subsystem):
     def __init__(self):
         super().__init__()
-        #self.swerveSubsystems = []
+        self.swerveModules = []
         for i in range(4):
-            #self.swerveSubsystems.append(swerveSubsys())
-            string=str("self.swerve"+str(i)+"=swerveSubsys("+str(swerveConfig.swerveDriveIds[i])+","+str(swerveConfig.swerveTurnIds[i])+","+str(swerveConfig.swerveEncoderIds[i])+")")
-            exec(string)
+            self.swerveModules.append(swerveSubsys(swerveConfig.swerveDriveIds[i],swerveConfig.swerveTurnIds[i],swerveConfig.swerveEncoderIds[i]))
+            #string=str("self.swerve"+str(i)+"=swerveSubsys("+str(swerveConfig.swerveDriveIds[i])+","+str(swerveConfig.swerveTurnIds[i])+","+str(swerveConfig.swerveEncoderIds[i])+")")
+            #exec(string)
         if swerveConfig.robotCompassType=="pidgeon":
             self.compass=phoenix6.hardware.Pigeon2(swerveConfig.robotCompassId)
             self.compass.reset()
@@ -123,7 +123,7 @@ class driveTrainSubsys(commands2.Subsystem):
             self.robotRotation,
             self.getSwerveState(),
             wpimath.geometry.Pose2d(
-                wpimath.geometry.Translation2d(5, 0),
+                wpimath.geometry.Translation2d(0, 0),
                 wpimath.geometry.Rotation2d(0),
             ),
             swerveConfig.wheelDistrustLevel,
@@ -136,8 +136,10 @@ class driveTrainSubsys(commands2.Subsystem):
         
         for i in range(4):
             #IF JITTERING WITH CORRECT PID, REVERSE OPTIMIZE ANGLE INPUT
-            exec(str("self.swerveNumbers["+str(i)+"].optimize(wpimath.geometry.Rotation2d.fromRotations(self.swerve"+str(i)+".getRot()))"))
-            exec(str("self.swerve"+str(i)+".setState(self.swerveNumbers["+str(i)+"].angle.degrees()/360,self.swerveNumbers["+str(i)+"].speed_fps)"))
+            self.swerveNumbers[i].optimize(wpimath.geometry.Rotation2d.fromRotations(self.swerveModules[i].getRot()))
+            self.swerveModules[i].setState(self.swerveNumbers[i].angle.radians()/(2*pi),self.swerveNumbers[i].speed_fps)
+            #exec(str("self.swerveNumbers["+str(i)+"].optimize(wpimath.geometry.Rotation2d.fromRotations(self.swerve"+str(i)+".getRot()))"))
+            #exec(str("self.swerve"+str(i)+".setState(self.swerveNumbers["+str(i)+"].angle.degrees()/360,self.swerveNumbers["+str(i)+"].speed_fps)"))
     def getPoseState(self):
         return self.poseEstimator.getEstimatedPosition()
 
@@ -157,8 +159,8 @@ class driveTrainSubsys(commands2.Subsystem):
 
 
         self.field.setRobotPose(currentPose) #update the position of the robot on the field in shuffleboard for debugging
-        wpilib.SmartDashboard.putNumber("Pose X", currentPose.X())
-        wpilib.SmartDashboard.putNumber("Pose Y", currentPose.Y())
+        wpilib.SmartDashboard.putNumber("Pose X", currentPose.x_feet)
+        wpilib.SmartDashboard.putNumber("Pose Y", currentPose.y_feet)
         wpilib.SmartDashboard.putNumber("Pose Deg", currentPose.rotation().degrees())
         wpilib.SmartDashboard.putNumber("Gyro degrees", self.compass.getRotation2d().degrees())
 
@@ -166,7 +168,8 @@ class driveTrainSubsys(commands2.Subsystem):
     def getSwerveState(self):
         string=[]
         for i in range(4):
-            exec("string.append(self.swerve"+str(i)+".getState())")
+            #string.append(self.swerve"+str(i)+".getState())")
+            string.append(self.swerveModules[i].getState())
         return string
 
 ##DIFFERENT INPUT DEVICE CONFIGS
@@ -186,11 +189,11 @@ class JoystickSubsys(commands2.Subsystem):
         self.myJoy=joystick
         super().__init__()
     def getX(self):
-        return self.myJoy.getRawAxis(axis=0)
+        return wpimath.applyDeadband(self.myJoy.getRawAxis(axis=0),0.05)
     def getZ(self):
-        return self.myJoy.getRawAxis(axis=2)
+        return wpimath.applyDeadband(self.myJoy.getRawAxis(axis=2),0.05)
     def getY(self):
-        return self.myJoy.getRawAxis(axis=1)
+        return wpimath.applyDeadband(self.myJoy.getRawAxis(axis=1),0.05)
 
 class VKBJoystickSubsys(commands2.Subsystem):
     def __init__(self,joystick=commands2.button.CommandJoystick):
@@ -212,31 +215,11 @@ class driveTrainCommand(commands2.Command):
        self.driveTrain,self.joystick=driveSubsys,joySubsys
 
     def execute(self):
-        self.driveTrain.setState(curveControl(self.joystick.getY(),2.5)*swerveConfig.driveSpeed,-curveControl(self.joystick.getX(),2.5)*swerveConfig.driveSpeed,curveControl(-self.joystick.getZ(),2)*swerveConfig.driveTurnSpeed)
+        curvedDriveValues=vectorCurve(-self.joystick.getX(),self.joystick.getY(),2.5,swerveConfig.driveSpeed)
+        self.driveTrain.setState(curvedDriveValues[0],curvedDriveValues[1],curveControl(-self.joystick.getZ(),2)*swerveConfig.driveTurnSpeed)
         pass
 
 class fieldOrientReorient(commands2.Command):
     def __init__(self,driveSubsys:driveTrainSubsys,joySubsys:globals()[swerveConfig.driveController+"Subsys"]):
         self.addRequirements(driveSubsys,joySubsys)
 
-class autoDriveTrainCommand(commands2.Command):
-    def __init__(self,driveSubsys:driveTrainSubsys):
-        self.addRequirements(driveSubsys)
-        self.driveSubsys=driveSubsys
-        cont=wpimath.controller
-        wpigeo=wpimath.geometry
-        super().__init__()
-        config = wpimath.trajectory.TrajectoryConfig(1,1)
-
-        #config.setReversed(True)
-        #IMPORTANT STUFF
-        startPos=wpigeo.Pose2d.fromFeet(0,0,wpigeo.Rotation2d.fromDegrees(0))
-        endPos=wpigeo.Pose2d.fromFeet(-3,0,wpigeo.Rotation2d.fromDegrees(0))
-        self.holoCont=cont.HolonomicDriveController(cont.PIDController(1,0,0),cont.PIDController(1,0,0),cont.ProfiledPIDControllerRadians(0.3,0,0,wpimath.trajectory.TrapezoidProfileRadians.Constraints(pi,pi)))
-        self.trajectory=wpimath.trajectory.TrajectoryGenerator.generateTrajectory([startPos,endPos],config=config)
-    def execute(self):
-        self.goal=self.trajectory.sample(self.clock.get())
-        speeds=self.holoCont.calculate(self.driveSubsys.getPoseState(),self.goal,wpimath.geometry.Rotation2d(0))
-        #print(self.driveSubsys.getPoseState())#,self.driveSubsys.getPoseState().y_feet)
-        print(speeds.vx,speeds.vy,speeds.omega,self.clock.get())
-        self.driveSubsys.setState(speeds.vx,speeds.vy,speeds.omega)

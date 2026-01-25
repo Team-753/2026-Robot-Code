@@ -1,5 +1,6 @@
-from swerveSubsys import driveTrainCommand,JoystickSubsys,driveTrainSubsys,XboxControllerSubsys,autoDriveTrainCommand,VKBJoystickSubsys
-import wpilib,commands2,swerveConfig
+from Drivetrain.swerveSubsys import driveTrainCommand,JoystickSubsys,driveTrainSubsys,XboxControllerSubsys,VKBJoystickSubsys
+from Drivetrain.autonomousDriveSubsys import autoDriveTrainCommand
+import wpilib,commands2,Drivetrain.swerveConfig as swerveConfig
 class robotContainer():
     def __init__(self):
         if swerveConfig.driveController=="Joystick"or swerveConfig.driveController=="VKBJoystick":
