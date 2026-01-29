@@ -171,6 +171,8 @@ class driveTrainSubsys(commands2.Subsystem):
             #string.append(self.swerve"+str(i)+".getState())")
             string.append(self.swerveModules[i].getState())
         return string
+    def recenterCompass(self):
+        self.compass.reset()
 
 ##DIFFERENT INPUT DEVICE CONFIGS
 class XboxControllerSubsys(commands2.Subsystem):
@@ -222,4 +224,7 @@ class driveTrainCommand(commands2.Command):
 class fieldOrientReorient(commands2.Command):
     def __init__(self,driveSubsys:driveTrainSubsys,joySubsys:globals()[swerveConfig.driveController+"Subsys"]):
         self.addRequirements(driveSubsys,joySubsys)
+        self.joystick=joySubsys
+    def execute(self):
+        driveTrainSubsys.recenterCompass()
 

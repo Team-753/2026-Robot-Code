@@ -17,8 +17,8 @@ class autoDriveTrainCommand(commands2.Command):
         self.holoCont=cont.HolonomicDriveController(cont.PIDController(2.5,0.1,0),cont.PIDController(2.5,0.1,0),cont.ProfiledPIDControllerRadians(0.3,0,0,wpimath.trajectory.TrapezoidProfileRadians.Constraints(pi,pi)))
         self.xPid=cont.PIDController(4,0.05,0)
         self.yPid=cont.PIDController(4,0.05,0)
-        self.omegaPid=cont.ProfiledPIDControllerRadians(4,0.1,0.1,wpimath.trajectory.TrapezoidProfileRadians.Constraints(pi,pi))
-        self.traj=choreo.load_swerve_trajectory("Turn90")
+        self.omegaPid=cont.ProfiledPIDControllerRadians(8,0.2,0.1,wpimath.trajectory.TrapezoidProfileRadians.Constraints(2*pi,2*pi))
+        self.traj=choreo.load_swerve_trajectory("Path2")
         self.clock=wpilib.Timer()
         self.clock.start()
     def getSpeeds(self, sample):
