@@ -9,7 +9,7 @@ from wpimath.estimator import SwerveDrive4PoseEstimator
 from Drivetrain.limelight import LimelightCamera
 
 from wpimath import estimator
-
+import navx
 from wpilib import AnalogEncoder,Timer, Field2d
 import wpimath.trajectory
 import Drivetrain.swerveConfig as swerveConfig
@@ -102,6 +102,10 @@ class driveTrainSubsys(commands2.Subsystem):
             #exec(string)
         if swerveConfig.robotCompassType=="pidgeon":
             self.compass=phoenix6.hardware.Pigeon2(swerveConfig.robotCompassId)
+            self.compass.reset()
+            self.robotRotation=self.compass.getRotation2d()
+        elif swerveConfig.robotCompassType=="navx":
+            self.compass=navx.AHRS(navx.AHRS.NavXComType.kMXP_SPI)
             self.compass.reset()
             self.robotRotation=self.compass.getRotation2d()
     
