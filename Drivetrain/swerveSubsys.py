@@ -162,7 +162,6 @@ class driveTrainSubsys(commands2.Subsystem):
         time = Timer.getFPGATimestamp()
 
         if self.limeLight.hasDetection():
-            #check to see if the robot can see an april tag
             print("Beans detected")
             posedata, latency = self.limeLight.getPoseData()
             if posedata is not None and latency is not None:

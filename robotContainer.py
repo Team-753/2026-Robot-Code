@@ -1,4 +1,4 @@
-from Drivetrain.swerveSubsys import driveTrainCommand,JoystickSubsys,driveTrainSubsys,XboxControllerSubsys,VKBJoystickSubsys
+from Drivetrain.swerveSubsys import driveTrainCommand,JoystickSubsys,driveTrainSubsys,XboxControllerSubsys,VKBJoystickSubsys,fieldOrientReorient,overideRobotInput
 from Drivetrain.autonomousDriveSubsys import autoDriveTrainCommand
 
 import wpilib,commands2,Drivetrain.swerveConfig as swerveConfig
@@ -21,6 +21,13 @@ class robotContainer():
     def autoInit(self):
         self.driveSubsystem.setDefaultCommand(autoDriveTrainCommand(self.driveSubsystem))
     def buttonBindings(self):
+        if swerveConfig.driveController=="Joystick":
+            self.controller.trigger().whileTrue(fieldOrientReorient(self.driveSubsystem))
+        if swerveConfig.driveController=="VKBJoystick":
+            self.controller.button(0).whileTrue(fieldOrientReorient(self.driveSubsystem))
+        if swerveConfig.driveController=="XboxControler":
+            self.controller.a().whileTrue(fieldOrientReorient(self.driveSubsystem))
+        #self.controller.button(2).whileTrue(overideRobotInput(self.driveSubsystem,x=0.1))
         print("bindings configed")
         hid = self.controller.getHID()
         print(f"HID buttons: {hid.getButtonCount()} targetingButton: {swerveConfig.targetingButton}")
