@@ -163,13 +163,17 @@ class driveTrainSubsys(commands2.Subsystem):
 
         if self.limeLight.hasDetection():
             #check to see if the robot can see an april tag
-
+            print("Beans detected")
             posedata, latency = self.limeLight.getPoseData()
             if posedata is not None and latency is not None:
                 lockTime = time - (latency/1000) #Take the locktime minus the latency (in miliseconds) to know how long in the past locking was
+                print("adding measurment")
                 self.poseEstimator.addVisionMeasurement(posedata,lockTime)
         currentPose = self.poseEstimator.update(self.compass.getRotation2d(), self.getSwerveState())
         #update the pose estimator with our most up to date info on where the robot is from all the systems
+
+
+
 
 
         self.field.setRobotPose(currentPose) #update the position of the robot on the field in shuffleboard for debugging
