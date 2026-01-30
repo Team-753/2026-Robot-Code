@@ -96,6 +96,8 @@ class driveTrainSubsys(commands2.Subsystem):
     def __init__(self):
         super().__init__()
         self.swerveModules = []
+        self.zeroCompass=False
+        self.overideValues=[None,None,None]
         for i in range(4):
             self.swerveModules.append(swerveSubsys(swerveConfig.swerveDriveIds[i],swerveConfig.swerveTurnIds[i],swerveConfig.swerveEncoderIds[i]))
             #string=str("self.swerve"+str(i)+"=swerveSubsys("+str(swerveConfig.swerveDriveIds[i])+","+str(swerveConfig.swerveTurnIds[i])+","+str(swerveConfig.swerveEncoderIds[i])+")")
@@ -135,6 +137,21 @@ class driveTrainSubsys(commands2.Subsystem):
         )
     
     def setState(self,fb,lr,rot):       
+        if self.zeroCompass==True:
+            self.compass.reset()
+        ##NOTE MAKE THIS LESS MESSY
+        for i in range(3):
+            if self.overideValues[i]!=None:
+                if i==0:
+                    fb=self.overideValues[0]
+                    print("OVERIDE X")
+                if i==1:
+                    fb=self.overideValues[1]
+                    print("OVERIDE Y")
+                if i==2:
+                    fb=self.overideValues[2]
+                    print("OVERIDE THETA")
+        
         
         self.swerveNumbers=self.swerveKinematics.toSwerveModuleStates(wpimath.kinematics.ChassisSpeeds.fromFieldRelativeSpeeds(fb,lr,rot,-self.compass.getRotation2d()))#FIELD ALIGN
         
@@ -175,8 +192,14 @@ class driveTrainSubsys(commands2.Subsystem):
             #string.append(self.swerve"+str(i)+".getState())")
             string.append(self.swerveModules[i].getState())
         return string
-    def recenterCompass(self):
-        self.compass.reset()
+    
+    def robotRecenter(self,bool):
+        self.zeroCompass=bool
+
+    def overideInput(self,x,y,theta):
+        self.overideValues[0]=x
+        self.overideValues[1]=y
+        self.overideValues[2]=theta
 
 ##DIFFERENT INPUT DEVICE CONFIGS
 class XboxControllerSubsys(commands2.Subsystem):
@@ -213,7 +236,6 @@ class VKBJoystickSubsys(commands2.Subsystem):
         return self.myJoy.getRawAxis(axis=1)
 
 ##SENDING COMMANDS TO DRIVETRAIN
-##NOTE APPLY EXPONENTIAL TO VECTOR INTEAD OF JOYSTICK COMPONETS,NOTE
 class driveTrainCommand(commands2.Command):
     def __init__(self,driveSubsys:driveTrainSubsys,joySubsys:globals()[swerveConfig.driveController+"Subsys"]):
        super().__init__()
@@ -226,9 +248,18 @@ class driveTrainCommand(commands2.Command):
         pass
 
 class fieldOrientReorient(commands2.Command):
-    def __init__(self,driveSubsys:driveTrainSubsys,joySubsys:globals()[swerveConfig.driveController+"Subsys"]):
-        self.addRequirements(driveSubsys,joySubsys)
-        self.joystick=joySubsys
+    def __init__(self,driveSubsys:driveTrainSubsys):
+        #self.addRequirements(driveSubsys,joySubsys)
+        self.dt=driveSubsys
     def execute(self):
-        driveTrainSubsys.recenterCompass()
+        self.dt.robotRecenter(True)
+    def end(self, interrupted):
+        self.dt.robotRecenter(False)
 
+class overideRobotInput(commands2.Command):
+    def __init__(self,driveSubsys:driveTrainSubsys,x=None,y=None,theta=None):
+        self.dt=driveSubsys
+        self.inputs=[x,y,theta]
+    def execute(self):
+        print("HHHHHHHHHH")
+        self.dt.overideInput(self.inputs[0],self.inputs[1],self.inputs[2])
