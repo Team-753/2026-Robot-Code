@@ -8,6 +8,8 @@ from wpimath.estimator import SwerveDrive4PoseEstimator
 
 from Drivetrain.limelight import LimelightCamera
 
+from Drivetrain.Targeting import Targeting
+
 from wpimath import estimator
 
 from wpilib import AnalogEncoder,Timer, Field2d
@@ -95,6 +97,7 @@ class swerveSubsys():
 class driveTrainSubsys(commands2.Subsystem):
     def __init__(self):
         super().__init__()
+        self.Targeting = Targeting
         self.swerveModules = []
         for i in range(4):
             self.swerveModules.append(swerveSubsys(swerveConfig.swerveDriveIds[i],swerveConfig.swerveTurnIds[i],swerveConfig.swerveEncoderIds[i]))
@@ -104,7 +107,9 @@ class driveTrainSubsys(commands2.Subsystem):
             self.compass=phoenix6.hardware.Pigeon2(swerveConfig.robotCompassId)
             self.compass.reset()
             self.robotRotation=self.compass.getRotation2d()
-    
+
+        self.targeting = Targeting()
+
 
         #Vision (Ryan)
         self.limeLight = LimelightCamera(swerveConfig.cameraName)
@@ -123,14 +128,23 @@ class driveTrainSubsys(commands2.Subsystem):
             self.robotRotation,
             self.getSwerveState(),
             wpimath.geometry.Pose2d(
-                wpimath.geometry.Translation2d(0, 0),
-                wpimath.geometry.Rotation2d(0),
+                wpimath.geometry.Translation2d(swerveConfig.startPoseX, swerveConfig.startPoseY),
+                wpimath.geometry.Rotation2d.fromDegrees(swerveConfig.startPoseDeg),
             ),
             swerveConfig.wheelDistrustLevel,
             swerveConfig.visionDistrustLevel,
         )
     
     def setState(self,fb,lr,rot):       
+        if self.targeting.is_enabled():
+            print("TARGETING ACTIVE")
+            pose = self.getPoseState()
+            if pose is not None:
+                if hasattr(self, "compass"):
+                    compass_degrees = self.compass.getRotation2d().degrees()
+                else:
+                    compass_degrees = pose.rotation().degrees()
+                rot = self.targeting.get_override_rotation(pose, compass_degrees)
         
         self.swerveNumbers=self.swerveKinematics.toSwerveModuleStates(wpimath.kinematics.ChassisSpeeds.fromFieldRelativeSpeeds(fb,lr,rot,-self.compass.getRotation2d()))#FIELD ALIGN
         
@@ -173,6 +187,13 @@ class driveTrainSubsys(commands2.Subsystem):
         return string
     def recenterCompass(self):
         self.compass.reset()
+
+    def setTargetingActive(self, active: bool):
+        if active and not self.targeting.is_enabled():
+            self.targeting.heading_pid.reset()
+            self.targeting.target_Enable()
+        elif not active and self.targeting.is_enabled():
+            self.targeting.target_Disable()
 
 ##DIFFERENT INPUT DEVICE CONFIGS
 class XboxControllerSubsys(commands2.Subsystem):
@@ -227,4 +248,3 @@ class fieldOrientReorient(commands2.Command):
         self.joystick=joySubsys
     def execute(self):
         driveTrainSubsys.recenterCompass()
-

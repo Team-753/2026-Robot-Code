@@ -5,11 +5,19 @@
 #| |_) / ____ \ ____) |_| || |____  | |___| |__| | |\  | |     _| || |__| |
 #|____/_/    \_\_____/|_____\_____|  \_____\____/|_| \_|_|    |_____\_____|
 
-driveSpeed=15
-driveTurnSpeed=15
+driveSpeed=50
+driveTurnSpeed=30
 
 driveController="Joystick" #Options:XboxController,Joystick,VKBJoystick
 driveControllerSlot=0 #USB NUMBER IN DRIVESTATION
+
+# Button to hold for targeting (raw button number for HID)
+targetingButton = 1
+
+# Starting robot pose (meters, degrees) in WPILib blue-origin field coords
+startPoseX = 2
+startPoseY = 4
+startPoseDeg = 0.0
 
 
 
@@ -45,8 +53,8 @@ swerveBaseLength=(0.64) #METERS
 
 #ODOMETRY TRUST Levels 
 #0-1 scale that is used in the Kalman filter. 0 is full trust, while 1 is full distrust. Hence, the distrust level
-visionDistrustLevel = 0.0,0.0,0.0
-wheelDistrustLevel = 1,1,1 
+visionDistrustLevel = 0.5,0.5,0.5
+wheelDistrustLevel = 0.5,0.5,0.5 
 
 #Limelight Camera Name and Settings 
 cameraName = ("limelight-jamal")
