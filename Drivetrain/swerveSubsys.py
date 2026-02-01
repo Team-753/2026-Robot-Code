@@ -8,8 +8,10 @@ from wpimath.estimator import SwerveDrive4PoseEstimator
 
 from Drivetrain.limelight import LimelightCamera
 
+from Drivetrain.Targeting import Targeting
+
 from wpimath import estimator
-import navx
+
 from wpilib import AnalogEncoder,Timer, Field2d
 import wpimath.trajectory
 import Drivetrain.swerveConfig as swerveConfig
@@ -95,20 +97,17 @@ class swerveSubsys():
 class driveTrainSubsys(commands2.Subsystem):
     def __init__(self):
         super().__init__()
+        self.Targeting = Targeting
         self.swerveModules = []
-        self.zeroCompass=False
-        self.overideValues=[None,None,None]
         for i in range(4):
             self.swerveModules.append(swerveSubsys(swerveConfig.swerveDriveIds[i],swerveConfig.swerveTurnIds[i],swerveConfig.swerveEncoderIds[i]))
         if swerveConfig.robotCompassType=="pidgeon":
             self.compass=phoenix6.hardware.Pigeon2(swerveConfig.robotCompassId)
             self.compass.reset()
             self.robotRotation=self.compass.getRotation2d()
-        elif swerveConfig.robotCompassType=="navx":
-            self.compass=navx.AHRS(navx.AHRS.NavXComType.kMXP_SPI)
-            self.compass.reset()
-            self.robotRotation=self.compass.getRotation2d()
-    
+
+        self.targeting = Targeting()
+
 
         #Vision (Ryan)
         self.limeLight = LimelightCamera(swerveConfig.cameraName)
@@ -127,29 +126,23 @@ class driveTrainSubsys(commands2.Subsystem):
             self.robotRotation,
             self.getSwerveState(),
             wpimath.geometry.Pose2d(
-                wpimath.geometry.Translation2d(0, 0),
-                wpimath.geometry.Rotation2d(0),
+                wpimath.geometry.Translation2d(swerveConfig.startPoseX, swerveConfig.startPoseY),
+                wpimath.geometry.Rotation2d.fromDegrees(swerveConfig.startPoseDeg),
             ),
             swerveConfig.wheelDistrustLevel,
             swerveConfig.visionDistrustLevel,
         )
     
     def setState(self,fb,lr,rot):       
-        if self.zeroCompass==True:
-            self.compass.reset()
-        ##NOTE MAKE THIS LESS MESSY
-        for i in range(3):
-            if self.overideValues[i]!=None:
-                if i==0:
-                    fb=self.overideValues[0]
-                    print("OVERIDE X")
-                if i==1:
-                    fb=self.overideValues[1]
-                    print("OVERIDE Y")
-                if i==2:
-                    fb=self.overideValues[2]
-                    print("OVERIDE THETA")
-        
+        if self.targeting.is_enabled():
+            print("TARGETING ACTIVE")
+            pose = self.getPoseState()
+            if pose is not None:
+                if hasattr(self, "compass"):
+                    compass_degrees = self.compass.getRotation2d().degrees()
+                else:
+                    compass_degrees = pose.rotation().degrees()
+                rot = self.targeting.get_override_rotation(pose, compass_degrees)
         
         self.swerveNumbers=self.swerveKinematics.toSwerveModuleStates(wpimath.kinematics.ChassisSpeeds.fromFieldRelativeSpeeds(fb,lr,rot,-self.compass.getRotation2d()))#FIELD ALIGN
         
@@ -167,14 +160,17 @@ class driveTrainSubsys(commands2.Subsystem):
         time = Timer.getFPGATimestamp()
 
         if self.limeLight.hasDetection():
-            #check to see if the robot can see an april tag
-
+            print("Beans detected")
             posedata, latency = self.limeLight.getPoseData()
             if posedata is not None and latency is not None:
                 lockTime = time - (latency/1000) #Take the locktime minus the latency (in miliseconds) to know how long in the past locking was
+                print("adding measurment")
                 self.poseEstimator.addVisionMeasurement(posedata,lockTime)
         currentPose = self.poseEstimator.update(self.compass.getRotation2d(), self.getSwerveState())
         #update the pose estimator with our most up to date info on where the robot is from all the systems
+
+
+
 
 
         self.field.setRobotPose(currentPose) #update the position of the robot on the field in shuffleboard for debugging
@@ -190,14 +186,15 @@ class driveTrainSubsys(commands2.Subsystem):
             #string.append(self.swerve"+str(i)+".getState())")
             string.append(self.swerveModules[i].getState())
         return string
-    
-    def robotRecenter(self,bool):
-        self.zeroCompass=bool
+    def recenterCompass(self):
+        self.compass.reset()
 
-    def overideInput(self,x,y,theta):
-        self.overideValues[0]=x
-        self.overideValues[1]=y
-        self.overideValues[2]=theta
+    def setTargetingActive(self, active: bool):
+        if active and not self.targeting.is_enabled():
+            self.targeting.heading_pid.reset()
+            self.targeting.target_Enable()
+        elif not active and self.targeting.is_enabled():
+            self.targeting.target_Disable()
 
 ##DIFFERENT INPUT DEVICE CONFIGS
 class XboxControllerSubsys(commands2.Subsystem):
@@ -234,6 +231,7 @@ class VKBJoystickSubsys(commands2.Subsystem):
         return self.myJoy.getRawAxis(axis=1)
 
 ##SENDING COMMANDS TO DRIVETRAIN
+##NOTE APPLY EXPONENTIAL TO VECTOR INTEAD OF JOYSTICK COMPONETS,NOTE
 class driveTrainCommand(commands2.Command):
     def __init__(self,driveSubsys:driveTrainSubsys,joySubsys:globals()[swerveConfig.driveController+"Subsys"]):
        super().__init__()
@@ -246,9 +244,9 @@ class driveTrainCommand(commands2.Command):
         pass
 
 class fieldOrientReorient(commands2.Command):
-    def __init__(self,driveSubsys:driveTrainSubsys):
-        #self.addRequirements(driveSubsys,joySubsys)
-        self.dt=driveSubsys
+    def __init__(self,driveSubsys:driveTrainSubsys,joySubsys:globals()[swerveConfig.driveController+"Subsys"]):
+        self.addRequirements(driveSubsys,joySubsys)
+        self.joystick=joySubsys
     def execute(self):
         self.dt.robotRecenter(True)
     def end(self, interrupted):
