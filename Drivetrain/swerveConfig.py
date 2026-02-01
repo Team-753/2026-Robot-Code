@@ -5,8 +5,8 @@
 #| |_) / ____ \ ____) |_| || |____  | |___| |__| | |\  | |     _| || |__| |
 #|____/_/    \_\_____/|_____\_____|  \_____\____/|_| \_|_|    |_____\_____|
 
-driveSpeed=15
-driveTurnSpeed=15
+driveSpeed=50
+driveTurnSpeed=30
 
 driveController="Joystick" #Options:XboxController,Joystick,VKBJoystick
 driveControllerSlot=0 #USB NUMBER IN DRIVESTATION

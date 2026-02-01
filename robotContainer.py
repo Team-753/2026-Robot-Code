@@ -26,5 +26,5 @@ class robotContainer():
             self.controller.button(0).whileTrue(fieldOrientReorient(self.driveSubsystem))
         if swerveConfig.driveController=="XboxControler":
             self.controller.a().whileTrue(fieldOrientReorient(self.driveSubsystem))
-        #self.controller.button(2).whileTrue(overideRobotInput(self.driveSubsystem,x=0.1))
+        self.controller.button(2).whileTrue(overideRobotInput(self.driveSubsystem,theta=0))
         print("bindings configed")

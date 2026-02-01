@@ -100,8 +100,6 @@ class driveTrainSubsys(commands2.Subsystem):
         self.overideValues=[None,None,None]
         for i in range(4):
             self.swerveModules.append(swerveSubsys(swerveConfig.swerveDriveIds[i],swerveConfig.swerveTurnIds[i],swerveConfig.swerveEncoderIds[i]))
-            #string=str("self.swerve"+str(i)+"=swerveSubsys("+str(swerveConfig.swerveDriveIds[i])+","+str(swerveConfig.swerveTurnIds[i])+","+str(swerveConfig.swerveEncoderIds[i])+")")
-            #exec(string)
         if swerveConfig.robotCompassType=="pidgeon":
             self.compass=phoenix6.hardware.Pigeon2(swerveConfig.robotCompassId)
             self.compass.reset()
@@ -263,3 +261,6 @@ class overideRobotInput(commands2.Command):
     def execute(self):
         print("HHHHHHHHHH")
         self.dt.overideInput(self.inputs[0],self.inputs[1],self.inputs[2])
+    def end(self, interrupted):
+        self.dt.overideInput(None,None,None)
+
