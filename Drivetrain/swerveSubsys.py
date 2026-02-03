@@ -98,6 +98,7 @@ class driveTrainSubsys(commands2.Subsystem):
     def __init__(self):
         super().__init__()
         self.Targeting = Targeting
+        self.resetCompass=False
         self.swerveModules = []
         for i in range(4):
             self.swerveModules.append(swerveSubsys(swerveConfig.swerveDriveIds[i],swerveConfig.swerveTurnIds[i],swerveConfig.swerveEncoderIds[i]))
@@ -143,6 +144,8 @@ class driveTrainSubsys(commands2.Subsystem):
                 else:
                     compass_degrees = pose.rotation().degrees()
                 rot = self.targeting.get_override_rotation(pose, compass_degrees)
+        if self.resetCompass:
+            self.compass.reset()
         
         self.swerveNumbers=self.swerveKinematics.toSwerveModuleStates(wpimath.kinematics.ChassisSpeeds.fromFieldRelativeSpeeds(fb,lr,rot,-self.compass.getRotation2d()))#FIELD ALIGN
         
@@ -186,8 +189,8 @@ class driveTrainSubsys(commands2.Subsystem):
             #string.append(self.swerve"+str(i)+".getState())")
             string.append(self.swerveModules[i].getState())
         return string
-    def recenterCompass(self):
-        self.compass.reset()
+    def robotRecenter(self,bool):
+        self.resetCompass=bool
 
     def setTargetingActive(self, active: bool):
         if active and not self.targeting.is_enabled():
@@ -244,9 +247,8 @@ class driveTrainCommand(commands2.Command):
         pass
 
 class fieldOrientReorient(commands2.Command):
-    def __init__(self,driveSubsys:driveTrainSubsys,joySubsys:globals()[swerveConfig.driveController+"Subsys"]):
-        self.addRequirements(driveSubsys,joySubsys)
-        self.joystick=joySubsys
+    def __init__(self,driveSubsys:driveTrainSubsys):
+        self.dt=driveSubsys
     def execute(self):
         self.dt.robotRecenter(True)
     def end(self, interrupted):
@@ -257,7 +259,6 @@ class overideRobotInput(commands2.Command):
         self.dt=driveSubsys
         self.inputs=[x,y,theta]
     def execute(self):
-        print("HHHHHHHHHH")
         self.dt.overideInput(self.inputs[0],self.inputs[1],self.inputs[2])
     def end(self, interrupted):
         self.dt.overideInput(None,None,None)

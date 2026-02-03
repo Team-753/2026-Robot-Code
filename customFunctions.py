@@ -18,3 +18,7 @@ def vectorCurve(x,y,exponet,mult):
     linearVelocity=sqrt((pow(x,2)+pow(y,2)))
     curvedVelocity=curveControl(linearVelocity,exponet)
     return[(sin(angle)*curvedVelocity*mult),(cos(angle)*curvedVelocity*mult)]
+def thresholdEqual(value,desiredValue,buffer):
+    if (desiredValue-buffer)<=value<=(desiredValue+buffer):
+        return True
+    return False
