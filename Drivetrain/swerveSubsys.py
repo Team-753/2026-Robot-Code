@@ -71,8 +71,8 @@ class swerveSubsys():
                 turnConfig.feedback.feedback_remote_sensor_id=turnSensorID 
                        
         #APPLY CONFIGS
-        self.driveMotor.configurator.apply(driveConfig)
-        self.turnMotor.configurator.apply(turnConfig)
+        self.driveMotor.configurator.apply(driveConfig,0.5)
+        self.turnMotor.configurator.apply(turnConfig,0.5)
         if self.hasWpiEnc:
             print("HAS WPIENC")
             self.turnMotor.set_position(self.turnSensor.get()-swerveConfig.offsetList[swerveConfig.swerveEncoderIds.index(turnSensorID)])
