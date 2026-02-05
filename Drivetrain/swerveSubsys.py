@@ -98,6 +98,7 @@ class driveTrainSubsys(commands2.Subsystem):
     def __init__(self):
         super().__init__()
         self.Targeting = Targeting
+        self.overidedInputs=[None,None,None]
         self.resetCompass=False
         self.swerveModules = []
         for i in range(4):
@@ -134,7 +135,11 @@ class driveTrainSubsys(commands2.Subsystem):
             swerveConfig.visionDistrustLevel,
         )
     
-    def setState(self,fb,lr,rot):       
+    def setState(self,fb,lr,rot):
+        inputs=[fb,lr,rot]
+        for i in range(3):
+            if self.overidedInputs[i]!=None:
+                inputs[i]=self.overidedInputs[i]
         if self.targeting.is_enabled():
             print("TARGETING ACTIVE")
             pose = self.getPoseState()
@@ -147,7 +152,7 @@ class driveTrainSubsys(commands2.Subsystem):
         if self.resetCompass:
             self.compass.reset()
         
-        self.swerveNumbers=self.swerveKinematics.toSwerveModuleStates(wpimath.kinematics.ChassisSpeeds.fromFieldRelativeSpeeds(fb,lr,rot,-self.compass.getRotation2d()))#FIELD ALIGN
+        self.swerveNumbers=self.swerveKinematics.toSwerveModuleStates(wpimath.kinematics.ChassisSpeeds.fromFieldRelativeSpeeds(inputs[0],inputs[1],inputs[2],-self.compass.getRotation2d()))#FIELD ALIGN
         
         for i in range(4):
             #IF JITTERING WITH CORRECT PID, REVERSE OPTIMIZE ANGLE INPUT
@@ -199,6 +204,10 @@ class driveTrainSubsys(commands2.Subsystem):
         elif not active and self.targeting.is_enabled():
             self.targeting.target_Disable()
 
+    def overideInput(self,x=None,y=None,rot=None):
+        self.overidedInputs[0]=x
+        self.overidedInputs[1]=y
+        self.overidedInputs[2]=rot
 ##DIFFERENT INPUT DEVICE CONFIGS
 class XboxControllerSubsys(commands2.Subsystem):
     def __init__(self,joystick=commands2.button.CommandXboxController):
@@ -259,6 +268,7 @@ class overideRobotInput(commands2.Command):
         self.dt=driveSubsys
         self.inputs=[x,y,theta]
     def execute(self):
+        print("J+UHIHIUHIUHIUHI")
         self.dt.overideInput(self.inputs[0],self.inputs[1],self.inputs[2])
     def end(self, interrupted):
         self.dt.overideInput(None,None,None)
