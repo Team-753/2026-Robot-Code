@@ -42,8 +42,7 @@ class robotContainer():
 
         ##Shooter bindings
         if auxiliaryConfig.auxController=="XboxController":
-            print("AIHBFIHGFIUERHIGFEHRGUIERGIUEHRIGHERIUGHIEURGHIUERIUHGIUHREUIHERGH")
-            self.auxController.a().whileTrue(commands2.RepeatCommand(shooterSubsys.shootBalls(self.shooterSubsystem,1,5000)))
+            self.auxController.a().whileTrue(commands2.RepeatCommand(shooterSubsys.shootBalls(self.shooterSubsystem,0.3,2000)))
         #self.controller.button(2).whileTrue(overideRobotInput(self.driveSubsystem,theta=0))
         print("bindings configed")
         hid = self.controller.getHID()

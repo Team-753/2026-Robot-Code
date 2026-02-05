@@ -9,6 +9,7 @@ class shooterSubsys(commands2.Subsystem):
         self.RPSControl=phoenix6.controls.VelocityVoltage(0).with_slot(0)
         self.shooterMotorConfig=phoenix6.configs.TalonFXConfiguration()
         self.shooterMotorConfig.slot0.k_p=0.3
+        self.shooterMotorConfig.slot0.k_s=3.17
         self.shooterMotor.configurator.apply(self.shooterMotorConfig,0.5)
 
     def setIndexMotor(self,speed):
@@ -24,11 +25,8 @@ class shootBalls(commands2.Command):
         self.speed=indexSpeed
         self.RPM=shooterRPM
     def execute(self):
-        print("EXECUTINGWJAONDIAWOJDNIAWDNIANWDIUANWDIU",self.RPM)
         self.shooter.setShooterRPM(self.RPM)
-        print(self.shooter.getShooterRPM())
-        if thresholdEqual(self.shooter.getShooterRPM(),self.RPM,2500) or True:
-            print("hhhh")
+        if thresholdEqual(self.shooter.getShooterRPM(),self.RPM,500):
             self.shooter.setIndexMotor(self.speed)
     def end(self, interrupted):
         self.shooter.setIndexMotor(0)
