@@ -8,6 +8,7 @@ from Drivetrain.Targeting2 import targetPointCommand
 ##IMPORT FROM AuxiliarySystems
 from AuxilarySystems import auxiliaryConfig, shooterSubsys
 
+
 class robotContainer():
     def __init__(self):
         if swerveConfig.driveController=="Joystick"or swerveConfig.driveController=="VKBJoystick":
@@ -29,6 +30,7 @@ class robotContainer():
         self.buttonBindings()
     def teleopInit(self):
         self.driveSubsystem.setDefaultCommand(driveTrainCommand(self.driveSubsystem,self.joystick))
+        self.shooterSubsystem.teleopInit()
     def autoInit(self):
         self.driveSubsystem.setDefaultCommand(autoDriveTrainCommand(self.driveSubsystem))
     def buttonBindings(self):
@@ -46,7 +48,7 @@ class robotContainer():
 
         ##Shooter bindings
         if auxiliaryConfig.auxController=="XboxController":
-            self.auxController.a().whileTrue(commands2.RepeatCommand(shooterSubsys.shootBalls(self.shooterSubsystem,0.3,2000)))
+            #self.auxController.a().whileTrue(commands2.RepeatCommand(shooterSubsys.shootBalls(self.shooterSubsystem,0.3,2000)))
             self.auxController.x().whileTrue(commands2.RepeatCommand(targetPointCommand(self.driveSubsystem,1,1)))
             self.auxController.y().whileTrue(commands2.RepeatCommand(overideRobotInput(self.driveSubsystem,theta=0.1)))
         #self.controller.button(2).whileTrue(overideRobotInput(self.driveSubsystem,theta=0))
