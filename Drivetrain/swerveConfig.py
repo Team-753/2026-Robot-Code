@@ -8,11 +8,11 @@
 driveSpeed=50
 driveTurnSpeed=30
 
-driveController="Joystick" #Options:XboxController,Joystick,VKBJoystick
+driveController="XboxController" #Options:XboxController,Joystick,VKBJoystick
 driveControllerSlot=0 #USB NUMBER IN DRIVESTATION
 
 # Button to hold for targeting (raw button number for HID)
-targetingButton = 1
+targetingButton = 10
 
 # Starting robot pose (meters, degrees) in WPILib blue-origin field coords
 startPoseX = 2

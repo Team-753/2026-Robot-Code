@@ -39,3 +39,4 @@ class autoDriveTrainCommand(commands2.Command):
         #print(self.driveSubsys.getPoseState())#,self.driveSubsys.getPoseState().y_feet)
         print(self.driveSubsys.getPoseState())
         self.driveSubsys.setState(-speeds.vx,speeds.vy,speeds.omega)
+        
