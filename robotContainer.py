@@ -42,9 +42,7 @@ class robotContainer():
             self.controller.a().whileTrue(fieldOrientReorient(self.driveSubsystem))
 
         if swerveConfig.driveController=="Joystick":
-            self.controller.button(2).whileTrue(targetPointCommand(self.driveSubsystem,1,1))
-        if swerveConfig.driveController=="XboxController":
-            self.controller.x().whileTrue(targetPointCommand(self.driveSubsystem,1,1))
+            self.controller.button(2).whileTrue()
 
         ##Shooter bindings
         if auxiliaryConfig.auxController=="XboxController":
@@ -53,21 +51,20 @@ class robotContainer():
             self.auxController.y().whileTrue(commands2.RepeatCommand(overideRobotInput(self.driveSubsystem,theta=0.1)))
         #self.controller.button(2).whileTrue(overideRobotInput(self.driveSubsystem,theta=0))
         print("bindings configed")
-        if self.controllerType=="Joystick":
-            hid = self.controller.getHID()
-            print(f"HID buttons: {hid.getButtonCount()} targetingButton: {swerveConfig.targetingButton}")
+        hid = self.controller.getHID()
+        print(f"HID buttons: {hid.getButtonCount()} targetingButton: {swerveConfig.targetingButton}")
 
-            def _enable_targeting():
-                print("Targeting enabled")
-                self.driveSubsystem.setTargetingActive(True)
+        def _enable_targeting():
+            print("Targeting enabled")
+            self.driveSubsystem.setTargetingActive(True)
 
-            def _disable_targeting():
-                print("Targeting disabled")
-                self.driveSubsystem.setTargetingActive(False)
+        def _disable_targeting():
+            print("Targeting disabled")
+            self.driveSubsystem.setTargetingActive(False)
 
-            self.controller.button(swerveConfig.targetingButton).onTrue(
-                commands2.InstantCommand(_enable_targeting)
-            )
-            self.controller.button(swerveConfig.targetingButton).onFalse(
-                commands2.InstantCommand(_disable_targeting)
-            )
+        self.controller.button(swerveConfig.targetingButton).onTrue(
+            commands2.InstantCommand(_enable_targeting)
+        )
+        self.controller.button(swerveConfig.targetingButton).onFalse(
+            commands2.InstantCommand(_disable_targeting)
+        )
