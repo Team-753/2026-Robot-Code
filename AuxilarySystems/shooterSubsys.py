@@ -13,14 +13,14 @@ class shooterSubsys(commands2.Subsystem):
         self.bigBoy = phoenix6.hardware.TalonFX(auxiliaryConfig.shooterMotorID)
         self.littleone = rev.SparkMax(auxiliaryConfig.indexMotorID,rev.SparkMax.MotorType.kBrushless)
         big_config = phoenix6.configs.Slot0Configs()
-        big_config.k_p = 0.25
+        big_config.k_p = 0.11
         big_config.k_i = 0
         big_config.k_d = 0
-        #big_config.k_s = 0.1
-        #big_config.k_v = 0.15
+        big_config.k_s = 0.1
+        big_config.k_v = 0.12
         self.bigBoy.configurator.apply(big_config)
         self.request = controls.VelocityVoltage(0).with_slot(0)
-        self.controller = wpilib.Joystick(0) # wpilib.XboxController(0)
+        self.controller =  wpilib.XboxController(0) #wpilib.Joystick(0)
         self.XPressed = False
         self.prevVal = False
         self.XChanged = False
@@ -48,15 +48,18 @@ class shooterSubsys(commands2.Subsystem):
     def executeState(self):
         
         self.prevVal = self.XPressed
-        self.XPressed = self.controller.getRawButton(auxiliaryConfig.shooterEnableBtnIdx) #.getXButton()
+        #self.XPressed = self.controller.getRawButton(auxiliaryConfig.shooterEnableBtnIdx)
+        self.XPressed = self.controller.getXButton()
         self.XChanged = self.prevVal == False and self.XPressed == True
 
         self.prevVal2 = self.LBPressed
-        self.LBPressed = self.controller.getRawButton(auxiliaryConfig.shooterVelocityUpBtnIdx) #getLeftBumperButton()
+        #self.LBPressed = self.controller.getRawButton(auxiliaryConfig.shooterVelocityUpBtnIdx) #getLeftBumperButton()
+        self.LBPressed = self.controller.getLeftBumperButton()
         self.LBChanged = self.prevVal2 == False and self.LBPressed == True
 
         self.prevVal3 = self.RBPressed
-        self.RBPressed = self.controller.getRawButton(auxiliaryConfig.shooterVelocityDownBtnIdx) #getRightBumperButton()
+        #self.RBPressed = self.controller.getRawButton(auxiliaryConfig.shooterVelocityDownBtnIdx) #getRightBumperButton()
+        self.RBPressed = self.controller.getRightBumperButton()
         self.RBChanged = self.prevVal3 == False and self.RBPressed == True
 
         if self.state == 'teleop':
@@ -68,7 +71,7 @@ class shooterSubsys(commands2.Subsystem):
                 print (self.targetVelocity)
             if self.XChanged and not self.toggleshoot:
                 self.toggleshoot = True
-                self.bigBoy.set_control(self.request.with_velocity(self.targetVelocity))
+                self.bigBoy.set_control(self.request.with_velocity(self.targetVelocity).with_feed_forward(0.2))
                 self.littleone.set(0.5)
                 print ('true')
             elif self.XChanged and self.toggleshoot:
