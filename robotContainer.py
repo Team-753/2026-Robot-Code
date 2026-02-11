@@ -42,14 +42,14 @@ class robotContainer():
             self.controller.a().whileTrue(fieldOrientReorient(self.driveSubsystem))
 
         if swerveConfig.driveController=="Joystick":
-            self.controller.button(2).whileTrue(targetPointCommand(self.driveSubsystem,1,1))
+            self.controller.button(2).whileTrue(targetPointCommand(self.driveSubsystem,4.62507, 4.03514))
         if swerveConfig.driveController=="XboxController":
             self.controller.x().whileTrue(targetPointCommand(self.driveSubsystem,1,1))
 
         ##Shooter bindings
         if auxiliaryConfig.auxController=="XboxController":
             self.auxController.a().whileTrue(commands2.RepeatCommand(shooterSubsys.shootBalls(self.shooterSubsystem,0.3,2000)))
-            self.auxController.x().whileTrue(commands2.RepeatCommand(targetPointCommand(self.driveSubsystem,1,1)))
+            self.auxController.x().whileTrue(commands2.RepeatCommand(targetPointCommand(self.driveSubsystem,4.62507, 4.03514)))
             self.auxController.y().whileTrue(commands2.RepeatCommand(overideRobotInput(self.driveSubsystem,theta=0.1)))
         #self.controller.button(2).whileTrue(overideRobotInput(self.driveSubsystem,theta=0))
         print("bindings configed")
