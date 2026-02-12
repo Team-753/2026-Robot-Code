@@ -166,10 +166,9 @@ class driveTrainSubsys(commands2.Subsystem):
     def periodic(self):
 
         time = Timer.getFPGATimestamp()
-
         if self.limeLight.hasDetection():
             print("Beans detected")
-            posedata, latency = self.limeLight.getPoseData()
+            posedata, latency = self.limeLight.getPoseData(self.getPoseState().rotation().degrees())
             if posedata is not None and latency is not None:
                 lockTime = time - (latency/1000) #Take the locktime minus the latency (in miliseconds) to know how long in the past locking was
                 print("adding measurment")
@@ -268,7 +267,6 @@ class overideRobotInput(commands2.Command):
         self.dt=driveSubsys
         self.inputs=[x,y,theta]
     def execute(self):
-        print("J+UHIHIUHIUHIUHI")
         self.dt.overideInput(self.inputs[0],self.inputs[1],self.inputs[2])
     def end(self, interrupted):
         self.dt.overideInput(None,None,None)
