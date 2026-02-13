@@ -97,7 +97,6 @@ class swerveSubsys():
 class driveTrainSubsys(commands2.Subsystem):
     def __init__(self):
         super().__init__()
-        self.Targeting = Targeting
         self.overidedInputs=[None,None,None]
         self.resetCompass=False
         self.swerveModules = []
@@ -108,7 +107,6 @@ class driveTrainSubsys(commands2.Subsystem):
             self.compass.reset()
             self.robotRotation=self.compass.getRotation2d()
 
-        self.targeting = Targeting()
 
 
         #Vision (Ryan)
@@ -140,15 +138,6 @@ class driveTrainSubsys(commands2.Subsystem):
         for i in range(3):
             if self.overidedInputs[i]!=None:
                 inputs[i]=self.overidedInputs[i]
-        if self.targeting.is_enabled():
-            print("TARGETING ACTIVE")
-            pose = self.getPoseState()
-            if pose is not None:
-                if hasattr(self, "compass"):
-                    compass_degrees = self.compass.getRotation2d().degrees()
-                else:
-                    compass_degrees = pose.rotation().degrees()
-                rot = self.targeting.get_override_rotation(pose, compass_degrees)
         if self.resetCompass:
             self.compass.reset()
         
