@@ -6,7 +6,7 @@ from Drivetrain.autonomousDriveSubsys import autoDriveTrainCommand
 from Drivetrain.Targeting2 import targetPointCommand
 
 ##IMPORT FROM AuxiliarySystems
-from AuxilarySystems import auxiliaryConfig, shooterSubsys, IndexerSubsys, IntakeSubsys
+from AuxilarySystems import auxiliaryConfig, shooterSubsys, IndexerSubsys, IntakeSubsys, flipSubsys
 
 
 class robotContainer():
@@ -22,6 +22,7 @@ class robotContainer():
         self.shooterSubsystem=shooterSubsys.shooterSubsys()
         self.indexerSubsystem=IndexerSubsys.indexerSubsys()
         self.intakeSubsystem=IntakeSubsys.intakeSubsys()
+        self.flipSubsystem=flipSubsys.flipsubsys()
         exec("self.joystick="+str(swerveConfig.driveController)+"Subsys(self.controller)")
         
         #Set default Command (runs over and over)
@@ -34,7 +35,8 @@ class robotContainer():
         self.driveSubsystem.setDefaultCommand(driveTrainCommand(self.driveSubsystem,self.joystick))
         self.shooterSubsystem.teleopInit()
         self.indexerSubsystem.teleopInit()
-        self.indexerSubsystem.teleopInit()
+        self.intakeSubsystem.teleopInit()
+        self.flipSubsystem.teleopInit()
     def autoInit(self):
         self.driveSubsystem.setDefaultCommand(autoDriveTrainCommand(self.driveSubsystem))
     def buttonBindings(self):
