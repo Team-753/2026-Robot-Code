@@ -15,3 +15,5 @@ indexerMotorIndexNumberLIKETHEONLYMOTOR = 99
 intakeSpeed=15
 intakeUpDownMotorID=98
 intakeSpinMotorID=97
+intakeDownPosition = 0  #these are in degrees
+intakeUpPosition = -120 #these are in degrees
