@@ -22,7 +22,7 @@ class robotContainer():
         self.shooterSubsystem=shooterSubsys.shooterSubsys()
         self.indexerSubsystem=IndexerSubsys.indexerSubsys()
         self.intakeSubsystem=IntakeSubsys.intakeSubsys()
-        self.flipSubsystem=flipSubsys.flipsubsys()
+        #self.flipSubsystem=flipSubsys.flipsubsys()
         exec("self.joystick="+str(swerveConfig.driveController)+"Subsys(self.controller)")
         
         #Set default Command (runs over and over)
@@ -36,7 +36,7 @@ class robotContainer():
         self.shooterSubsystem.teleopInit()
         self.indexerSubsystem.teleopInit()
         self.intakeSubsystem.teleopInit()
-        self.flipSubsystem.teleopInit()
+        #self.flipSubsystem.teleopInit()
     def autoInit(self):
         self.driveSubsystem.setDefaultCommand(autoDriveTrainCommand(self.driveSubsystem))
     def buttonBindings(self):

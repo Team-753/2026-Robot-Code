@@ -15,6 +15,6 @@ indexerMotorIndexNumberLIKETHEONLYMOTOR = 99
 intakeUpDownMotorID=98
 intakeSpinMotorID=97
 intakeDownPosition = 0  #these are in degrees
-intakeUpPosition = -120 #these are in degrees
+intakeUpPosition = 120 #these are in degrees
 intakeUpDownEncoderOffset = 0 #how far off is the motor that moves the intake up and down(in rotations)
 intakeSpinnerSpeed = 30 #in rotations per second

@@ -3,7 +3,7 @@ import wpilib
 import phoenix6
 from phoenix6 import configs, controls
 import rev
-import auxiliaryConfig
+from AuxilarySystems import auxiliaryConfig
 
 
 class indexerSubsys(commands2.Subsystem):

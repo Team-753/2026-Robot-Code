@@ -22,9 +22,9 @@ class intakeSubsys(commands2.Subsystem):
         big_config.k_v = 0.12
         
         self.updownConfig = rev.SparkMaxConfig() 
-        self.updownConfig.closedLoop.P(0.1, 0)
-        self.updownConfig.closedLoop.I(0.0, 0)
-        self.updownConfig.closedLoop.D(0.0, 0)
+        self.updownConfig.closedLoop.P(0.1)
+        self.updownConfig.closedLoop.I(0.0)
+        self.updownConfig.closedLoop.D(0.0)
 
         self.spin.configurator.apply(big_config)
         self.request = controls.VelocityVoltage(0).with_slot(0)
@@ -44,20 +44,20 @@ class intakeSubsys(commands2.Subsystem):
 
         self.AbsEncoder = wpilib.DutyCycleEncoder(0)
         self.AbsEncoder.get()
-        self.updown.set_position(self.convertRotations(self.AbsEncoder.get()))
+        self.updownEncoder.setPosition(self.convertMotorRotations(self.convertAbsRotations(self.AbsEncoder.get())))
 
     def convertMotorRotations(self, absValue):
-        return absValue * 50 + auxiliaryConfig.intakeUpDownEncoderOffset # this math is to be determined later
+        return absValue * 50 # this math is to be determined later
         
     def convertAbsRotations(self, absValue):
-        return (absValue + auxiliaryConfig.intakeUpDownEncoderOffset) * 360
+        return absValue + auxiliaryConfig.intakeUpDownEncoderOffset
 
     def teleopInit(self):
         self.state = 'teleop'
 
     def periodic(self):
 
-        print (self.AbsEncoder.get())
+        #print (self.AbsEncoder.get())
 
         if self.state == 'teleop':
             self.executeState()
@@ -76,7 +76,7 @@ class intakeSubsys(commands2.Subsystem):
 
         self.prevVal3 = self.inRange
         AbsEncoderConverted = self.convertAbsRotations(self.AbsEncoder.get())
-        self.inRange = (AbsEncoderConverted < auxiliaryConfig.intakeDownPosition + 15) and (AbsEncoderConverted > auxiliaryConfig.intakeDownPosition - 5)
+        self.inRange = (AbsEncoderConverted < auxiliaryConfig.intakeDownPosition + 15/360) and (AbsEncoderConverted > auxiliaryConfig.intakeDownPosition - 5/360)
         self.enteredRange = self.prevVal3 == False and self.inRange == True
 
         if not self.inRange:
@@ -90,8 +90,10 @@ class intakeSubsys(commands2.Subsystem):
                 self.spinToggle = not self.spinToggle
                 if self.spinToggle == True:
                     self.spin.set_control(self.request.with_velocity(auxiliaryConfig.intakeSpinnerSpeed))
+                    print('start spinning')
                 else:
                     self.spin.set_control(self.request.with_velocity(0))
+                    print('stop spinning')
 
             if self.AChanged:
                 if self.whatDIR == False:
@@ -103,11 +105,11 @@ class intakeSubsys(commands2.Subsystem):
                     self.whatDIR = False
                 # call for position move
                 self.updownController.setSetpoint(targetDirection, rev.SparkMax.ControlType.kPosition, rev.ClosedLoopSlot(0))
-                print (f'moving to {targetDirection / 50}')
+                print (f'moving to {targetDirection / 50 * 360}')
             
             
 
             if self.timer.get() > .99 :
-                print (self.AbsEncoder.get())
+                print (f'AbsEncoderConverted {AbsEncoderConverted}')
                 self.timer.reset()
                 self.timer.start()            
