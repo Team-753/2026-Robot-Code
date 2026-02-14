@@ -62,7 +62,7 @@ class swerveSubsys():
                 #CAN CODER CONFIG
                 self.turnSensor=phoenix6.hardware.CANcoder(turnSensorID)
                 turnSensorConfig=phoenix6.configs.CANcoderConfiguration()
-                turnSensorConfig.magnet_sensor.magnet_offset=swerveConfig.offsetList[swerveConfig.swerveEncoderIds.index(turnSensorID)]
+                turnSensorConfig.magnet_sensor.magnet_offset=-swerveConfig.offsetList[swerveConfig.swerveEncoderIds.index(turnSensorID)]
                 turnSensorConfig.magnet_sensor.absolute_sensor_discontinuity_point=0.5 #FACTORY
                 turnSensorConfig.magnet_sensor.sensor_direction=phoenix6.signals.SensorDirectionValue.CLOCKWISE_POSITIVE
                 self.turnSensor.configurator.apply(turnSensorConfig)
@@ -144,13 +144,12 @@ class driveTrainSubsys(commands2.Subsystem):
             self.compass.reset()
         
         self.swerveNumbers=self.swerveKinematics.toSwerveModuleStates(wpimath.kinematics.ChassisSpeeds.fromFieldRelativeSpeeds(inputs[0],inputs[1],inputs[2],-self.compass.getRotation2d()))#FIELD ALIGN
-        
+        #FOR ALIGNMENT 
+        #print(self.swerveModules[0].getRot(),self.swerveModules[1].getRot(),self.swerveModules[2].getRot(),self.swerveModules[3].getRot())
         for i in range(4):
             #IF JITTERING WITH CORRECT PID, REVERSE OPTIMIZE ANGLE INPUT
             self.swerveNumbers[i].optimize(wpimath.geometry.Rotation2d.fromRotations(self.swerveModules[i].getRot()))
             self.swerveModules[i].setState(self.swerveNumbers[i].angle.radians()/(2*pi),self.swerveNumbers[i].speed)
-            #exec(str("self.swerveNumbers["+str(i)+"].optimize(wpimath.geometry.Rotation2d.fromRotations(self.swerve"+str(i)+".getRot()))"))
-            #exec(str("self.swerve"+str(i)+".setState(self.swerveNumbers["+str(i)+"].angle.degrees()/360,self.swerveNumbers["+str(i)+"].speed_fps)"))
     def getPoseState(self):
         return self.poseEstimator.getEstimatedPosition()
 
