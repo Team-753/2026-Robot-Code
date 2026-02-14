@@ -11,7 +11,7 @@ from Drivetrain.limelight import LimelightCamera
 from Drivetrain.Targeting import Targeting
 
 from wpimath import estimator
-
+import navx
 from wpilib import AnalogEncoder,Timer, Field2d
 import wpimath.trajectory
 import Drivetrain.swerveConfig as swerveConfig
@@ -106,8 +106,10 @@ class driveTrainSubsys(commands2.Subsystem):
             self.compass=phoenix6.hardware.Pigeon2(swerveConfig.robotCompassId)
             self.compass.reset()
             self.robotRotation=self.compass.getRotation2d()
-
-
+        elif swerveConfig.robotCompassType=="navx":
+            self.compass=navx.AHRS(navx.AHRS.NavXComType.kMXP_SPI)
+            self.compass.reset()
+            self.robotRotation=self.compass.getRotation2d()
 
         #Vision (Ryan)
         self.limeLight = LimelightCamera(swerveConfig.cameraName)
