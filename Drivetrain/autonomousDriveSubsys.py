@@ -18,7 +18,7 @@ class autoDriveTrainCommand(commands2.Command):
         self.xPid=cont.PIDController(4,0.05,0)
         self.yPid=cont.PIDController(4,0.05,0)
         self.omegaPid=cont.ProfiledPIDControllerRadians(8,0.2,0.1,wpimath.trajectory.TrapezoidProfileRadians.Constraints(2*pi,2*pi))
-        self.traj=choreo.load_swerve_trajectory("Path2")
+        self.traj=choreo.load_swerve_trajectory("Turn90")
         self.clock=wpilib.Timer()
         self.clock.start()
     def getSpeeds(self, sample):
@@ -38,4 +38,4 @@ class autoDriveTrainCommand(commands2.Command):
         speeds=self.getSpeeds(self.goal)
         #print(self.driveSubsys.getPoseState())#,self.driveSubsys.getPoseState().y_feet)
         print(self.driveSubsys.getPoseState())
-        self.driveSubsys.setState(-speeds.vx,speeds.vy,speeds.omega)
+        self.driveSubsys.setState(speeds.vx,-speeds.vy,speeds.omega)

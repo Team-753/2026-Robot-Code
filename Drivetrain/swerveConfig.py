@@ -5,7 +5,7 @@
 #| |_) / ____ \ ____) |_| || |____  | |___| |__| | |\  | |     _| || |__| |
 #|____/_/    \_\_____/|_____\_____|  \_____\____/|_| \_|_|    |_____\_____|
 
-driveSpeed=-50
+driveSpeed=50
 driveTurnSpeed=30
 
 driveController="VKBJoystick" #Options:XboxController,Joystick,VKBJoystick
@@ -15,8 +15,8 @@ driveControllerSlot=0 #USB NUMBER IN DRIVESTATION
 targetingButton = 1
 
 # Starting robot pose (meters, degrees) in WPILib blue-origin field coords
-startPoseX = 2
-startPoseY = 4
+startPoseX = 0
+startPoseY = 0
 startPoseDeg = 0.0
 
 

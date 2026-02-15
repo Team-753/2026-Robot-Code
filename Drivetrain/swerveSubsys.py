@@ -19,7 +19,7 @@ from customFunctions import curveControl,vectorCurve
 class swerveSubsys():
     def __init__(self,driveID,turnID,turnSensorID=None):
 
-
+        wpilib.DriverStation.silenceJoystickConnectionWarning(True)
         super().__init__()
         self.driveMotor=phoenix6.hardware.TalonFX(driveID)
         self.turnMotor=phoenix6.hardware.TalonFX(turnID)
@@ -89,7 +89,7 @@ class swerveSubsys():
             return self.turnSensor.get_absolute_position().value
 
     def getState(self):
-        return wpimath.kinematics.SwerveModulePosition(-self.driveMotor.get_position().value*swerveConfig.swerveWheelDiameter*pi,wpimath.geometry.Rotation2d.fromRotations(-self.turnMotor.get_position().value))
+        return wpimath.kinematics.SwerveModulePosition(self.driveMotor.get_position().value*swerveConfig.swerveWheelDiameter*pi,wpimath.geometry.Rotation2d.fromRotations(-self.turnMotor.get_position().value))
 
     def debug(self):
         return self.turnSensor.get_position().value
@@ -108,8 +108,7 @@ class driveTrainSubsys(commands2.Subsystem):
             self.robotRotation=self.compass.getRotation2d()
         elif swerveConfig.robotCompassType=="navx":
             self.compass=navx.AHRS(navx.AHRS.NavXComType.kMXP_SPI)
-            self.compass.reset()
-            self.robotRotation=self.compass.getRotation2d()
+            self.robotRotation=self.compass.getRotation2d()            
 
         #Vision (Ryan)
         self.limeLight = LimelightCamera(swerveConfig.cameraName)
@@ -134,7 +133,9 @@ class driveTrainSubsys(commands2.Subsystem):
             swerveConfig.wheelDistrustLevel,
             swerveConfig.visionDistrustLevel,
         )
-    
+        print(self.compass.getRotation2d())
+        self.compass.reset()
+        print(self.compass.getRotation2d()) 
     def setState(self,fb,lr,rot):
         inputs=[fb,lr,rot]
         for i in range(3):
@@ -153,8 +154,7 @@ class driveTrainSubsys(commands2.Subsystem):
     def getPoseState(self):
         return self.poseEstimator.getEstimatedPosition()
 
-    def periodic(self):
-
+    def periodic(self):            
         time = Timer.getFPGATimestamp()
         if self.limeLight.hasDetection():
             print("Beans detected")
@@ -240,7 +240,8 @@ class driveTrainCommand(commands2.Command):
        self.driveTrain,self.joystick=driveSubsys,joySubsys
 
     def execute(self):
-        curvedDriveValues=vectorCurve(-self.joystick.getX(),self.joystick.getY(),2.5,swerveConfig.driveSpeed)
+        print(self.driveTrain.getPoseState().rotation())
+        curvedDriveValues=vectorCurve(self.joystick.getX(),-self.joystick.getY(),2.5,swerveConfig.driveSpeed)
         self.driveTrain.setState(curvedDriveValues[0],curvedDriveValues[1],curveControl(-self.joystick.getZ(),2)*swerveConfig.driveTurnSpeed)
         pass
 
