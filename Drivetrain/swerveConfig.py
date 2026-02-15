@@ -5,10 +5,10 @@
 #| |_) / ____ \ ____) |_| || |____  | |___| |__| | |\  | |     _| || |__| |
 #|____/_/    \_\_____/|_____\_____|  \_____\____/|_| \_|_|    |_____\_____|
 
-driveSpeed=50
+driveSpeed=-50
 driveTurnSpeed=30
 
-driveController="Joystick" #Options:XboxController,Joystick,VKBJoystick
+driveController="VKBJoystick" #Options:XboxController,Joystick,VKBJoystick
 driveControllerSlot=0 #USB NUMBER IN DRIVESTATION
 
 # Button to hold for targeting (raw button number for HID)
