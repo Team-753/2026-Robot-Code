@@ -3,7 +3,7 @@ from math import pi
 from Drivetrain.swerveSubsys import driveTrainSubsys
 import choreo
 class autoDriveTrainCommand(commands2.Command):
-    def __init__(self,driveSubsys:driveTrainSubsys):
+    def __init__(self,driveSubsys:driveTrainSubsys,trajectoryName:str=""):
         self.addRequirements(driveSubsys)
         self.driveSubsys=driveSubsys
         cont=wpimath.controller
@@ -18,7 +18,16 @@ class autoDriveTrainCommand(commands2.Command):
         self.xPid=cont.PIDController(4,0.05,0)
         self.yPid=cont.PIDController(4,0.05,0)
         self.omegaPid=cont.ProfiledPIDControllerRadians(8,0.2,0.1,wpimath.trajectory.TrapezoidProfileRadians.Constraints(2*pi,2*pi))
-        self.traj=choreo.load_swerve_trajectory("Path2")
+        if trajectoryName:
+            try:
+                self.traj=choreo.load_swerve_trajectory(trajectoryName)
+                wpilib.SmartDashboard.putString("Auto Trajectory Loaded",trajectoryName)
+            except Exception as ex:
+                self.traj=None
+                wpilib.SmartDashboard.putString("Auto Trajectory Error",str(ex))
+        else:
+            self.traj=None
+            wpilib.SmartDashboard.putString("Auto Trajectory Loaded","None")
         self.clock=wpilib.Timer()
         self.clock.start()
     def getSpeeds(self, sample):
@@ -33,6 +42,9 @@ class autoDriveTrainCommand(commands2.Command):
         )
         return speeds
     def execute(self):
+        if self.traj is None:
+            self.driveSubsys.setState(0,0,0)
+            return
         self.goal=self.traj.sample_at(self.clock.get())
         #speeds=self.holoCont.calculate(self.driveSubsys.getPoseState(),self.goal.get_pose(),wpimath.geometry.Rotation2d.fromDegrees(self.goal.heading))
         speeds=self.getSpeeds(self.goal)
