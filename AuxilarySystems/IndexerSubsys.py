@@ -13,14 +13,15 @@ class indexerSubsys(commands2.Subsystem):
         self.state = 'init'
         self.numberOne = phoenix6.hardware.TalonFX(auxiliaryConfig.indexerMotorIndexNumberLIKETHEONLYMOTOR)
         big_config = phoenix6.configs.Slot0Configs()
-        big_config.k_p = 0.3
+        big_config.k_p = 2
         big_config.k_i = 0
         big_config.k_d = 0
-        #big_config.k_s = 0.1
-        big_config.k_v = 0.15
+        big_config.k_s = 0.3
+        big_config.k_v = 0.63
         self.numberOne.configurator.apply(big_config)
         self.request = controls.VelocityVoltage(0).with_slot(0)
         self.controller =   wpilib.XboxController(0) #wpilib.Joystick(2)
+        self.brake = controls.NeutralOut()
         self.XPressed = False
         self.prevVal = False
         self.XChanged = False
@@ -37,7 +38,7 @@ class indexerSubsys(commands2.Subsystem):
             self.executeState()
         else:
             self.toggleshoot = False
-            self.numberOne.set_control(self.request.with_velocity(0).with_feed_forward(0))
+            self.numberOne.set_control(self.brake)
 
 
 
@@ -56,7 +57,7 @@ class indexerSubsys(commands2.Subsystem):
             elif self.XChanged and self.toggleshoot:
                 self.toggleshoot = False
                 print ('False')
-                self.numberOne.set_control(self.request.with_velocity(0).with_feed_forward(0))
+                self.numberOne.set_control(self.brake)
             if self.timer.get() > .99 :
                 print(f'current velocity:{self.numberOne.get_velocity().value}')
                 self.timer.reset()
