@@ -142,7 +142,10 @@ class driveTrainSubsys(commands2.Subsystem):
                 inputs[i]=self.overidedInputs[i]
         if self.targeting.is_enabled():
             print("TARGETING ACTIVE")
-            pose = self.getPoseState()
+            # Pull pose from SmartDashboard if available, fall back to estimator
+            pose = self.getPoseFromDashboard()
+            if pose is None:
+                pose = self.getPoseState()
             if pose is not None:
                 if hasattr(self, "compass"):
                     compass_degrees = self.compass.getRotation2d().degrees()
@@ -163,6 +166,17 @@ class driveTrainSubsys(commands2.Subsystem):
     def getPoseState(self):
         return self.poseEstimator.getEstimatedPosition()
 
+    def getPoseFromDashboard(self):
+        x = wpilib.SmartDashboard.getNumber("Pose X", float("nan"))
+        y = wpilib.SmartDashboard.getNumber("Pose Y", float("nan"))
+        deg = wpilib.SmartDashboard.getNumber("Pose Deg", float("nan"))
+        if math.isnan(x) or math.isnan(y) or math.isnan(deg):
+            return None
+        return wpimath.geometry.Pose2d(
+            wpimath.geometry.Translation2d(x, y),
+            wpimath.geometry.Rotation2d.fromDegrees(deg),
+        )
+
     def periodic(self):
 
         time = Timer.getFPGATimestamp()
@@ -172,7 +186,6 @@ class driveTrainSubsys(commands2.Subsystem):
             posedata, latency = self.limeLight.getPoseData()
             if posedata is not None and latency is not None:
                 lockTime = time - (latency/1000) #Take the locktime minus the latency (in miliseconds) to know how long in the past locking was
-                print("adding measurment")
                 self.poseEstimator.addVisionMeasurement(posedata,lockTime)
         currentPose = self.poseEstimator.update(self.compass.getRotation2d(), self.getSwerveState())
         #update the pose estimator with our most up to date info on where the robot is from all the systems
@@ -182,8 +195,8 @@ class driveTrainSubsys(commands2.Subsystem):
 
 
         self.field.setRobotPose(currentPose) #update the position of the robot on the field in shuffleboard for debugging
-        wpilib.SmartDashboard.putNumber("Pose X", currentPose.x_feet)
-        wpilib.SmartDashboard.putNumber("Pose Y", currentPose.y_feet)
+        wpilib.SmartDashboard.putNumber("Pose X", currentPose.X())
+        wpilib.SmartDashboard.putNumber("Pose Y", currentPose.Y())
         wpilib.SmartDashboard.putNumber("Pose Deg", currentPose.rotation().degrees())
         wpilib.SmartDashboard.putNumber("Gyro degrees", self.compass.getRotation2d().degrees())
 

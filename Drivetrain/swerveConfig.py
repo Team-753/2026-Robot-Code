@@ -53,8 +53,8 @@ swerveBaseLength=(0.64) #METERS
 
 #ODOMETRY TRUST Levels 
 #0-1 scale that is used in the Kalman filter. 0 is full trust, while 1 is full distrust. Hence, the distrust level
-visionDistrustLevel = 0.5,0.5,0.5
-wheelDistrustLevel = 0.5,0.5,0.5 
+visionDistrustLevel = 0.7,0.7,0.7
+wheelDistrustLevel = 0.3,0.3,0.3 
 
 #Limelight Camera Name and Settings 
 cameraName = ("limelight-jamal")
