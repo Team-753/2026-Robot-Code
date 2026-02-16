@@ -20,8 +20,8 @@ class robotContainer():
         #Declare Subystems
         # self.driveSubsystem=driveTrainSubsys()
         #self.shooterSubsystem=shooterSubsys.shooterSubsys()
-        self.indexerSubsystem=IndexerSubsys.indexerSubsys()
-        # self.intakeSubsystem=IntakeSubsys.intakeSubsys()
+        #self.indexerSubsystem=IndexerSubsys.indexerSubsys()
+         self.intakeSubsystem=IntakeSubsys.intakeSubsys()
         # #self.flipSubsystem=flipSubsys.flipsubsys()
         # exec("self.joystick="+str(swerveConfig.driveController)+"Subsys(self.controller)")
         
@@ -34,8 +34,8 @@ class robotContainer():
     def teleopInit(self):
         # self.driveSubsystem.setDefaultCommand(driveTrainCommand(self.driveSubsystem,self.joystick))
         #self.shooterSubsystem.teleopInit()
-        self.indexerSubsystem.teleopInit()
-        # self.intakeSubsystem.teleopInit()
+        #self.indexerSubsystem.teleopInit()
+         self.intakeSubsystem.teleopInit()
         #self.flipSubsystem.teleopInit()
     # def autoInit(self):
     #     self.driveSubsystem.setDefaultCommand(autoDriveTrainCommand(self.driveSubsystem))
