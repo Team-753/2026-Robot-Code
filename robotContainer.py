@@ -35,16 +35,14 @@ class robotContainer():
 
         ##Stick recenter bindings
         if swerveConfig.driveController=="Joystick":
-            self.controller.trigger().whileTrue(fieldOrientReorient(self.driveSubsystem))
+            self.controller.button(6).whileTrue(fieldOrientReorient(self.driveSubsystem))
+            self.controller.button(1).whileTrue(commands2.RepeatCommand(targetPointCommand(self.driveSubsystem,11.91497, 4.03514)))
         if swerveConfig.driveController=="VKBJoystick":
-            self.controller.button(1).whileTrue(fieldOrientReorient(self.driveSubsystem))
+            self.controller.button(15).whileTrue(fieldOrientReorient(self.driveSubsystem))
+            self.controller.button(1).whileTrue(commands2.RepeatCommand(targetPointCommand(self.driveSubsystem,11.91497, 4.03514)))
         if swerveConfig.driveController=="XboxController":
             self.controller.a().whileTrue(fieldOrientReorient(self.driveSubsystem))
-
-        if swerveConfig.driveController=="Joystick":
-            self.controller.button(2).whileTrue(targetPointCommand(self.driveSubsystem,4.62507, 4.03514))
-        if swerveConfig.driveController=="XboxController":
-            self.controller.x().whileTrue(targetPointCommand(self.driveSubsystem,1,1))
+            self.controller.rightTrigger().whileTrue()(commands2.RepeatCommand(targetPointCommand(self.driveSubsystem,11.91497, 4.03514)))
 
         ##Shooter bindings
         if auxiliaryConfig.auxController=="XboxController":
