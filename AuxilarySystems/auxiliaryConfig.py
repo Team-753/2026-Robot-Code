@@ -1,11 +1,13 @@
 auxController="XboxController" #Options:XboxController
 auxControllerSlot=1
+
 #Shooter Subystem Config
-shooterIndexMotorID=16 #Rev SparkMAX
-shooterMotorID1=1 #All are Phoenix6 TalonFX
-shooterMotorID2=3
-shooterMotorID3=5
-shooterMotorID4=7
+shooterIndexMotorID=17 #Rev SparkMAX
+#All are Phoenix6 TalonFX
+shooterMotorID1=13 # + velocity
+shooterMotorID2=15 # + velocity
+shooterMotorID3=14 # - velocity
+shooterMotorID4=16 # - velocity
 shooterEnableBtnIdx=3 # joystick raw button index for enable button
 shooterVelocityUpBtnIdx=6 # joystick raw button index for velocity up increment
 shooterVelocityDownBtnIdx=4 # joystick raw button index for velocity down increment

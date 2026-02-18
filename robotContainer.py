@@ -21,7 +21,7 @@ class robotContainer():
         #Declare Subystems
         self.driveSubsystem=driveTrainSubsys()
         
-        #self.shooterSubsystem=shooterSubsys.shooterSubsys()
+        self.shooterSubsystem=shooterSubsys.shooterSubsys()
         #self.indexerSubsystem=IndexerSubsys.indexerSubsys()
         #self.intakeSubsystem=IntakeSubsys.intakeSubsys()
         #self.flipSubsystem=flipSubsys.flipsubsys()
@@ -74,7 +74,7 @@ class robotContainer():
 
     def teleopInit(self):
         self.driveSubsystem.setDefaultCommand(driveTrainCommand(self.driveSubsystem,self.joystick))
-        #self.shooterSubsystem.teleopInit()
+        self.shooterSubsystem.teleopInit()
         #self.indexerSubsystem.teleopInit()
         #elf.intakeSubsystem.teleopInit()
         #self.flipSubsystem.teleopInit()
@@ -82,6 +82,8 @@ class robotContainer():
     def autoInit(self):
         selectedTrajectoryName=self.getSelectedTrajectoryName()
         self.driveSubsystem.setDefaultCommand(autoDriveTrainCommand(self.driveSubsystem,selectedTrajectoryName))
+        self.shooterSubsystem.autoInit()
+
     def buttonBindings(self):
 
         ##Stick recenter bindings

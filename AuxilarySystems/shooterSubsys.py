@@ -36,10 +36,14 @@ class shooterSubsys(commands2.Subsystem):
         self.LBPressed = False
         self.timer.reset()
         self.timer.start()
-        self.targetVelocity = 10
+        self.targetVelocity = 5 # initial target velocity for all BigBoy's
+        self.VelocityIncrement = 2 # velocity increment when performing shooting test
 
     def teleopInit(self):
         self.state = 'teleop'
+
+    def autoInit(self):
+        self.state = 'auto'
 
     def periodic(self):
 
@@ -77,22 +81,22 @@ class shooterSubsys(commands2.Subsystem):
 
         if self.state == 'teleop':
             if self.LBChanged:
-                self.targetVelocity = (self.targetVelocity + 5)
-                print (self.targetVelocity)
+                self.targetVelocity = (self.targetVelocity + self.VelocityIncrement)
+                print (f'update target velocity to {self.targetVelocity}')
             if self.RBChanged:
-                self.targetVelocity = (self.targetVelocity - 5)
-                print (self.targetVelocity)
+                self.targetVelocity = (self.targetVelocity - self.VelocityIncrement)
+                print (f'update target velocity to {self.targetVelocity}')
             if self.XChanged and not self.toggleshoot:
                 self.toggleshoot = True
                 self.bigBoy1.set_control(self.request.with_velocity(self.targetVelocity).with_feed_forward(0.2))
                 self.bigBoy2.set_control(self.request.with_velocity(self.targetVelocity).with_feed_forward(0.2))
-                self.bigBoy3.set_control(self.request.with_velocity(self.targetVelocity).with_feed_forward(0.2))
-                self.bigBoy4.set_control(self.request.with_velocity(self.targetVelocity).with_feed_forward(0.2))
+                self.bigBoy3.set_control(self.request.with_velocity(-self.targetVelocity).with_feed_forward(-0.2))
+                self.bigBoy4.set_control(self.request.with_velocity(-self.targetVelocity).with_feed_forward(-0.2))
                 self.littleone.set(0.5)
-                print ('true')
+                print ('starting all shooter motors')
             elif self.XChanged and self.toggleshoot:
                 self.toggleshoot = False
-                print ('False')
+                print ('stopping all shooter motors')
                 self.bigBoy1.set_control(self.brake)
                 self.bigBoy2.set_control(self.brake)
                 self.bigBoy3.set_control(self.brake)
