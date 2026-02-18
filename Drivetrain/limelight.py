@@ -13,7 +13,7 @@ class LimelightCamera(Subsystem):
         instance = NetworkTableInstance.getDefault()
         self.table = instance.getTable(self.cameraName)
         self._path = self.table.getPath()
-
+        self.yaw=0
         self.pipelineIndexRequest = self.table.getDoubleTopic("pipeline").publish()
         self.pipelineIndex = self.table.getDoubleTopic("getpipe").getEntry(-1)
         # "cl" and "tl" are additional latencies in milliseconds
@@ -53,9 +53,10 @@ class LimelightCamera(Subsystem):
         return self.tv.get(0.0) == 1.0
         
 
-    def getPoseData(self) -> tuple[geometry.Pose2d | None, float | None]:
+    def getPoseData(self,yaw) -> tuple[geometry.Pose2d | None, float | None]:
+        self.yaw=yaw
         """ Returns the *last* calculated robot Pose2D and the pipeline latency, or (None, None) if unavailable """
-        bot_pose_data = self.table.getEntry("botpose_wpiblue").getDoubleArray([])
+        bot_pose_data = self.table.getEntry("botpose_wpiblue").getDoubleArray([0.5,0,0,0,0,0])
         if len(bot_pose_data) < 7:
             return (None, None)
         pose_2d = geometry.Pose2d(
@@ -72,6 +73,8 @@ class LimelightCamera(Subsystem):
     def periodic(self) -> None:
         now = Timer.getFPGATimestamp()
         heartbeat = self.getHB()
+        array=[self.yaw,0.0,0.0,0.0,0.0,0.0]
+        self.table.getEntry("robot_orientation_set").setDoubleArray(array)
         if heartbeat != self.lastHeartbeat:
             self.lastHeartbeat = heartbeat
             self.lastHeartbeatTime = now
