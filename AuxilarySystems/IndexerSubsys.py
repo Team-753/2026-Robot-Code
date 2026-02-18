@@ -20,7 +20,7 @@ class indexerSubsys(commands2.Subsystem):
         big_config.k_v = 0.63
         self.numberOne.configurator.apply(big_config)
         self.request = controls.VelocityVoltage(0).with_slot(0)
-        self.controller =   wpilib.XboxController(0) #wpilib.Joystick(2)
+        self.controller = wpilib.Joystick(0) #wpilib.XboxController(0) #wpilib.Joystick(2)
         self.brake = controls.NeutralOut()
         self.XPressed = False
         self.prevVal = False
@@ -45,7 +45,7 @@ class indexerSubsys(commands2.Subsystem):
     def executeState(self):
         
         self.prevVal = self.XPressed
-        self.XPressed = self.controller.getXButton() #.getXButton()
+        self.XPressed = self.controller.getRawButton(1) #.getXButton()
         self.XChanged = self.prevVal == False and self.XPressed == True
 
         if self.state == 'teleop':
