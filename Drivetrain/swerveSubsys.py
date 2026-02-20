@@ -8,8 +8,6 @@ from wpimath.estimator import SwerveDrive4PoseEstimator
 
 from Drivetrain.limelight import LimelightCamera
 
-from Drivetrain.Targeting import Targeting
-
 from wpimath import estimator
 
 from wpilib import AnalogEncoder,Timer, Field2d
