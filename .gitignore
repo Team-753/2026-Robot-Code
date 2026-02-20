@@ -78,6 +78,9 @@ networktables.json
 simgui.json
 *-window.json
 
+# Local choreo test path to keep untracked
+ChoreoGeneratedPaths/NewPath.traj
+
 # Simulation data log directory
 logs/
 
