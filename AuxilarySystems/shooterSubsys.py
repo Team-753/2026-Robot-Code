@@ -16,17 +16,23 @@ class shooterSubsys(commands2.Subsystem):
         self.bigBoy4 = phoenix6.hardware.TalonFX(auxiliaryConfig.shooterMotorID4)
         self.littleone = rev.SparkMax(auxiliaryConfig.shooterIndexMotorID,rev.SparkMax.MotorType.kBrushless)
         big_config = phoenix6.configs.Slot0Configs()
-        big_config.k_p = 2
+        big_config.k_p = 0.1
         big_config.k_i = 0
         big_config.k_d = 0
         big_config.k_s = 0.3
         big_config.k_v = 0.63
+        rampconfig = phoenix6.configs.ClosedLoopRampsConfigs()
+        rampconfig.voltage_closed_loop_ramp_period = 0.5
         self.bigBoy1.configurator.apply(big_config)
         self.bigBoy2.configurator.apply(big_config)
         self.bigBoy3.configurator.apply(big_config)
         self.bigBoy4.configurator.apply(big_config)
+        self.bigBoy1.configurator.apply(rampconfig)
+        self.bigBoy2.configurator.apply(rampconfig)
+        self.bigBoy3.configurator.apply(rampconfig)
+        self.bigBoy4.configurator.apply(rampconfig)
         self.request = controls.VelocityVoltage(0).with_slot(0)
-        self.controller =  wpilib.XboxController(0) #wpilib.Joystick(0)
+        self.controller =  wpilib.XboxController(1) #wpilib.Joystick(0)
         self.brake = controls.NeutralOut()
         self.XPressed = False
         self.prevVal = False
@@ -36,8 +42,8 @@ class shooterSubsys(commands2.Subsystem):
         self.LBPressed = False
         self.timer.reset()
         self.timer.start()
-        self.targetVelocity = 5 # initial target velocity for all BigBoy's
-        self.VelocityIncrement = 2 # velocity increment when performing shooting test
+        self.targetVelocity = 2 # initial target velocity for all BigBoy's
+        self.VelocityIncrement = 1 # velocity increment when performing shooting test
 
     def teleopInit(self):
         self.state = 'teleop'
@@ -65,18 +71,15 @@ class shooterSubsys(commands2.Subsystem):
     def executeState(self):
         
         self.prevVal = self.XPressed
-        #self.XPressed = self.controller.getRawButton(auxiliaryConfig.shooterEnableBtnIdx)
-        self.XPressed = self.controller.getXButton()
-        self.XChanged = self.prevVal == False and self.XPressed == True
+        self.XPressed = self.controller.getRawAxis(3)
+        self.XChanged = self.prevVal < 0.5 and self.XPressed > 0.5
 
         self.prevVal2 = self.LBPressed
-        #self.LBPressed = self.controller.getRawButton(auxiliaryConfig.shooterVelocityUpBtnIdx) #getLeftBumperButton()
-        self.LBPressed = self.controller.getLeftBumperButton()
+        self.LBPressed = self.controller.getRawButton(auxiliaryConfig.shooterVelocityUpBtnIdx)
         self.LBChanged = self.prevVal2 == False and self.LBPressed == True
 
         self.prevVal3 = self.RBPressed
-        #self.RBPressed = self.controller.getRawButton(auxiliaryConfig.shooterVelocityDownBtnIdx) #getRightBumperButton()
-        self.RBPressed = self.controller.getRightBumperButton()
+        self.RBPressed = self.controller.getRawButton(auxiliaryConfig.shooterVelocityDownBtnIdx)
         self.RBChanged = self.prevVal3 == False and self.RBPressed == True
 
         if self.state == 'teleop':
@@ -86,13 +89,14 @@ class shooterSubsys(commands2.Subsystem):
             if self.RBChanged:
                 self.targetVelocity = (self.targetVelocity - self.VelocityIncrement)
                 print (f'update target velocity to {self.targetVelocity}')
+
             if self.XChanged and not self.toggleshoot:
                 self.toggleshoot = True
                 self.bigBoy1.set_control(self.request.with_velocity(self.targetVelocity).with_feed_forward(0.2))
                 self.bigBoy2.set_control(self.request.with_velocity(self.targetVelocity).with_feed_forward(0.2))
                 self.bigBoy3.set_control(self.request.with_velocity(-self.targetVelocity).with_feed_forward(-0.2))
                 self.bigBoy4.set_control(self.request.with_velocity(-self.targetVelocity).with_feed_forward(-0.2))
-                self.littleone.set(0.5)
+                self.littleone.set(auxiliaryConfig.shooterIndexDutyCycle)
                 print ('starting all shooter motors')
             elif self.XChanged and self.toggleshoot:
                 self.toggleshoot = False
@@ -102,7 +106,9 @@ class shooterSubsys(commands2.Subsystem):
                 self.bigBoy3.set_control(self.brake)
                 self.bigBoy4.set_control(self.brake)
                 self.littleone.set(0)
+
             if self.timer.get() > .99 :
-                print(f'current shooter velocity:{self.bigBoy1.get_velocity().value}, target velocity {self.targetVelocity}')
+                if self.toggleshoot :
+                    print(f'current shooter velocity:{self.bigBoy1.get_velocity().value}, target velocity {self.targetVelocity}')
                 self.timer.reset()
                 self.timer.start()            

@@ -2,19 +2,21 @@ auxController="XboxController" #Options:XboxController
 auxControllerSlot=1
 
 #Shooter Subystem Config
-shooterIndexMotorID=17 #Rev SparkMAX
+shooterIndexMotorID=18 #Rev SparkMAX
 #All are Phoenix6 TalonFX
-shooterMotorID1=13 # + velocity
+shooterMotorID1=14 # + velocity
 shooterMotorID2=15 # + velocity
-shooterMotorID3=14 # - velocity
+shooterMotorID3=13 # - velocity
 shooterMotorID4=16 # - velocity
-shooterEnableBtnIdx=3 # joystick raw button index for enable button
-shooterVelocityUpBtnIdx=6 # joystick raw button index for velocity up increment
-shooterVelocityDownBtnIdx=4 # joystick raw button index for velocity down increment
+shooterEnableBtnIdx=3 # AXIS index for enable button
+shooterVelocityUpBtnIdx=4 # raw button index for velocity up increment
+shooterVelocityDownBtnIdx=1 # raw button index for velocity down increment
+shooterIndexDutyCycle = 0.1 # fixed duty cycle of the rev indexer
 
 #Indexer Subsystem config
 indexerSpeed=5 #revolutions per second
-indexerMotorIndexNumberLIKETHEONLYMOTOR = 5
+indexerMotorIndexNumberLIKETHEONLYMOTOR = 17
+indexerEnableBtnIdx=2
 
 #Intake Subsystem config
 intakeUpDownMotorID=98
@@ -24,3 +26,5 @@ intakeUpPosition = 120 #these are in degrees
 intakeUpDownEncoderOffset = 0 #how far off is the motor that moves the intake up and down(in rotations)
 intakeSpinnerSpeed = 30 #in rotations per second
 intakeupdowngearratio = 15
+intakeSpinEnableBtnIdx = 3 
+intakeUpdownToggleBtnIdx = 5
