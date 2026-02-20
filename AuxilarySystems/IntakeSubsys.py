@@ -41,11 +41,11 @@ class intakeSubsys(commands2.Subsystem):
         big_config.k_s = 0.1
         big_config.k_v = 0.12
         
-        self.updownConfig = rev.SparkMaxConfig() 
+        self.updownConfig = rev.SparkMaxConfig()
         self.updownConfig.closedLoop.P(0.1)
         self.updownConfig.closedLoop.I(0.0)
         self.updownConfig.closedLoop.D(0.0)
-        #self.updown.configure(self.updownConfig)
+        self.updown.configure(self.updownConfig, rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
 
         self.spin.configurator.apply(big_config)
         self.request = controls.VelocityVoltage(0).with_slot(0)
