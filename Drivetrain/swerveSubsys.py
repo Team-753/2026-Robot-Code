@@ -64,7 +64,7 @@ class swerveSubsys():
                 if swerveConfig.debugOffsets:
                     turnSensorConfig.magnet_sensor.magnet_offset=0
                 else:
-                    turnSensorConfig.magnet_sensor.magnet_offset=swerveConfig.offsetList[swerveConfig.swerveEncoderIds.index(turnSensorID)]
+                    turnSensorConfig.magnet_sensor.magnet_offset=1.5-swerveConfig.offsetList[swerveConfig.swerveEncoderIds.index(turnSensorID)]-1
                 turnSensorConfig.magnet_sensor.absolute_sensor_discontinuity_point=0.5 #FACTORY
                 turnSensorConfig.magnet_sensor.sensor_direction=phoenix6.signals.SensorDirectionValue.CLOCKWISE_POSITIVE
                 self.turnSensor.configurator.apply(turnSensorConfig)
@@ -132,7 +132,11 @@ class driveTrainSubsys(commands2.Subsystem):
         widthN = swerveConfig.swerveBaseWidth/2
         lengthN = swerveConfig.swerveBaseLength/2
 
-        self.swerveKinematics = wpimath.kinematics.SwerveDrive4Kinematics(wpimath.geometry.Translation2d(widthN/2,lengthN/2),wpimath.geometry.Translation2d(widthN/2,-lengthN/2),wpimath.geometry.Translation2d(-widthN/2,-lengthN/2),wpimath.geometry.Translation2d(-widthN/2,lengthN/2))
+        self.swerveKinematics = wpimath.kinematics.SwerveDrive4Kinematics(
+            wpimath.geometry.Translation2d(-lengthN/2,widthN/2),
+            wpimath.geometry.Translation2d(-lengthN/2,-widthN/2),
+            wpimath.geometry.Translation2d(lengthN/2,-widthN/2),
+            wpimath.geometry.Translation2d(lengthN/2,widthN/2))
 
         self.poseEstimator = estimator.SwerveDrive4PoseEstimator(
             self.swerveKinematics,
@@ -247,7 +251,7 @@ class driveTrainCommand(commands2.Command):
        self.driveTrain,self.joystick=driveSubsys,joySubsys
 
     def execute(self):
-        curvedDriveValues=vectorCurve(-self.joystick.getX(),self.joystick.getY(),2.5,swerveConfig.driveSpeed)
+        curvedDriveValues=vectorCurve(self.joystick.getX(),-self.joystick.getY(),2.5,swerveConfig.driveSpeed)
         self.driveTrain.setState(curvedDriveValues[0],curvedDriveValues[1],curveControl(-self.joystick.getZ(),2)*swerveConfig.driveTurnSpeed)
         pass
 
