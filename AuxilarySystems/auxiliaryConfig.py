@@ -1,3 +1,4 @@
+import phoenix6
 auxController="XboxController" #Options:XboxController
 auxControllerSlot=1
 #Shooter Subystem Config
@@ -15,3 +16,21 @@ indexerMotorIndexNumberLIKETHEONLYMOTOR = 99
 intakeSpeed=15
 intakeUpDownMotorID=98
 intakeSpinMotorID=97
+
+
+# flip configs
+graberlv1=0.1
+graberlv3=0.3
+arm_k_p_config=phoenix6.configs.Slot0Configs()
+arm_k_p_config.k_p=0
+arm_k_p_config.k_i=0
+arm_k_p_config.k_d=0
+
+graber_k_s_config=0
+graber_k_i_config=0
+graber_k_p_config=0
+graber_k_v_config=0
+graber_k_d_config=0
+graberhomespeed=0
+armhomespeed=0
+flipMotorID=19
