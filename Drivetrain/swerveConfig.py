@@ -34,6 +34,7 @@ debugOffsets=False
 swerveEncoderType="canCoder" #canCoder,wpilibEncoder #IF NOT USING AN ENCODER LEAVE swerveEncoderIds BLANK
 robotCompassType="pidgeon" #navx,pidgeon #NOTE navx not working, need to get inport working
 robotCompassId=0 #FOR PIDGEON ONLY
+swerveCanivoreName="whoevernamedthiswascool"#Set to None is no canivore, put a string with the name of the canivore if canivore
 
 #SWERVE CAN IDS #FL,FR,BL,BR
 swerveDriveIds=[1,4,7,10]   #1,4,7,10]

@@ -16,12 +16,12 @@ import Drivetrain.swerveConfig as swerveConfig
 from customFunctions import curveControl,vectorCurve
 import navx
 class swerveSubsys():
-    def __init__(self,driveID,turnID,turnSensorID=None):
-
-
+    def __init__(self,driveID,turnID,turnSensorID=None,swerveCanivoreName=None):
+        if not swerveCanivoreName:
+            swerveCanivoreName="rio"
         super().__init__()
-        self.driveMotor=phoenix6.hardware.TalonFX(driveID)
-        self.turnMotor=phoenix6.hardware.TalonFX(turnID)
+        self.driveMotor=phoenix6.hardware.TalonFX(driveID,swerveCanivoreName)
+        self.turnMotor=phoenix6.hardware.TalonFX(turnID,swerveCanivoreName)
         turnSensorType=swerveConfig.swerveEncoderType
 
         
@@ -59,7 +59,7 @@ class swerveSubsys():
                 self.turnVariable=self.turnSensor.get()
             elif turnSensorType=="canCoder":
                 #CAN CODER CONFIG
-                self.turnSensor=phoenix6.hardware.CANcoder(turnSensorID)
+                self.turnSensor=phoenix6.hardware.CANcoder(turnSensorID,swerveCanivoreName)
                 turnSensorConfig=phoenix6.configs.CANcoderConfiguration()
                 if swerveConfig.debugOffsets:
                     turnSensorConfig.magnet_sensor.magnet_offset=0
@@ -83,7 +83,7 @@ class swerveSubsys():
     def setState(self,desRot,desSpeed):
         if not swerveConfig.debugOffsets:
             self.turnMotor.set_control(self.postion.with_position(desRot))
-            self.driveMotor.set_control(self.dutyCycle.with_velocity(desSpeed))
+        self.driveMotor.set_control(self.dutyCycle.with_velocity(desSpeed))
 
     def getTemperature(self): 
         turnMotorTemperature = self.turnMotor.get_device_temp().refresh()
@@ -109,9 +109,11 @@ class driveTrainSubsys(commands2.Subsystem):
         self.resetCompass=False
         self.swerveModules = []
         for i in range(4):
-            self.swerveModules.append(swerveSubsys(swerveConfig.swerveDriveIds[i],swerveConfig.swerveTurnIds[i],swerveConfig.swerveEncoderIds[i]))
+            self.swerveModules.append(swerveSubsys(swerveConfig.swerveDriveIds[i],swerveConfig.swerveTurnIds[i],swerveConfig.swerveEncoderIds[i],swerveConfig.swerveCanivoreName))
         if swerveConfig.robotCompassType=="pidgeon":
-            self.compass=phoenix6.hardware.Pigeon2(swerveConfig.robotCompassId)
+            if not swerveConfig.swerveCanivoreName:
+                swerveConfig.swerveCanivoreName="rio"
+            self.compass=phoenix6.hardware.Pigeon2(swerveConfig.robotCompassId,swerveConfig.swerveCanivoreName)
             self.compass.reset()
             self.robotRotation=self.compass.getRotation2d()
         if swerveConfig.robotCompassType=="navx":
