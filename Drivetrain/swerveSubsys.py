@@ -63,7 +63,10 @@ class swerveSubsys():
                 #CAN CODER CONFIG
                 self.turnSensor=phoenix6.hardware.CANcoder(turnSensorID)
                 turnSensorConfig=phoenix6.configs.CANcoderConfiguration()
-                turnSensorConfig.magnet_sensor.magnet_offset=swerveConfig.offsetList[swerveConfig.swerveEncoderIds.index(turnSensorID)]
+                if swerveConfig.debugOffsets:
+                    turnSensorConfig.magnet_sensor.magnet_offset=0
+                else:
+                    turnSensorConfig.magnet_sensor.magnet_offset=swerveConfig.offsetList[swerveConfig.swerveEncoderIds.index(turnSensorID)]
                 turnSensorConfig.magnet_sensor.absolute_sensor_discontinuity_point=0.5 #FACTORY
                 turnSensorConfig.magnet_sensor.sensor_direction=phoenix6.signals.SensorDirectionValue.CLOCKWISE_POSITIVE
                 self.turnSensor.configurator.apply(turnSensorConfig)
@@ -80,8 +83,9 @@ class swerveSubsys():
 
             
     def setState(self,desRot,desSpeed):
-        self.turnMotor.set_control(self.postion.with_position(desRot))
-        self.driveMotor.set_control(self.dutyCycle.with_velocity(desSpeed))
+        if not swerveConfig.debugOffsets:
+            self.turnMotor.set_control(self.postion.with_position(desRot))
+            self.driveMotor.set_control(self.dutyCycle.with_velocity(desSpeed))
 
     def getRot(self):
         if self.hasWpiEnc:
@@ -146,7 +150,8 @@ class driveTrainSubsys(commands2.Subsystem):
             self.compass.reset()
         
         self.swerveNumbers=self.swerveKinematics.toSwerveModuleStates(wpimath.kinematics.ChassisSpeeds.fromFieldRelativeSpeeds(inputs[0],inputs[1],inputs[2],-self.compass.getRotation2d()))#FIELD ALIGN
-        
+        if swerveConfig.debugOffsets:
+            print(self.swerveModules[0].getRot(),self.swerveModules[1].getRot(),self.swerveModules[2].getRot(),self.swerveModules[3].getRot())
         for i in range(4):
             #IF JITTERING WITH CORRECT PID, REVERSE OPTIMIZE ANGLE INPUT
             self.swerveNumbers[i].optimize(wpimath.geometry.Rotation2d.fromRotations(self.swerveModules[i].getRot()))
