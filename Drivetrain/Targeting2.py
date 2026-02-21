@@ -13,6 +13,7 @@ class targetPointCommand(commands2.Command):
         super().__init__()
         self.driveSubsys = driveSubsys
         self.TARGET_POINT_BLUE = (11.91497, 4.03514)
+        self.TARGET_POINT_RED = (4.62507, 4.03514)
         self.thetaPid=wpimath.controller.ProfiledPIDControllerRadians(65,0.06,0.1,wpimath.trajectory.TrapezoidProfileRadians.Constraints(2*pi,2*pi))
         self.thetaPid.setIntegratorRange(-1,1)
         self.thetaPid.enableContinuousInput(-pi,pi)
@@ -42,19 +43,11 @@ class targetPointCommand(commands2.Command):
         pass
 
     def execute(self):
-
-        if robotPose:
-            self.pastPosition=robotPose
-
-
-
         robotPose=self.driveSubsys.getPoseState()
         vel=oldPose.getPose
         desiredRotation=atan2(self._get_target_point)
         output=self.thetaPid.calculate(robotPose.rotation().radians(),desiredRotation)
         #print(robotPose.rotation().radians(),desiredRotation,self.ty-robotPose.y)
         self.driveSubsys.overideInput(rot=output)
-        print(self.timestampPose)
-        print("Sending Time Data")
     def end(self,interrupted):
         self.driveSubsys.overideInput()
