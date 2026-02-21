@@ -8,8 +8,6 @@ from wpimath.estimator import SwerveDrive4PoseEstimator
 
 from Drivetrain.limelight import LimelightCamera
 
-from Drivetrain.Targeting import Targeting
-
 from wpimath import estimator
 
 from wpilib import AnalogEncoder,Timer, Field2d
@@ -86,6 +84,11 @@ class swerveSubsys():
         if not swerveConfig.debugOffsets:
             self.turnMotor.set_control(self.postion.with_position(desRot))
             self.driveMotor.set_control(self.dutyCycle.with_velocity(desSpeed))
+
+    def getTemperature(self): 
+        turnMotorTemperature = self.turnMotor.get_device_temp().refresh()
+        driveMotorTemperature = self.driveMotor.get_device_temp().refresh()
+        return turnMotorTemperature, driveMotorTemperature
 
     def getRot(self):
         if self.hasWpiEnc:
@@ -174,7 +177,9 @@ class driveTrainSubsys(commands2.Subsystem):
         #update the pose estimator with our most up to date info on where the robot is from all the systems
 
 
-
+        for i, modules in enumerate(self.swerveModules): #TODO add the extra bits
+            pass
+        
 
 
         self.field.setRobotPose(currentPose) #update the position of the robot on the field in shuffleboard for debugging

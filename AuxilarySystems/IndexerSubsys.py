@@ -20,7 +20,7 @@ class indexerSubsys(commands2.Subsystem):
         big_config.k_v = 0.63
         self.numberOne.configurator.apply(big_config)
         self.request = controls.VelocityVoltage(0).with_slot(0)
-        self.controller =   wpilib.XboxController(0) #wpilib.Joystick(2)
+        self.controller = wpilib.XboxController(1) #wpilib.Joystick(2)
         self.brake = controls.NeutralOut()
         self.XPressed = False
         self.prevVal = False
@@ -31,6 +31,9 @@ class indexerSubsys(commands2.Subsystem):
 
     def teleopInit(self):
         self.state = 'teleop'
+
+    def autoInit(self):
+        self.state = 'auto'
 
     def periodic(self):
 
@@ -45,7 +48,7 @@ class indexerSubsys(commands2.Subsystem):
     def executeState(self):
         
         self.prevVal = self.XPressed
-        self.XPressed = self.controller.getXButton() #.getXButton()
+        self.XPressed = self.controller.getRawButton(auxiliaryConfig.indexerEnableBtnIdx)
         self.XChanged = self.prevVal == False and self.XPressed == True
 
         if self.state == 'teleop':
@@ -53,12 +56,12 @@ class indexerSubsys(commands2.Subsystem):
             if self.XChanged and not self.toggleshoot:
                 self.toggleshoot = True
                 self.numberOne.set_control(self.request.with_velocity(auxiliaryConfig.indexerSpeed).with_feed_forward(0))
-                print ('true')
+                print ('indexer starting motor')
             elif self.XChanged and self.toggleshoot:
                 self.toggleshoot = False
-                print ('False')
+                print ('Indexer stopping motor')
                 self.numberOne.set_control(self.brake)
             if self.timer.get() > .99 :
-                print(f'current velocity:{self.numberOne.get_velocity().value}')
+                #print(f'current velocity:{self.numberOne.get_velocity().value}')
                 self.timer.reset()
                 self.timer.start()            

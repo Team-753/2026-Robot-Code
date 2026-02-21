@@ -11,9 +11,29 @@ class intakeSubsys(commands2.Subsystem):
         self.timer = wpilib.Timer()
         self.state = 'init'
         self.spin = phoenix6.hardware.TalonFX(auxiliaryConfig.intakeSpinMotorID)
+
         self.updown = rev.SparkMax(auxiliaryConfig.intakeUpDownMotorID,rev.SparkMax.MotorType.kBrushless)
         self.updownEncoder = self.updown.getEncoder()
         self.updownController = self.updown.getClosedLoopController()
+
+        # # alternate motor for updown - for testing only
+        # self.updownAlt = phoenix6.hardware.TalonFX(8)
+        # self.updownAltConfig= phoenix6.configs.Slot1Configs()
+        # self.updownAltConfig.k_p = 0.1
+        # self.updownAltConfig.k_d = 0.1
+        # self.updownAltConfig.k_i = 0
+        # #self.updownAltConfig.k_s = 0.1
+        # #self.updownAltConfig.k_v = 0.1
+        # self.updownAltGeneral = phoenix6.configs.config_groups.ClosedLoopGeneralConfigs()
+        # self.updownAltGeneral.continuous_wrap = False
+        # self.updownAltFeedback = phoenix6.configs.config_groups.FeedbackConfigs()
+        # self.updownAltFeedback.sensor_to_mechanism_ratio = 1
+        # self.updownAlt.configurator.apply(self.updownAltConfig)
+        # self.updownAlt.configurator.apply(self.updownAltGeneral)
+        # self.updownAlt.configurator.apply(self.updownAltFeedback)
+        # self.positionRequest = controls.PositionVoltage(0).with_slot(1) # vel = 5rps
+        # self.updownAlt.set_position(0)
+
         big_config = phoenix6.configs.Slot0Configs()
         big_config.k_p = 0.11
         big_config.k_i = 0
@@ -21,14 +41,15 @@ class intakeSubsys(commands2.Subsystem):
         big_config.k_s = 0.1
         big_config.k_v = 0.12
         
-        self.updownConfig = rev.SparkMaxConfig() 
+        self.updownConfig = rev.SparkMaxConfig()
         self.updownConfig.closedLoop.P(0.1)
         self.updownConfig.closedLoop.I(0.0)
         self.updownConfig.closedLoop.D(0.0)
+        self.updown.configure(self.updownConfig, rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
 
         self.spin.configurator.apply(big_config)
         self.request = controls.VelocityVoltage(0).with_slot(0)
-        self.controller =  wpilib.XboxController(0) #wpilib.Joystick(0)
+        self.controller =  wpilib.XboxController(1) #wpilib.Joystick(0)
         self.YPressed = False
         self.prevVal = False
         self.YChanged = False
@@ -41,6 +62,7 @@ class intakeSubsys(commands2.Subsystem):
         self.targetVelocity = 0
         self.spinToggle = False
         self.inRange = False
+        
 
         self.AbsEncoder = wpilib.DutyCycleEncoder(0)
         self.AbsEncoder.get()
@@ -55,6 +77,9 @@ class intakeSubsys(commands2.Subsystem):
     def teleopInit(self):
         self.state = 'teleop'
 
+    def autoInit(self):
+        self.state = 'auto'
+
     def periodic(self):
 
         #print (self.AbsEncoder.get())
@@ -65,18 +90,16 @@ class intakeSubsys(commands2.Subsystem):
     def executeState(self):
         
         self.prevVal = self.YPressed
-        #self.YPressed = self.controller.getRawButton(auxiliaryConfig.shooterEnableBtnIdx)
-        self.YPressed = self.controller.getYButton()
+        self.YPressed = self.controller.getRawButton(auxiliaryConfig.intakeSpinEnableBtnIdx)
         self.YChanged = self.prevVal == False and self.YPressed == True
 
         self.prevVal2 = self.APressed
-        #self.APressed = self.controller.getRawButton(auxiliaryConfig.shooterEnableBtnIdx)
-        self.APressed = self.controller.getAButton()
+        self.APressed = self.controller.getRawButton(auxiliaryConfig.intakeUpdownToggleBtnIdx)
         self.AChanged = self.prevVal2 == False and self.APressed == True
 
         self.prevVal3 = self.inRange
-        AbsEncoderConverted = self.convertAbsRotations(self.AbsEncoder.get())
-        self.inRange = (AbsEncoderConverted < auxiliaryConfig.intakeDownPosition + 15/360) and (AbsEncoderConverted > auxiliaryConfig.intakeDownPosition - 5/360)
+        AbsEncoderConverted = 0#self.convertAbsRotations(self.AbsEncoder.get())
+        self.inRange = (AbsEncoderConverted < auxiliaryConfig.intakeDownPosition/360 + 15/360) and (AbsEncoderConverted > auxiliaryConfig.intakeDownPosition/360 - 5/360)
         self.enteredRange = self.prevVal3 == False and self.inRange == True
 
         if not self.inRange:
@@ -90,26 +113,28 @@ class intakeSubsys(commands2.Subsystem):
                 self.spinToggle = not self.spinToggle
                 if self.spinToggle == True:
                     self.spin.set_control(self.request.with_velocity(auxiliaryConfig.intakeSpinnerSpeed))
-                    print('start spinning')
+                    print('intake start spinning')
                 else:
                     self.spin.set_control(self.request.with_velocity(0))
-                    print('stop spinning')
+                    print('intake stop spinning')
 
             if self.AChanged:
                 if self.whatDIR == False:
-                    targetDirection = ((auxiliaryConfig.intakeUpPosition / 360) * 50)
+                    targetDirection = ((auxiliaryConfig.intakeUpPosition / 360) * auxiliaryConfig.intakeupdowngearratio)
                     
                     self.whatDIR = True
                 else:
-                    targetDirection = ((auxiliaryConfig.intakeDownPosition / 360) * 50)
+                    targetDirection = ((auxiliaryConfig.intakeDownPosition / 360) * auxiliaryConfig.intakeupdowngearratio)
                     self.whatDIR = False
                 # call for position move
                 self.updownController.setSetpoint(targetDirection, rev.SparkMax.ControlType.kPosition, rev.ClosedLoopSlot(0))
-                print (f'moving to {targetDirection / 50 * 360}')
+                # also call it from the test updown
+                # self.updownAlt.set_control(self.positionRequest.with_position(targetDirection))
+                print (f'intake moving to {targetDirection / auxiliaryConfig.intakeupdowngearratio * 360}')# / auxiliaryConfig.intakeupdowngearratio * 360}')
             
             
 
             if self.timer.get() > .99 :
-                print (f'AbsEncoderConverted {AbsEncoderConverted}')
+                #print (f'AbsEncoderConverted {AbsEncoderConverted}')
                 self.timer.reset()
                 self.timer.start()            
