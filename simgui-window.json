@@ -11,8 +11,8 @@
       "style": "0",
       "userScale": "2",
       "width": "1920",
-      "xpos": "-242",
-      "ypos": "277"
+      "xpos": "11",
+      "ypos": "109"
     }
   },
   "Window": {
@@ -24,7 +24,7 @@
     "###Joysticks": {
       "Collapsed": "0",
       "Pos": "312,581",
-      "Size": "1156,241"
+      "Size": "1156,218"
     },
     "###Keyboard 0 Settings": {
       "Collapsed": "0",
