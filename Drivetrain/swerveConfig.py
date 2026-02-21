@@ -8,7 +8,7 @@
 driveSpeed=50
 driveTurnSpeed=30
 
-driveController="Joystick" #Options:XboxController,Joystick,VKBJoystick
+driveController="VKBJoystick" #Options:XboxController,Joystick,VKBJoystick
 driveControllerSlot=0 #USB NUMBER IN DRIVESTATION
 
 # Button to hold for targeting (raw button number for HID)
@@ -28,16 +28,17 @@ startPoseDeg = 0.0
     #I MANUALLY SET THE SWERVES TO THE FORWARD POSITION AND THEN PRINTED OUT THE OFFSETS OF EACH ENCODER AND RECORDED THEM
     #0.071533203125,-0.396728515625,0.16455078125,0.45654296875,
 offsetList=[-0.396728515625,0.071533203125,0.16455078125,0.45654296875] ##ONLY APPLIES IF USEING WPI ENCODERS(NOT CANCODER)
+debugOffsets=False
 ##quack 0.7083120783296617,0.3599781216554734,0.13246701675334055,0.5696525556151847##
 ##WIWO 0.7083120783296617,0.3599781216554734,0.13246701675334055,0.5696525556151847## TESTBOT0.45654296875,-0.396728515625,0.071533203125,0.16455078125
 swerveEncoderType="canCoder" #canCoder,wpilibEncoder #IF NOT USING AN ENCODER LEAVE swerveEncoderIds BLANK
 robotCompassType="pidgeon" #navx,pidgeon #NOTE navx not working, need to get inport working
-robotCompassId=13 #FOR PIDGEON ONLY
+robotCompassId=0 #FOR PIDGEON ONLY
 
-#SWERVE CAN IDS
-swerveDriveIds=[4,7,10,1]   #1,4,7,10]
-swerveTurnIds=[6,9,12,3]  # 3,6,9,12]
-swerveEncoderIds=[5,8,0,2]#2,5,8,0] #EXTERNAL ENCODERS, NOT MOTORS
+#SWERVE CAN IDS #FL,FR,BL,BR
+swerveDriveIds=[1,4,7,10]   #1,4,7,10]
+swerveTurnIds=[2,5,8,11]  # 3,6,9,12]
+swerveEncoderIds=[3,6,9,12]#2,5,8,0] #EXTERNAL ENCODERS, NOT MOTORS
 
 #SWERVE MECHANISM RATIOS
     #HOW TO GET?
