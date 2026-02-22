@@ -16,12 +16,12 @@ import Drivetrain.swerveConfig as swerveConfig
 from customFunctions import curveControl,vectorCurve
 import navx
 class swerveSubsys():
-    def __init__(self,driveID,turnID,turnSensorID=None):
-
-
+    def __init__(self,driveID,turnID,turnSensorID=None,swerveCanivoreName=None):
+        if not swerveCanivoreName:
+            swerveCanivoreName="rio"
         super().__init__()
-        self.driveMotor=phoenix6.hardware.TalonFX(driveID)
-        self.turnMotor=phoenix6.hardware.TalonFX(turnID)
+        self.driveMotor=phoenix6.hardware.TalonFX(driveID,swerveCanivoreName)
+        self.turnMotor=phoenix6.hardware.TalonFX(turnID,swerveCanivoreName)
         turnSensorType=swerveConfig.swerveEncoderType
 
         
@@ -59,9 +59,12 @@ class swerveSubsys():
                 self.turnVariable=self.turnSensor.get()
             elif turnSensorType=="canCoder":
                 #CAN CODER CONFIG
-                self.turnSensor=phoenix6.hardware.CANcoder(turnSensorID)
+                self.turnSensor=phoenix6.hardware.CANcoder(turnSensorID,swerveCanivoreName)
                 turnSensorConfig=phoenix6.configs.CANcoderConfiguration()
-                turnSensorConfig.magnet_sensor.magnet_offset=swerveConfig.offsetList[swerveConfig.swerveEncoderIds.index(turnSensorID)]
+                if swerveConfig.debugOffsets:
+                    turnSensorConfig.magnet_sensor.magnet_offset=0
+                else:
+                    turnSensorConfig.magnet_sensor.magnet_offset=1.5-swerveConfig.offsetList[swerveConfig.swerveEncoderIds.index(turnSensorID)]-1
                 turnSensorConfig.magnet_sensor.absolute_sensor_discontinuity_point=0.5 #FACTORY
                 turnSensorConfig.magnet_sensor.sensor_direction=phoenix6.signals.SensorDirectionValue.CLOCKWISE_POSITIVE
                 self.turnSensor.configurator.apply(turnSensorConfig)
@@ -78,7 +81,8 @@ class swerveSubsys():
 
             
     def setState(self,desRot,desSpeed):
-        self.turnMotor.set_control(self.postion.with_position(desRot))
+        if not swerveConfig.debugOffsets:
+            self.turnMotor.set_control(self.postion.with_position(desRot))
         self.driveMotor.set_control(self.dutyCycle.with_velocity(desSpeed))
 
     def getTemperature(self): 
@@ -105,9 +109,11 @@ class driveTrainSubsys(commands2.Subsystem):
         self.resetCompass=False
         self.swerveModules = []
         for i in range(4):
-            self.swerveModules.append(swerveSubsys(swerveConfig.swerveDriveIds[i],swerveConfig.swerveTurnIds[i],swerveConfig.swerveEncoderIds[i]))
+            self.swerveModules.append(swerveSubsys(swerveConfig.swerveDriveIds[i],swerveConfig.swerveTurnIds[i],swerveConfig.swerveEncoderIds[i],swerveConfig.swerveCanivoreName))
         if swerveConfig.robotCompassType=="pidgeon":
-            self.compass=phoenix6.hardware.Pigeon2(swerveConfig.robotCompassId)
+            if not swerveConfig.swerveCanivoreName:
+                swerveConfig.swerveCanivoreName="rio"
+            self.compass=phoenix6.hardware.Pigeon2(swerveConfig.robotCompassId,swerveConfig.swerveCanivoreName)
             self.compass.reset()
             self.robotRotation=self.compass.getRotation2d()
         if swerveConfig.robotCompassType=="navx":
@@ -126,7 +132,11 @@ class driveTrainSubsys(commands2.Subsystem):
         widthN = swerveConfig.swerveBaseWidth/2
         lengthN = swerveConfig.swerveBaseLength/2
 
-        self.swerveKinematics = wpimath.kinematics.SwerveDrive4Kinematics(wpimath.geometry.Translation2d(widthN/2,lengthN/2),wpimath.geometry.Translation2d(widthN/2,-lengthN/2),wpimath.geometry.Translation2d(-widthN/2,-lengthN/2),wpimath.geometry.Translation2d(-widthN/2,lengthN/2))
+        self.swerveKinematics = wpimath.kinematics.SwerveDrive4Kinematics(
+            wpimath.geometry.Translation2d(-lengthN/2,widthN/2),
+            wpimath.geometry.Translation2d(-lengthN/2,-widthN/2),
+            wpimath.geometry.Translation2d(lengthN/2,-widthN/2),
+            wpimath.geometry.Translation2d(lengthN/2,widthN/2))
 
         self.poseEstimator = estimator.SwerveDrive4PoseEstimator(
             self.swerveKinematics,
@@ -149,7 +159,8 @@ class driveTrainSubsys(commands2.Subsystem):
             self.compass.reset()
         
         self.swerveNumbers=self.swerveKinematics.toSwerveModuleStates(wpimath.kinematics.ChassisSpeeds.fromFieldRelativeSpeeds(inputs[0],inputs[1],inputs[2],-self.compass.getRotation2d()))#FIELD ALIGN
-        
+        if swerveConfig.debugOffsets:
+            print(self.swerveModules[0].getRot(),self.swerveModules[1].getRot(),self.swerveModules[2].getRot(),self.swerveModules[3].getRot())
         for i in range(4):
             #IF JITTERING WITH CORRECT PID, REVERSE OPTIMIZE ANGLE INPUT
             self.swerveNumbers[i].optimize(wpimath.geometry.Rotation2d.fromRotations(self.swerveModules[i].getRot()))
@@ -240,7 +251,7 @@ class driveTrainCommand(commands2.Command):
        self.driveTrain,self.joystick=driveSubsys,joySubsys
 
     def execute(self):
-        curvedDriveValues=vectorCurve(-self.joystick.getX(),self.joystick.getY(),2.5,swerveConfig.driveSpeed)
+        curvedDriveValues=vectorCurve(self.joystick.getX(),-self.joystick.getY(),2.5,swerveConfig.driveSpeed)
         self.driveTrain.setState(curvedDriveValues[0],curvedDriveValues[1],curveControl(-self.joystick.getZ(),2)*swerveConfig.driveTurnSpeed)
         pass
 

@@ -2,7 +2,7 @@ import os
 import wpilib,commands2,Drivetrain.swerveConfig as swerveConfig
 
 ##IMPORT FROM Drivetrain
-from Drivetrain.swerveSubsys import driveTrainCommand,JoystickSubsys,driveTrainSubsys,XboxControllerSubsys,VKBJoystickSubsys,fieldOrientReorient,overideRobotInput
+from Drivetrain.swerveSubsys import driveTrainCommand,JoystickSubsys,driveTrainSubsys,XboxControllerSubsys,VKBJoystickSubsys,fieldOrientReorient,overideRobotInput,pointToVelocityVectorCommand
 from Drivetrain.autonomousDriveSubsys import autoDriveTrainCommand
 from Drivetrain.Targeting2 import targetPointCommand
 
@@ -87,13 +87,16 @@ class robotContainer():
         ##Stick recenter bindings
         if swerveConfig.driveController=="Joystick":
             self.controller.button(6).whileTrue(fieldOrientReorient(self.driveSubsystem))
-            self.controller.button(1).whileTrue(commands2.RepeatCommand(targetPointCommand(self.driveSubsystem)))
+            self.controller.button(2).whileTrue(commands2.RepeatCommand(targetPointCommand(self.driveSubsystem,11.91497, 4.03514)))
+            self.controller.button(1).whileTrue(commands2.RepeatCommand(pointToVelocityVectorCommand(self.driveSubsystem,self.controller)))
         if swerveConfig.driveController=="VKBJoystick":
             self.controller.button(15).whileTrue(fieldOrientReorient(self.driveSubsystem))
-            self.controller.button(1).whileTrue(commands2.RepeatCommand(targetPointCommand(self.driveSubsystem,11.91497, 4.03514)))
+            self.controller.button(3).whileTrue(commands2.RepeatCommand(targetPointCommand(self.driveSubsystem,11.91497, 4.03514)))
+            self.controller.button(1).whileTrue(commands2.RepeatCommand(pointToVelocityVectorCommand(self.driveSubsystem,self.controller)))
         if swerveConfig.driveController=="XboxController":
             self.controller.a().whileTrue(fieldOrientReorient(self.driveSubsystem))
-            self.controller.rightTrigger().whileTrue()(commands2.RepeatCommand(targetPointCommand(self.driveSubsystem,11.91497, 4.03514)))
+            self.controller.x().whileTrue()(commands2.RepeatCommand(targetPointCommand(self.driveSubsystem,11.91497, 4.03514)))
+            self.controller.rightTrigger().whileTrue(commands2.RepeatCommand(pointToVelocityVectorCommand(self.driveSubsystem,self.controller)))
 
         ##Shooter bindings
         if auxiliaryConfig.auxController=="XboxController":
