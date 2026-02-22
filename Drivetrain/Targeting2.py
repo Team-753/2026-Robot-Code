@@ -17,9 +17,6 @@ class targetPointCommand(commands2.Command):
         self.thetaPid=wpimath.controller.ProfiledPIDControllerRadians(65,0.06,0.1,wpimath.trajectory.TrapezoidProfileRadians.Constraints(2*pi,2*pi))
         self.thetaPid.setIntegratorRange(-1,1)
         self.thetaPid.enableContinuousInput(-pi,pi)
-        self.currentTime = Timer.getFPGATimestamp()
-        self.pastPosition = None
-        self.velx,self.vely=0,0
     def _get_alliance(self): #We need this information so that we dont score in the wrong hub.
         try:
             alliance = wpilib.DriverStation.getAlliance()
@@ -30,32 +27,45 @@ class targetPointCommand(commands2.Command):
     def _get_target_point(self): #Sets the target point based on the team we are on. 
         alliance = self._get_alliance()
         if alliance == wpilib.DriverStation.Alliance.kRed:
-            return [self.TARGET_POINT_RED[0]-self.velx,self.TARGET_POINT_RED[1]-self.vely]
-        return [self.TARGET_POINT_BLUE[0]-self.velx,self.TARGET_POINT_BLUE[1]-self.vely]
+            return [self.TARGET_POINT_RED[0],self.TARGET_POINT_RED[1]]
+        return [self.TARGET_POINT_BLUE[0],self.TARGET_POINT_BLUE[1]]
 
     def timestampPose(self):#Used to timestamp where the robot is so that we can run velocity calulations. 
         return (self.driveSubsys.getPoseState,self.currentTime)
 
     def calucateVelocity(self): #Used to calculate the velocity of the robot so that we can adjust the target point
-        pass
+        try:
+            pastPosition=self.robotPose
+            pastTime=self.currentTime
+        except:
+            print("Error Storing Position to past")
+        self.robotPose=self.driveSubsys.getPoseState()
+        self.currentTime=Timer.getFPGATimestamp()
+        try:
+            if pastPosition:
+                deltaTime=self.currentTime-pastTime
+                velx=self.robotPose.x-pastPosition.x
+                vely=self.robotPose.y-pastPosition.y
+                velx=velx*(1/deltaTime)
+                vely=vely*(1/deltaTime)
+        except:
+            print("error calculating velocity")
+        pastPosition=self.robotPose
+        return [velx,vely,deltaTime]
 
-    def adjustedTargetPoint(self): #Returns the point we are looking for. 
-        pass
+    def adjustedTargetPoint(self,targetPoint,tof,velocities): #Returns the point we are looking for. 
+        tx=targetPoint[0]-(tof*velocities[0])
+        ty=targetPoint[1]-(tof*velocities[1])
+        return[tx,ty]
 
     def execute(self):
-        if robotPose:
-            self.pastPosition=robotPose.getPoseState()
-            self.pastTime=Timer.getFPGATimestamp()
-            print(Timer.getFPGATimestamp)
-        robotPose=self.driveSubsys.getPoseState()
-        if pastPosition:
-            self.velx=self.pastPosition.x
-            self.vely=self.pastPosition.y
-        desiredRotation=atan2(self._get_target_point)
-        output=self.thetaPid.calculate(robotPose.rotation().radians(),desiredRotation)
-        #print(robotPose.rotation().radians(),desiredRotation,self.ty-robotPose.y)
+        print("executing")
+        velocities=self.calucateVelocity()
+        leadTargetPoint=self.adjustedTargetPoint(self._get_target_point(),0.4,velocities)
+        desiredRotation=atan2(leadTargetPoint[1],leadTargetPoint[0])
+        output=self.thetaPid.calculate(self.robotPose.rotation().radians(),desiredRotation)
         self.driveSubsys.overideInput(rot=output)
-        print(self.timestampPose)
+        #print(self.timestampPose())
         print("Sending Time Data")
     def end(self,interrupted):
         self.driveSubsys.overideInput()
