@@ -76,7 +76,7 @@ class targetPointWithLeadCommand(commands2.Command):
         print("executing")
         velocities=self.calucateVelocity()
         leadTargetPoint=self.adjustedTargetPoint(self._get_target_point(),0.4,velocities)
-        desiredRotation=atan2(leadTargetPoint[1],leadTargetPoint[0])
+        desiredRotation=atan2(leadTargetPoint[1]-self.robotPose.y,leadTargetPoint[0]-self.robotPose.x)
         output=self.thetaPid.calculate(self.robotPose.rotation().radians(),desiredRotation)
         self.driveSubsys.overideInput(rot=output)
         #print(self.timestampPose())
