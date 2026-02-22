@@ -1,101 +1,93 @@
-import math
+import commands2,wpimath.controller,wpimath.trajectory
+from math import atan2,pi
 import wpilib
-import wpimath.controller
-from typing import Optional, TYPE_CHECKING
-import Drivetrain.swerveConfig as swerveConfig
+from Drivetrain.swerveSubsys import overideRobotInput,driveTrainSubsys
+from wpilib import Timer
+import wpilib
+        
+#NOTICE: This targeting system assumes the metric system. 
 
-# Target points are in meters, WPILib blue-origin field coordinates.
-TARGET_POINT_RED = (4.62507, 4.03514)
-TARGET_POINT_BLUE = (11.91497, 4.03514)
+#Unfortunantly, Cheeseburgers-per-hour was not easy to implement into the code (plus I am lazy) -Ryan T
+class targetPointCommand(commands2.Command):
+    def __init__(self,driveSubsys:driveTrainSubsys):
+        super().__init__()
+        self.driveSubsys = driveSubsys
+        self.TARGET_POINT_BLUE = (11.91497, 4.03514)
+        self.TARGET_POINT_RED = (4.62507, 4.03514)
+        self.thetaPid=wpimath.controller.ProfiledPIDControllerRadians(65,0.06,0.1,wpimath.trajectory.TrapezoidProfileRadians.Constraints(2*pi,2*pi))
+        self.thetaPid.setIntegratorRange(-1,1)
+        self.thetaPid.enableContinuousInput(-pi,pi)
+        self.lastSample = None
+        self.velocity = (0.0,0.0,0.0) # vx, vy, omega (field-relative m/s, m/s, rad/s)
+        self.projectileFlightTime = 0.0 # seconds
+        
+    def _get_alliance(self): #We need this information so that we dont score in the wrong hub.
+        try:
+            alliance = wpilib.DriverStation.getAlliance()
+        except Exception:
+            return None
+        return alliance
 
-# Match the swerve module turn PID values from swerveSubsys.
-TURN_KP = 50.0
-TURN_KI = 0.0001
-TURN_KD = 0.1
+    def _get_target_point(self): #Sets the target point based on the team we are on. 
+        alliance = self._get_alliance()
+        if alliance == wpilib.DriverStation.Alliance.kRed:
+            return self.TARGET_POINT_RED
+        return self.TARGET_POINT_BLUE
 
-if TYPE_CHECKING:
-    from Drivetrain.swerveSubsys import driveTrainSubsys
+    def _poseXY(self, pose):
+        if hasattr(pose, "X") and callable(getattr(pose, "X")):
+            return float(pose.X()), float(pose.Y())
+        return float(pose.x), float(pose.y)
 
+    def _angleDelta(self,current,previous):
+        return (current - previous + pi) % (2*pi) - pi
 
+    def timestampPose(self):#Used to timestamp where the robot is so that we can run velocity calulations.
+        return (Timer.getFPGATimestamp(), self.driveSubsys.getPoseState())
 
-def _clamp(value: float, min_value: float, max_value: float) -> float:
-    if value < min_value:
-        return min_value
-    if value > max_value:
-        return max_value
-    return value
+    def calucateVelocity(self): #Used to calculate the velocity of the robot so that we can adjust the target point
+        sampleTime, samplePose = self.timestampPose()
 
-def _get_alliance():
-    try:
-        alliance = wpilib.DriverStation.getAlliance()
-    except Exception:
-        return None
+        if self.lastSample is None:
+            self.lastSample = (sampleTime, samplePose)
+            return self.velocity
 
-    # Some bindings may return (hasAlliance, alliance)
-    if isinstance(alliance, tuple) and len(alliance) == 2 and isinstance(alliance[0], bool):
-        return alliance[1] if alliance[0] else None
+        lastTime, lastPose = self.lastSample
+        dt = sampleTime - lastTime
+        if dt <= 1e-4:
+            return self.velocity
 
-    # Some bindings may return an Optional-like with .value
-    if hasattr(alliance, "value"):
-        return alliance.value
+        xNow, yNow = self._poseXY(samplePose)
+        xOld, yOld = self._poseXY(lastPose)
+        thetaNow = samplePose.rotation().radians()
+        thetaOld = lastPose.rotation().radians()
 
-    return alliance
+        vx = (xNow - xOld) / dt
+        vy = (yNow - yOld) / dt
+        omega = self._angleDelta(thetaNow, thetaOld) / dt
 
+        self.velocity = (vx, vy, omega)
+        self.lastSample = (sampleTime, samplePose)
+        return self.velocity
 
-def _get_target_point():
-    alliance = _get_alliance()
-    if alliance == wpilib.DriverStation.Alliance.kRed:
-        return TARGET_POINT_RED
-    return TARGET_POINT_BLUE
+    def setProjectileFlightTime(self, flightTimeSeconds):
+        self.projectileFlightTime = max(0.0, float(flightTimeSeconds))
 
+    def adjustedTargetPoint(self): #Returns the point we are looking for. 
+        targetX, targetY = self._get_target_point()
+        vx, vy, _ = self.velocity
+        leadX = targetX - (vx * self.projectileFlightTime)
+        leadY = targetY - (vy * self.projectileFlightTime)
+        return leadX, leadY
 
-def _pose_xy(pose2d):
-    if hasattr(pose2d, "X") and callable(getattr(pose2d, "X")):
-        return float(pose2d.X()), float(pose2d.Y())
-    return float(pose2d.x), float(pose2d.y)
-
-
-class Targeting:
-    def __init__(self, drive_subsys: Optional["driveTrainSubsys"] = None):
-        self.heading_pid = wpimath.controller.PIDController(
-            TURN_KP,
-            TURN_KI,
-            TURN_KD,
-        )
-        self.drive_subsys = drive_subsys
-        self._target_enable = False
-        self.heading_pid.enableContinuousInput(-math.pi, math.pi)
-
-    def set_drive_subsys(self, drive_subsys):
-        self.drive_subsys = drive_subsys
-
-    def target_Enable(self):
-        self._target_enable = True
-
-    def target_Disable(self):
-        self._target_enable = False
-
-    def is_enabled(self) -> bool:
-        return self._target_enable
-    
-    def get_override_rotation(self, pose2d=None, compass_degrees: Optional[float] = None) -> float:
-        if pose2d is None and self.drive_subsys is not None:
-            pose2d = self.drive_subsys.getPoseState()
-        if compass_degrees is None and self.drive_subsys is not None:
-            compass_degrees = self.drive_subsys.compass.getRotation2d().degrees()
-
-        if pose2d is None:
-            return 0.0
-        if compass_degrees is None:
-            return 0.0
-
-        target_x, target_y = _get_target_point()
-        pose_x, pose_y = _pose_xy(pose2d)
-        dx = target_x - pose_x
-        dy = target_y - pose_y
-
-        target_heading = math.atan2(dy, dx)
-        current_heading = math.radians(compass_degrees)
-        rot_cmd = self.heading_pid.calculate(current_heading, target_heading)
-
-        return _clamp(rot_cmd, -swerveConfig.driveTurnSpeed, swerveConfig.driveTurnSpeed)
+    def execute(self):
+        robotPose=self.driveSubsys.getPoseState()
+        self.calucateVelocity()
+        targetX, targetY = self.adjustedTargetPoint()
+        robotX, robotY = self._poseXY(robotPose)
+        desiredRotation=atan2(targetY-robotY,targetX-robotX)
+        output=self.thetaPid.calculate(robotPose.rotation().radians(),desiredRotation)
+        #print(robotPose.rotation().radians(),desiredRotation,self.ty-robotPose.y)
+        self.driveSubsys.overideInput(rot=output)
+    def end(self,interrupted):
+        self.driveSubsys.overideInput()
