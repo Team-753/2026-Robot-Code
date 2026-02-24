@@ -42,8 +42,8 @@ class shooterSubsys(commands2.Subsystem):
         self.LBPressed = False
         self.timer.reset()
         self.timer.start()
-        self.targetVelocity = 1 # initial target velocity for all BigBoy's
-        self.VelocityIncrement = 0.5 # velocity increment when performing shooting test
+        self.targetVelocity = 2 # initial target velocity for all BigBoy's
+        self.VelocityIncrement = 1 # velocity increment when performing shooting test
 
     def teleopInit(self):
         self.state = 'teleop'
@@ -72,7 +72,7 @@ class shooterSubsys(commands2.Subsystem):
         
         self.prevVal = self.XPressed
         self.XPressed = self.controller.getRawAxis(3)
-        self.XChanged = (self.prevVal < 0.5 and self.XPressed > 0.5) or (self.prevVal > 0.5 and self.XPressed < 0.5)
+        self.XChanged = self.prevVal < 0.5 and self.XPressed > 0.5
 
         self.prevVal2 = self.LBPressed
         self.LBPressed = self.controller.getRawButton(auxiliaryConfig.shooterVelocityUpBtnIdx)
