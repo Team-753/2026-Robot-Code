@@ -11,14 +11,14 @@ class indexerSubsys(commands2.Subsystem):
         super().__init__()
         self.timer = wpilib.Timer()
         self.state = 'init'
-        self.numberOne = phoenix6.hardware.TalonFX(auxiliaryConfig.indexerMotorIndexNumberLIKETHEONLYMOTOR)
+        self.numberOne = rev.SparkMax(auxiliaryConfig.indexerMotorIndexNumberLIKETHEONLYMOTOR,rev.SparkMax.MotorType.kBrushless)
         big_config = phoenix6.configs.Slot0Configs()
         big_config.k_p = 2
         big_config.k_i = 0
         big_config.k_d = 0
         big_config.k_s = 0.3
         big_config.k_v = 0.63
-        self.numberOne.configurator.apply(big_config)
+        #self.numberOne.configurator.apply(big_config)
         self.request = controls.VelocityVoltage(0).with_slot(0)
         self.controller = wpilib.XboxController(1) #wpilib.Joystick(2)
         self.brake = controls.NeutralOut()
@@ -41,7 +41,7 @@ class indexerSubsys(commands2.Subsystem):
             self.executeState()
         else:
             self.toggleshoot = False
-            self.numberOne.set_control(self.brake)
+            #self.numberOne.set_control(self.brake)
 
 
 
@@ -55,12 +55,12 @@ class indexerSubsys(commands2.Subsystem):
            
             if self.XChanged and not self.toggleshoot:
                 self.toggleshoot = True
-                self.numberOne.set(auxiliaryConfig.indexerSpeed)
+                self.numberOne.set(0.5)#auxiliaryConfig.indexerSpeed)
                 print ('indexer starting motor')
             elif self.XChanged and self.toggleshoot:
                 self.toggleshoot = False
                 print ('Indexer stopping motor')
-                self.numberOne.set(0)
+                self.numberOne.set(0) 
             if self.timer.get() > .99 :
                 #print(f'current velocity:{self.numberOne.get_velocity().value}')
                 self.timer.reset()

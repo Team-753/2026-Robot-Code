@@ -42,9 +42,10 @@ class intakeSubsys(commands2.Subsystem):
         big_config.k_v = 0.12
         
         self.updownConfig = rev.SparkMaxConfig()
-        self.updownConfig.closedLoop.P(0.1)
+        self.updownConfig.closedLoop.P(0.4)
         self.updownConfig.closedLoop.I(0.0)
         self.updownConfig.closedLoop.D(0.0)
+        self.updownConfig.closedLoop.setFeedbackSensor(rev.FeedbackSensor.kAbsoluteEncoder)
         self.updown.configure(self.updownConfig, rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
 
         self.spin.configurator.apply(big_config)
@@ -65,8 +66,6 @@ class intakeSubsys(commands2.Subsystem):
         
 
         self.AbsEncoder = wpilib.DutyCycleEncoder(0)
-        self.AbsEncoder.get()
-        self.updownEncoder.setPosition(self.convertMotorRotations(self.convertAbsRotations(self.AbsEncoder.get())))
 
     def convertMotorRotations(self, absValue):
         return absValue * 50 # this math is to be determined later
@@ -112,10 +111,10 @@ class intakeSubsys(commands2.Subsystem):
                 
                 self.spinToggle = not self.spinToggle
                 if self.spinToggle == True:
-                    self.spin.set_control(self.request.with_velocity(auxiliaryConfig.intakeSpinnerSpeed))
+                    self.spin.set(-1)
                     print('intake start spinning')
                 else:
-                    self.spin.set_control(self.request.with_velocity(0))
+                    self.spin.set(0)
                     print('intake stop spinning')
 
             if self.AChanged:
@@ -130,7 +129,7 @@ class intakeSubsys(commands2.Subsystem):
                 self.updownController.setSetpoint(targetDirection, rev.SparkMax.ControlType.kPosition, rev.ClosedLoopSlot(0))
                 # also call it from the test updown
                 # self.updownAlt.set_control(self.positionRequest.with_position(targetDirection))
-                print (f'intake moving to {targetDirection / auxiliaryConfig.intakeupdowngearratio * 360}')# / auxiliaryConfig.intakeupdowngearratio * 360}')
+                print (f'intake moving to {targetDirection}')# / auxiliaryConfig.intakeupdowngearratio * 360}')# / auxiliaryConfig.intakeupdowngearratio * 360}')
             
             
 
