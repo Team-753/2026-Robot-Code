@@ -14,12 +14,12 @@ shooterVelocityDownBtnIdx=1 # raw button index for velocity down increment
 shooterIndexDutyCycle = 0.1 # fixed duty cycle of the rev indexer
 
 #Indexer Subsystem config
-indexerSpeed=5 #revolutions per second
+indexerSpeed=5 #1 is 100% power
 indexerMotorIndexNumberLIKETHEONLYMOTOR = 17
 indexerEnableBtnIdx=2
 
 #Intake Subsystem config
-intakeUpDownMotorID=98
+intakeUpDownMotorID=9 #?
 intakeSpinMotorID=5
 intakeDownPosition = 0  #these are in degrees
 intakeUpPosition = 120 #these are in degrees

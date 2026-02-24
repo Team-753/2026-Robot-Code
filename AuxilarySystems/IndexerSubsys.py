@@ -55,12 +55,12 @@ class indexerSubsys(commands2.Subsystem):
            
             if self.XChanged and not self.toggleshoot:
                 self.toggleshoot = True
-                self.numberOne.set_control(self.request.with_velocity(auxiliaryConfig.indexerSpeed).with_feed_forward(0))
+                self.numberOne.set(auxiliaryConfig.indexerSpeed)
                 print ('indexer starting motor')
             elif self.XChanged and self.toggleshoot:
                 self.toggleshoot = False
                 print ('Indexer stopping motor')
-                self.numberOne.set_control(self.brake)
+                self.numberOne.set(0)
             if self.timer.get() > .99 :
                 #print(f'current velocity:{self.numberOne.get_velocity().value}')
                 self.timer.reset()
