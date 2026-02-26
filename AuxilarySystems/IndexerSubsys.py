@@ -55,7 +55,7 @@ class indexerSubsys(commands2.Subsystem):
            
             if self.XChanged and not self.toggleshoot:
                 self.toggleshoot = True
-                self.numberOne.set(0.5)#auxiliaryConfig.indexerSpeed)
+                self.numberOne.set(auxiliaryConfig.indexerSpeed)
                 print ('indexer starting motor')
             elif self.XChanged and self.toggleshoot:
                 self.toggleshoot = False

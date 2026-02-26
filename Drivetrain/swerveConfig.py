@@ -8,7 +8,7 @@
 driveSpeed=50
 driveTurnSpeed=30
 
-driveController="Joystick" #Options:XboxController,Joystick,VKBJoystick
+driveController="Joystick" #Options:XboxController,Joystick,VKBJoystick #NOTE ADD automatic
 driveControllerSlot=0 #USB NUMBER IN DRIVESTATION
 
 # Button to hold for targeting (raw button number for HID)

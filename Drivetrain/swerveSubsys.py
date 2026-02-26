@@ -275,12 +275,12 @@ class overideRobotInput(commands2.Command):
 class pointToVelocityVectorCommand(commands2.Command):
     def __init__(self,driveSubsys:driveTrainSubsys,joySubsys:globals()[swerveConfig.driveController+"Subsys"]):
         self.dt=driveSubsys
-        self.joyStick=joySubsys
+        self.joystick=joySubsys
         self.thetaPid=wpimath.controller.ProfiledPIDControllerRadians(63,0.03,0.05,wpimath.trajectory.TrapezoidProfileRadians.Constraints(4*pi,4*pi))
         self.thetaPid.setIntegratorRange(-1,1)
     def execute(self):
         robotPose=self.dt.getPoseState()
-        desiredRotation=math.atan2(robotPose.y,robotPose.x)
+        desiredRotation=math.atan2(self.joystick.getY(),self.joystick.getX())
         output=self.thetaPid.calculate(robotPose.rotation().radians(),desiredRotation)
         self.dt.overideInput(rot=output)
     def end(self,interrupted):
