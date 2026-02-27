@@ -6,7 +6,6 @@ from wpilib import Timer
 import wpilib
         
 #NOTICE: This targeting system assumes the metric system. 
-
 #Unfortunantly, Cheeseburgers-per-hour was not easy to implement into the code (plus I am lazy) -Ryan T
 class targetPointCommand(commands2.Command):
     def __init__(self,driveSubsys:driveTrainSubsys,tx,ty):
