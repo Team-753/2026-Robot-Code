@@ -185,7 +185,7 @@ class driveTrainSubsys(commands2.Subsystem):
 
         if self.limeLight.hasDetection():
             print("Beans detected")
-            posedata, latency = self.limeLight.getPoseData()
+            posedata, latency = self.limeLight.getPoseData(self.getPoseState().rotation())
             if posedata is not None and latency is not None:
                 lockTime = time - (latency/1000) #Take the locktime minus the latency (in miliseconds) to know how long in the past locking was
                 print("adding measurment")
@@ -286,12 +286,12 @@ class overideRobotInput(commands2.Command):
 class pointToVelocityVectorCommand(commands2.Command):
     def __init__(self,driveSubsys:driveTrainSubsys,joySubsys:globals()[swerveConfig.driveController+"Subsys"]):
         self.dt=driveSubsys
-        self.joyStick=joySubsys
+        self.joystick=joySubsys
         self.thetaPid=wpimath.controller.ProfiledPIDControllerRadians(63,0.03,0.05,wpimath.trajectory.TrapezoidProfileRadians.Constraints(4*pi,4*pi))
         self.thetaPid.setIntegratorRange(-1,1)
     def execute(self):
         robotPose=self.dt.getPoseState()
-        desiredRotation=math.atan2(robotPose.y,robotPose.x)
+        desiredRotation=math.atan2(self.joystick.getX(),-self.joystick.getY())
         output=self.thetaPid.calculate(robotPose.rotation().radians(),desiredRotation)
         self.dt.overideInput(rot=output)
     def end(self,interrupted):

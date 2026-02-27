@@ -42,7 +42,7 @@ class intakeSubsys(commands2.Subsystem):
         big_config.k_v = 0.12
         
         self.updownConfig = rev.SparkMaxConfig()
-        self.updownConfig.closedLoop.P(0.4)
+        self.updownConfig.closedLoop.P(0.2)
         self.updownConfig.closedLoop.I(0.0)
         self.updownConfig.closedLoop.D(0.0)
         self.updownConfig.closedLoop.setFeedbackSensor(rev.FeedbackSensor.kAbsoluteEncoder)
@@ -114,7 +114,7 @@ class intakeSubsys(commands2.Subsystem):
                 
                 self.spinToggle = not self.spinToggle
                 if self.spinToggle == True:
-                    self.spin.set(-1)
+                    self.spin.set(-auxiliaryConfig.intakeSpinnerSpeed)
                     print('intake start spinning')
                 else:
                     self.spin.set(0)
