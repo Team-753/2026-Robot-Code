@@ -180,19 +180,22 @@ class driveTrainSubsys(commands2.Subsystem):
 
         # Update wheel/gyro odometry once, then fuse any available camera measurements.
         currentPose = self.poseEstimator.update(self.compass.getRotation2d(), self.getSwerveState())
-        cameraReadings = (
-            (limelight3Detected, self.limelight3),
-            (limelight3aDetected, self.limelight3a),
-        )
-        for hasDetection, camera in cameraReadings:
-            if not hasDetection:
-                continue
-            posedata, latency = camera.getPoseData(currentPose.rotation())
-            if posedata is None or latency is None:
-                continue
-            lockTime = time - (latency / 1000.0) #Take the locktime minus the latency (in miliseconds) to know how long in the past locking was
-            self.poseEstimator.addVisionMeasurement(posedata, lockTime)
 
+        if limelight3Detected:
+            posedata, latency = self.limeLight3a.getPoseData(self.getPoseState().rotation())
+            if posedata is not None and latency is not None:
+                lockTime = time - (latency/1000) #Take the locktime minus the latency (in miliseconds) to know how long in the past locking was
+                self.poseEstimator.addVisionMeasurement(posedata,lockTime)
+            currentPose = self.poseEstimator.update(self.compass.getRotation2d(), self.getSwerveState())
+            currentPose = self.poseEstimator.getEstimatedPosition()
+
+
+        if limelight3aDetected:
+            posedata, latency = self.limelight3a.getPoseData(self.getPoseState().rotation())
+            if posedata is not None and latency is not None:
+                lockTime = time - (latency/1000) #Take the locktime minus the latency (in miliseconds) to know how long in the past locking was
+                self.poseEstimator.addVisionMeasurement(posedata,lockTime)
+        currentPose = self.poseEstimator.update(self.compass.getRotation2d(), self.getSwerveState())
         currentPose = self.poseEstimator.getEstimatedPosition()
         #update the pose estimator with our most up to date info on where the robot is from all the systems
 
