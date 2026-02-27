@@ -61,5 +61,5 @@ visionDistrustLevel = 0.7,0.7,0.7
 wheelDistrustLevel = 0.3,0.3,0.3 
 
 #Limelight Camera Name and Settings 
-cameraName = ("limelight-jamal")
+cameraName3 = ("limelight-jamal")
 cameraName3a = ("limelight-bubba")

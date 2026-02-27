@@ -123,7 +123,7 @@ class driveTrainSubsys(commands2.Subsystem):
 
 
         #Vision (Ryan)
-        self.limeLight = LimelightCamera(swerveConfig.cameraName)
+        self.limelight3 = LimelightCamera(swerveConfig.cameraName3)
         self.limelight3a = LimelightCamera(swerveConfig.cameraName3a)
 
         #Pose Setup for Estimator (Ryan)
@@ -171,26 +171,29 @@ class driveTrainSubsys(commands2.Subsystem):
 
     def periodic(self):
 
-        if self.limeLight.hasDetection():
-            wpilib.SmartDashboard.putBoolean("Limelight3 Detection", True)
-        else:
-            wpilib.SmartDashboard.putBoolean("Limelight3 Detection", False)
-
-        if self.limelight3a.hasDetection():
-            wpilib.SmartDashboard.putBoolean("Limelight3a Detection", True)
-        else:
-            wpilib.SmartDashboard.putBoolean("Limelight3a Detection", False)
-
         time = Timer.getFPGATimestamp()
 
-        if self.limeLight.hasDetection():
-            print("Beans detected")
-            posedata, latency = self.limeLight.getPoseData(self.getPoseState().rotation())
-            if posedata is not None and latency is not None:
-                lockTime = time - (latency/1000) #Take the locktime minus the latency (in miliseconds) to know how long in the past locking was
-                print("adding measurment")
-                self.poseEstimator.addVisionMeasurement(posedata,lockTime)
+        limelight3Detected = self.limelight3.hasDetection()
+        limelight3aDetected = self.limelight3a.hasDetection()
+        wpilib.SmartDashboard.putBoolean("Limelight3 Detection", limelight3Detected)
+        wpilib.SmartDashboard.putBoolean("Limelight3a Detection", limelight3aDetected)
+
+        # Update wheel/gyro odometry once, then fuse any available camera measurements.
         currentPose = self.poseEstimator.update(self.compass.getRotation2d(), self.getSwerveState())
+        cameraReadings = (
+            (limelight3Detected, self.limelight3),
+            (limelight3aDetected, self.limelight3a),
+        )
+        for hasDetection, camera in cameraReadings:
+            if not hasDetection:
+                continue
+            posedata, latency = camera.getPoseData(currentPose.rotation())
+            if posedata is None or latency is None:
+                continue
+            lockTime = time - (latency / 1000.0) #Take the locktime minus the latency (in miliseconds) to know how long in the past locking was
+            self.poseEstimator.addVisionMeasurement(posedata, lockTime)
+
+        currentPose = self.poseEstimator.getEstimatedPosition()
         #update the pose estimator with our most up to date info on where the robot is from all the systems
 
 
