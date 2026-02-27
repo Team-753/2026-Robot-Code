@@ -13,7 +13,7 @@ class LimelightCamera(Subsystem):
         instance = NetworkTableInstance.getDefault()
         self.table = instance.getTable(self.cameraName)
         self._path = self.table.getPath()
-        self.yaw=0
+        self.yaw=0.0
         self.pipelineIndexRequest = self.table.getDoubleTopic("pipeline").publish()
         self.pipelineIndex = self.table.getDoubleTopic("getpipe").getEntry(-1)
         # "cl" and "tl" are additional latencies in milliseconds
@@ -54,7 +54,14 @@ class LimelightCamera(Subsystem):
         
 
     def getPoseData(self,yaw) -> tuple[geometry.Pose2d | None, float | None]:
-        self.yaw=yaw
+        # robot_orientation_set requires numeric values; coerce Rotation2d or raw numeric yaw to float degrees
+        if isinstance(yaw, geometry.Rotation2d):
+            self.yaw = float(yaw.degrees())
+        else:
+            try:
+                self.yaw = float(yaw)
+            except (TypeError, ValueError):
+                self.yaw = 0.0
         """ Returns the *last* calculated robot Pose2D and the pipeline latency, or (None, None) if unavailable """
         bot_pose_data = self.table.getEntry("botpose_wpiblue").getDoubleArray([0.5,0,0,0,0,0])
         if len(bot_pose_data) < 7:
