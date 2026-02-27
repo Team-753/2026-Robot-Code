@@ -111,4 +111,4 @@ class shooterSubsys(commands2.Subsystem):
                 if self.toggleshoot :
                     print(f'current shooter velocity:{self.bigBoy1.get_velocity().value}, target velocity {self.targetVelocity}')
                 self.timer.reset()
-                self.timer.start()            
+                self.timer.start()           
