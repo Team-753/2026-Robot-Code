@@ -179,7 +179,7 @@ class driveTrainSubsys(commands2.Subsystem):
         wpilib.SmartDashboard.putBoolean("Limelight3a Detection", limelight3aDetected)
 
         # Update wheel/gyro odometry once, then fuse any available camera measurements.
-        currentPose = self.poseEstimator.update(self.compass.getRotation2d(), self.getSwerveState())
+        currentPose = self.poseEstimator.update(self.compass.getRotation2d().degrees(), self.getSwerveState())
         cameraReadings = (
             (limelight3Detected, self.limelight3),
             (limelight3aDetected, self.limelight3a),
