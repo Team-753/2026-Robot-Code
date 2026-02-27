@@ -9,6 +9,7 @@ class shooterSubsys(commands2.Subsystem):
     def __init__(self):
         super().__init__()
         self.timer = wpilib.Timer()
+        self.timer2 = wpilib.Timer()
         self.state = 'init'
         self.bigBoy1 = phoenix6.hardware.TalonFX(auxiliaryConfig.shooterMotorID1)
         self.bigBoy2 = phoenix6.hardware.TalonFX(auxiliaryConfig.shooterMotorID2)
@@ -40,6 +41,7 @@ class shooterSubsys(commands2.Subsystem):
         self.toggleshoot = False
         self.RBPressed = False
         self.LBPressed = False
+        self.timer2.reset()
         self.timer.reset()
         self.timer.start()
         self.targetVelocity = 2 # initial target velocity for all BigBoy's
@@ -72,7 +74,7 @@ class shooterSubsys(commands2.Subsystem):
         
         self.prevVal = self.XPressed
         self.XPressed = self.controller.getRawAxis(3)
-        self.XChanged = self.prevVal < 0.5 and self.XPressed > 0.5
+        self.XChanged = self.prevVal < 0.5 and self.XPressed > 0.5 or (self.prevVal > 0.5 and self.XPressed < 0.5)
 
         self.prevVal2 = self.LBPressed
         self.LBPressed = self.controller.getRawButton(auxiliaryConfig.shooterVelocityUpBtnIdx)
@@ -89,6 +91,10 @@ class shooterSubsys(commands2.Subsystem):
             if self.RBChanged:
                 self.targetVelocity = (self.targetVelocity - self.VelocityIncrement)
                 print (f'update target velocity to {self.targetVelocity}')
+            
+            if self.timer2 == auxiliaryConfig.shooterStartupTime:
+                self.timer2.reset()
+                self.littleone.set(-1 * auxiliaryConfig.shooterIndexDutyCycle)
 
             if self.XChanged and not self.toggleshoot:
                 self.toggleshoot = True
@@ -96,7 +102,8 @@ class shooterSubsys(commands2.Subsystem):
                 self.bigBoy2.set_control(self.request.with_velocity(self.targetVelocity).with_feed_forward(0.2))
                 self.bigBoy3.set_control(self.request.with_velocity(self.targetVelocity).with_feed_forward(0.2))
                 self.bigBoy4.set_control(self.request.with_velocity(self.targetVelocity).with_feed_forward(0.2))
-                self.littleone.set(-1 * auxiliaryConfig.shooterIndexDutyCycle)
+                self.littleone.set(auxiliaryConfig.shooterIndexDutyCycle)
+                self.timer2.start()
                 print ('starting all shooter motors')
             elif self.XChanged and self.toggleshoot:
                 self.toggleshoot = False

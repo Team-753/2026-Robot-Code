@@ -12,6 +12,7 @@ shooterEnableBtnIdx=3 # AXIS index for enable button
 shooterVelocityUpBtnIdx=4 # raw button index for velocity up increment
 shooterVelocityDownBtnIdx=1 # raw button index for velocity down increment
 shooterIndexDutyCycle = 0.8 # fixed duty cycle of the rev indexer
+shooterStartupTime = 2
 
 #Indexer Subsystem config
 indexerSpeed=0.5 #1 is 100% power

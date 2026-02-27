@@ -10,10 +10,11 @@ class indexerSubsys(commands2.Subsystem):
     def __init__(self):
         super().__init__()
         self.timer = wpilib.Timer()
+        self.timer2 = wpilib.Timer()
         self.state = 'init'
         self.numberOne = rev.SparkMax(auxiliaryConfig.indexerMotorIndexNumberLIKETHEONLYMOTOR,rev.SparkMax.MotorType.kBrushless)
         big_config = phoenix6.configs.Slot0Configs()
-        big_config.k_p = 2
+        big_config.k_p = .11
         big_config.k_i = 0
         big_config.k_d = 0
         big_config.k_s = 0.3
@@ -55,8 +56,10 @@ class indexerSubsys(commands2.Subsystem):
            
             if self.XChanged and not self.toggleshoot:
                 self.toggleshoot = True
-                self.numberOne.set(auxiliaryConfig.indexerSpeed)
-                print ('indexer starting motor')
+                print('waiting for big motor speed')
+                if self.timer2 == auxiliaryConfig.shooterStartupTime:
+                    self.numberOne.set(auxiliaryConfig.indexerSpeed)
+                    print ('indexer starting motor')
             elif self.XChanged and self.toggleshoot:
                 self.toggleshoot = False
                 print ('Indexer stopping motor')
