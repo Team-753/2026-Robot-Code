@@ -8,7 +8,7 @@
 driveSpeed=50
 driveTurnSpeed=30
 
-driveController="VKBJoystick" #Options:XboxController,Joystick,VKBJoystick
+driveController="Joystick" #Options:XboxController,Joystick,VKBJoystick #NOTE ADD automatic
 driveControllerSlot=0 #USB NUMBER IN DRIVESTATION
 
 # Button to hold for targeting (raw button number for HID)
@@ -61,4 +61,5 @@ visionDistrustLevel = 0.7,0.7,0.7
 wheelDistrustLevel = 0.3,0.3,0.3 
 
 #Limelight Camera Name and Settings 
-cameraName = ("limelight-jamal")
+cameraName3 = ("limelight-jamal")
+cameraName3a = ("limelight-bubba")

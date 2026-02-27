@@ -30,6 +30,7 @@ class targetPointWithLeadCommand(commands2.Command):
         self.thetaPid=wpimath.controller.ProfiledPIDControllerRadians(65,0.06,0.1,wpimath.trajectory.TrapezoidProfileRadians.Constraints(2*pi,2*pi))
         self.thetaPid.setIntegratorRange(-1,1)
         self.thetaPid.enableContinuousInput(-pi,pi)
+        self.lookupTable=pandas.read_csv("deploy/lookupTables/shooter.csv")
     def _get_alliance(self): #We need this information so that we dont score in the wrong hub.
         try:
             alliance = wpilib.DriverStation.getAlliance()
@@ -42,10 +43,9 @@ class targetPointWithLeadCommand(commands2.Command):
         if alliance == wpilib.DriverStation.Alliance.kRed:
             return [self.TARGET_POINT_RED[0],self.TARGET_POINT_RED[1]]
         return [self.TARGET_POINT_BLUE[0],self.TARGET_POINT_BLUE[1]]
-
-    def timestampPose(self):#Used to timestamp where the robot is so that we can run velocity calulations. 
-        return (self.driveSubsys.getPoseState,self.currentTime)
-
+    
+    def getTOF(self):
+        print(self.lookupTable.loc[self.lookupTable["rpm"].get(1)])
     def calucateVelocity(self): #Used to calculate the velocity of the robot so that we can adjust the target point
         try:
             pastPosition=self.robotPose
@@ -62,6 +62,9 @@ class targetPointWithLeadCommand(commands2.Command):
                 velx=velx*(1/deltaTime)
                 vely=vely*(1/deltaTime)
         except:
+            velx=0
+            vely=0
+            deltaTime=0
             print("error calculating velocity")
         pastPosition=self.robotPose
         return [velx,vely,deltaTime]
@@ -72,13 +75,11 @@ class targetPointWithLeadCommand(commands2.Command):
         return[tx,ty]
 
     def execute(self):
-        print("executing")
         velocities=self.calucateVelocity()
         leadTargetPoint=self.adjustedTargetPoint(self._get_target_point(),0.4,velocities)
         desiredRotation=atan2(leadTargetPoint[1]-self.robotPose.y,leadTargetPoint[0]-self.robotPose.x)
         output=self.thetaPid.calculate(self.robotPose.rotation().radians(),desiredRotation)
+        self.getTOF()
         self.driveSubsys.overideInput(rot=output)
-        #print(self.timestampPose())
-        print("Sending Time Data")
     def end(self,interrupted):
         self.driveSubsys.overideInput()

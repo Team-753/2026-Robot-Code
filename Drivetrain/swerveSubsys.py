@@ -123,7 +123,8 @@ class driveTrainSubsys(commands2.Subsystem):
 
 
         #Vision (Ryan)
-        self.limeLight = LimelightCamera(swerveConfig.cameraName)
+        self.limelight3 = LimelightCamera(swerveConfig.cameraName3)
+        self.limelight3a = LimelightCamera(swerveConfig.cameraName3a)
 
         #Pose Setup for Estimator (Ryan)
         self.field = Field2d() #creates a field on shuffleboard, useful for debugging autos
@@ -172,14 +173,30 @@ class driveTrainSubsys(commands2.Subsystem):
 
         time = Timer.getFPGATimestamp()
 
-        if self.limeLight.hasDetection():
-            print("Beans detected")
-            posedata, latency = self.limeLight.getPoseData()
+        limelight3Detected = self.limelight3.hasDetection()
+        limelight3aDetected = self.limelight3a.hasDetection()
+        wpilib.SmartDashboard.putBoolean("Limelight3 Detection", limelight3Detected)
+        wpilib.SmartDashboard.putBoolean("Limelight3a Detection", limelight3aDetected)
+
+        # Update wheel/gyro odometry once, then fuse any available camera measurements.
+        currentPose = self.poseEstimator.update(self.compass.getRotation2d(), self.getSwerveState())
+
+        if limelight3Detected:
+            posedata, latency = self.limeLight3a.getPoseData(self.getPoseState().rotation())
             if posedata is not None and latency is not None:
                 lockTime = time - (latency/1000) #Take the locktime minus the latency (in miliseconds) to know how long in the past locking was
-                print("adding measurment")
+                self.poseEstimator.addVisionMeasurement(posedata,lockTime)
+            currentPose = self.poseEstimator.update(self.compass.getRotation2d(), self.getSwerveState())
+            currentPose = self.poseEstimator.getEstimatedPosition()
+
+
+        if limelight3aDetected:
+            posedata, latency = self.limelight3a.getPoseData(self.getPoseState().rotation())
+            if posedata is not None and latency is not None:
+                lockTime = time - (latency/1000) #Take the locktime minus the latency (in miliseconds) to know how long in the past locking was
                 self.poseEstimator.addVisionMeasurement(posedata,lockTime)
         currentPose = self.poseEstimator.update(self.compass.getRotation2d(), self.getSwerveState())
+        currentPose = self.poseEstimator.getEstimatedPosition()
         #update the pose estimator with our most up to date info on where the robot is from all the systems
 
 
@@ -275,12 +292,12 @@ class overideRobotInput(commands2.Command):
 class pointToVelocityVectorCommand(commands2.Command):
     def __init__(self,driveSubsys:driveTrainSubsys,joySubsys:globals()[swerveConfig.driveController+"Subsys"]):
         self.dt=driveSubsys
-        self.joyStick=joySubsys
+        self.joystick=joySubsys
         self.thetaPid=wpimath.controller.ProfiledPIDControllerRadians(63,0.03,0.05,wpimath.trajectory.TrapezoidProfileRadians.Constraints(4*pi,4*pi))
         self.thetaPid.setIntegratorRange(-1,1)
     def execute(self):
         robotPose=self.dt.getPoseState()
-        desiredRotation=math.atan2(robotPose.y,robotPose.x)
+        desiredRotation=math.atan2(self.joystick.getX(),-self.joystick.getY())
         output=self.thetaPid.calculate(robotPose.rotation().radians(),desiredRotation)
         self.dt.overideInput(rot=output)
     def end(self,interrupted):

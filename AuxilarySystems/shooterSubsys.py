@@ -94,9 +94,9 @@ class shooterSubsys(commands2.Subsystem):
                 self.toggleshoot = True
                 self.bigBoy1.set_control(self.request.with_velocity(self.targetVelocity).with_feed_forward(0.2))
                 self.bigBoy2.set_control(self.request.with_velocity(self.targetVelocity).with_feed_forward(0.2))
-                self.bigBoy3.set_control(self.request.with_velocity(-self.targetVelocity).with_feed_forward(-0.2))
-                self.bigBoy4.set_control(self.request.with_velocity(-self.targetVelocity).with_feed_forward(-0.2))
-                self.littleone.set(auxiliaryConfig.shooterIndexDutyCycle)
+                self.bigBoy3.set_control(self.request.with_velocity(self.targetVelocity).with_feed_forward(0.2))
+                self.bigBoy4.set_control(self.request.with_velocity(self.targetVelocity).with_feed_forward(0.2))
+                self.littleone.set(-1 * auxiliaryConfig.shooterIndexDutyCycle)
                 print ('starting all shooter motors')
             elif self.XChanged and self.toggleshoot:
                 self.toggleshoot = False

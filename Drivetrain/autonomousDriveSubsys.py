@@ -46,8 +46,9 @@ class autoDriveTrainCommand(commands2.Command):
             self.driveSubsys.setState(0,0,0)
             return
         self.goal=self.traj.sample_at(self.clock.get())
+        print(self.traj.events)
         #speeds=self.holoCont.calculate(self.driveSubsys.getPoseState(),self.goal.get_pose(),wpimath.geometry.Rotation2d.fromDegrees(self.goal.heading))
         speeds=self.getSpeeds(self.goal)
         #print(self.driveSubsys.getPoseState())#,self.driveSubsys.getPoseState().y_feet)
-        print(self.driveSubsys.getPoseState())
+        #print(self.driveSubsys.getPoseState())
         self.driveSubsys.setState(-speeds.vx,speeds.vy,speeds.omega)
