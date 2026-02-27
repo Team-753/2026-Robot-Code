@@ -95,7 +95,7 @@ class robotContainer():
             self.controller.button(1).whileTrue(commands2.RepeatCommand(pointToVelocityVectorCommand(self.driveSubsystem,self.controller)))
         if swerveConfig.driveController=="XboxController":
             self.controller.a().whileTrue(fieldOrientReorient(self.driveSubsystem))
-            self.controller.x().whileTrue()(commands2.RepeatCommand(targetPointCommand(self.driveSubsystem,11.91497, 4.03514)))
+            self.controller.x().whileTrue(commands2.RepeatCommand(targetPointCommand(self.driveSubsystem,11.91497, 4.03514)))
             self.controller.rightTrigger().whileTrue(commands2.RepeatCommand(pointToVelocityVectorCommand(self.driveSubsystem,self.controller)))
 
         ##Shooter bindings
