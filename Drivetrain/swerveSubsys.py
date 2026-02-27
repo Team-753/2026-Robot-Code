@@ -124,6 +124,7 @@ class driveTrainSubsys(commands2.Subsystem):
 
         #Vision (Ryan)
         self.limeLight = LimelightCamera(swerveConfig.cameraName)
+        self.limelight3a = LimelightCamera(swerveConfig.cameraName3a)
 
         #Pose Setup for Estimator (Ryan)
         self.field = Field2d() #creates a field on shuffleboard, useful for debugging autos
@@ -169,6 +170,16 @@ class driveTrainSubsys(commands2.Subsystem):
         return self.poseEstimator.getEstimatedPosition()
 
     def periodic(self):
+
+        if self.limeLight.hasDetection():
+            wpilib.SmartDashboard.putBoolean("Limelight3 Detection", True)
+        else:
+            wpilib.SmartDashboard.putBoolean("Limelight3 Detection", False)
+
+        if self.limelight3a.hasDetection():
+            wpilib.SmartDashboard.putBoolean("Limelight3a Detection", True)
+        else:
+            wpilib.SmartDashboard.putBoolean("Limelight3a Detection", False)
 
         time = Timer.getFPGATimestamp()
 

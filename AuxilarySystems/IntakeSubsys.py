@@ -50,14 +50,17 @@ class intakeSubsys(commands2.Subsystem):
 
         self.spin.configurator.apply(big_config)
         self.request = controls.VelocityVoltage(0).with_slot(0)
-        self.controller =  wpilib.XboxController(1) #wpilib.Joystick(0)
+        self.controllerPort = auxiliaryConfig.auxControllerSlot
+        self.controller = wpilib.XboxController(self.controllerPort) #wpilib.Joystick(0)
+        self._warnedMissingController = False
         self.YPressed = False
         self.prevVal = False
         self.YChanged = False
         self.APressed = False
         self.prevVal2 = False
         self.AChanged = False
-        self.whatDIR = True
+        # Assume intake starts in the down position so first toggle goes up.
+        self.intakeIsDown = True
         self.timer.reset()
         self.timer.start()
         self.targetVelocity = 0
@@ -89,11 +92,11 @@ class intakeSubsys(commands2.Subsystem):
     def executeState(self):
         
         self.prevVal = self.YPressed
-        self.YPressed = self.controller.getRawButton(auxiliaryConfig.intakeSpinEnableBtnIdx)
+        self.YPressed = self._getRawButtonSafe(auxiliaryConfig.intakeSpinEnableBtnIdx)
         self.YChanged = self.prevVal == False and self.YPressed == True
 
         self.prevVal2 = self.APressed
-        self.APressed = self.controller.getRawButton(auxiliaryConfig.intakeUpdownToggleBtnIdx)
+        self.APressed = self._getRawButtonSafe(auxiliaryConfig.intakeUpdownToggleBtnIdx)
         self.AChanged = self.prevVal2 == False and self.APressed == True
 
         self.prevVal3 = self.inRange
@@ -118,22 +121,44 @@ class intakeSubsys(commands2.Subsystem):
                     print('intake stop spinning')
 
             if self.AChanged:
-                if self.whatDIR == False:
+                if self.intakeIsDown:
                     targetDirection = ((auxiliaryConfig.intakeUpPosition / 360) * auxiliaryConfig.intakeupdowngearratio)
-                    
-                    self.whatDIR = True
+                    self.intakeIsDown = False
+                    targetLabel = "up"
                 else:
                     targetDirection = ((auxiliaryConfig.intakeDownPosition / 360) * auxiliaryConfig.intakeupdowngearratio)
-                    self.whatDIR = False
+                    self.intakeIsDown = True
+                    targetLabel = "down"
+
                 # call for position move
-                self.updownController.setSetpoint(targetDirection, rev.SparkMax.ControlType.kPosition, rev.ClosedLoopSlot(0))
+                err = self.updownController.setSetpoint(
+                    targetDirection,
+                    rev.SparkMax.ControlType.kPosition,
+                    rev.ClosedLoopSlot.kSlot0,
+                )
                 # also call it from the test updown
                 # self.updownAlt.set_control(self.positionRequest.with_position(targetDirection))
-                print (f'intake moving to {targetDirection}')# / auxiliaryConfig.intakeupdowngearratio * 360}')# / auxiliaryConfig.intakeupdowngearratio * 360}')
+                if err == rev.REVLibError.kOk:
+                    print(f'intake moving {targetLabel} to {targetDirection}')
+                else:
+                    print(f'intake move {targetLabel} failed: {err}')
             
             
 
             if self.timer.get() > .99 :
                 #print (f'AbsEncoderConverted {AbsEncoderConverted}')
                 self.timer.reset()
-                self.timer.start()            
+                self.timer.start()
+
+    def _getRawButtonSafe(self, buttonIdx: int) -> bool:
+        buttonCount = wpilib.DriverStation.getStickButtonCount(self.controllerPort)
+        if buttonCount < buttonIdx:
+            if not self._warnedMissingController:
+                print(
+                    f"Aux controller on USB {self.controllerPort} has {buttonCount} buttons; "
+                    f"cannot read button {buttonIdx}"
+                )
+                self._warnedMissingController = True
+            return False
+        self._warnedMissingController = False
+        return self.controller.getRawButton(buttonIdx)
