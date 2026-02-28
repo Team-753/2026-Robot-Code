@@ -1,4 +1,5 @@
 import commands2,wpimath.controller,wpimath.trajectory
+import pandas
 from math import atan2,pi
 import wpilib
 from Drivetrain.swerveSubsys import overideRobotInput,driveTrainSubsys
@@ -7,7 +8,9 @@ import wpilib
         
 #NOTICE: This targeting system assumes the metric system. 
 #Unfortunantly, Cheeseburgers-per-hour was not easy to implement into the code (plus I am lazy) -Ryan T
-class targetPointCommand(commands2.Command):
+
+
+class targetPointCommand(commands2.Command): #This class points the robot in the direction it is heading. 
     def __init__(self,driveSubsys:driveTrainSubsys,tx,ty):
         self.tx,self.ty=tx,ty
         self.driveSubsys=driveSubsys
@@ -21,7 +24,10 @@ class targetPointCommand(commands2.Command):
         self.driveSubsys.overideInput(rot=output)
     def end(self,interrupted):
         self.driveSubsys.overideInput()
-class targetPointWithLeadCommand(commands2.Command):
+
+
+
+class targetPointWithLeadCommand(commands2.Command): #This class is used for estimating where the robot needs to look based on its velocity. 
     def __init__(self,driveSubsys:driveTrainSubsys):
         super().__init__()
         self.driveSubsys = driveSubsys
