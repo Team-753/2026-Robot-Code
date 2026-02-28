@@ -1,9 +1,9 @@
+import rev
 import commands2
 import phoenix6
 import wpilib
 from phoenix6 import configs, controls
 from collections.abc import Sequence
-import rev
 from AuxilarySystems import auxiliaryConfig
 
 
