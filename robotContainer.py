@@ -24,7 +24,7 @@ class robotContainer():
         self.shooterSubsystem=shooterSubsys.shooterSubsys()
         self.indexerSubsystem=IndexerSubsys.indexerSubsys()
         self.intakeSubsystem=IntakeSubsys.intakeSubsys()
-        self.flipSubsystem=flipSubsys.flipsubsys()
+        #self.flipSubsystem=flipSubsys.flipsubsys()
 
         exec("self.joystick="+str(swerveConfig.driveController)+"Subsys(self.controller)")
         self.initializeTrajectoryChooser()
@@ -77,7 +77,7 @@ class robotContainer():
         self.shooterSubsystem.teleopInit()
         self.indexerSubsystem.teleopInit()
         self.intakeSubsystem.teleopInit()
-        self.flipSubsystem.teleopInit()
+        #self.flipSubsystem.teleopInit()
 
     def autoInit(self):
         pass
@@ -100,9 +100,8 @@ class robotContainer():
             self.controller.rightTrigger().whileTrue(commands2.RepeatCommand(pointToVelocityVectorCommand(self.driveSubsystem,self.joystick)))
 
         ##Shooter bindings
-        if auxiliaryConfig.auxController=="XboxController":
-            self.auxController.a().whileTrue(commands2.RepeatCommand(shooterSubsys.shootBalls(self.shooterSubsystem,0.3,2000)))
-            self.auxController.x().whileTrue(commands2.RepeatCommand(targetPointCommand(self.driveSubsystem,4.62507, 4.03514)))
-            self.auxController.x().whileTrue(commands2.RepeatCommand(targetPointCommand(self.driveSubsystem,4.62507, 4.03514)))
-            self.auxController.y().whileTrue(commands2.RepeatCommand(overideRobotInput(self.driveSubsystem,theta=0.1)))
-            pass
+        #if auxiliaryConfig.auxController=="XboxController":
+            #self.auxController.x().whileTrue(commands2.RepeatCommand(targetPointCommand(self.driveSubsystem,4.62507, 4.03514)))
+           # self.auxController.x().whileTrue(commands2.RepeatCommand(targetPointCommand(self.driveSubsystem,4.62507, 4.03514)))
+            #self.auxController.y().whileTrue(commands2.RepeatCommand(overideRobotInput(self.driveSubsystem,theta=0.1)))
+            #pass
