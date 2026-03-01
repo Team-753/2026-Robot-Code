@@ -118,10 +118,10 @@
   "splits":[0]
  },
  "events":[
-   {"name":"StartShooting", "from":{"target":1, "targetTimestamp":1.13789, "offset":{"exp":"0 s", "val":0.0}}, "event":{"type":"parallel", "data":{"commands":[
+   {"name":"setShooting(True)", "from":{"target":1, "targetTimestamp":1.13789, "offset":{"exp":"0 s", "val":0.0}}, "event":{"type":"parallel", "data":{"commands":[
        {"type":"named", "data":{"name":"startTargeting"}},
        {"type":"named", "data":{"name":"startShooting"}}]}}},
-   {"name":"Stop Shooting", "from":{"target":3, "targetTimestamp":3.84609, "offset":{"exp":"0 s", "val":0.0}}, "event":{"type":"parallel", "data":{"commands":[
-       {"type":"named", "data":{"name":"stopTargeting"}},
+   {"name":"setShooting(False)", "from":{"target":3, "targetTimestamp":3.84609, "offset":{"exp":"0 s", "val":0.0}}, "event":{"type":"parallel", "data":{"commands":[
+       {"type":"named", "data":{"name":"setTargeting"}},
        {"type":"named", "data":{"name":"stopShooting"}}]}}}]
 }
