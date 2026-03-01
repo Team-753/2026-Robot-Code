@@ -1,7 +1,7 @@
 import os
 import wpilib,commands2,Drivetrain.swerveConfig as swerveConfig
 
-##IMPORT FROM Drivetrain
+#IMPORT FROM Drivetrain
 from Drivetrain.swerveSubsys import driveTrainCommand,JoystickSubsys,driveTrainSubsys,XboxControllerSubsys,VKBJoystickSubsys,fieldOrientReorient,overideRobotInput,pointToVelocityVectorCommand
 from Drivetrain.autonomousDriveSubsys import autoDriveTrainCommand
 from Drivetrain.Targeting2 import targetPointCommand
@@ -80,6 +80,7 @@ class robotContainer():
         #self.flipSubsystem.teleopInit()
 
     def autoInit(self):
+        pass
         selectedTrajectoryName=self.getSelectedTrajectoryName()
         self.driveSubsystem.setDefaultCommand(autoDriveTrainCommand(self.driveSubsystem,selectedTrajectoryName))
         self.shooterSubsystem.autoInit()
@@ -102,9 +103,8 @@ class robotContainer():
             self.controller.rightTrigger().whileTrue(commands2.RepeatCommand(pointToVelocityVectorCommand(self.driveSubsystem,self.joystick)))
 
         ##Shooter bindings
-        if auxiliaryConfig.auxController=="XboxController":
-            #self.auxController.a().whileTrue(commands2.RepeatCommand(shooterSubsys.shootBalls(self.shooterSubsystem,0.3,2000)))
+        #if auxiliaryConfig.auxController=="XboxController":
             #self.auxController.x().whileTrue(commands2.RepeatCommand(targetPointCommand(self.driveSubsystem,4.62507, 4.03514)))
-            #self.auxController.x().whileTrue(commands2.RepeatCommand(targetPointCommand(self.driveSubsystem,4.62507, 4.03514)))
+           # self.auxController.x().whileTrue(commands2.RepeatCommand(targetPointCommand(self.driveSubsystem,4.62507, 4.03514)))
             #self.auxController.y().whileTrue(commands2.RepeatCommand(overideRobotInput(self.driveSubsystem,theta=0.1)))
-            pass
+            #pass

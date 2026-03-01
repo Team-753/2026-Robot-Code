@@ -29,3 +29,16 @@ intakeSpinnerSpeed = 0.7 #dutyCycle
 intakeupdowngearratio = 1
 intakeSpinEnableBtnIdx = 3
 intakeUpdownToggleBtnIdx = 5
+
+# flip configs
+graberlv1=0.1
+graberlv3=0.3
+
+graber_k_s_config=0
+graber_k_i_config=0
+graber_k_p_config=0
+graber_k_v_config=0
+graber_k_d_config=0
+graberhomespeed=0
+armhomespeed=0
+flipMotorID=19
