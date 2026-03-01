@@ -17,6 +17,7 @@ class targetPointCommand(commands2.Command): #This class points the robot in the
         self.thetaPid.setIntegratorRange(-1,1)
         self.thetaPid.enableContinuousInput(-pi,pi)
     def execute(self):
+        print("targeting",self.tx,",",self.ty)
         robotPose=self.driveSubsys.getPoseState()
         desiredRotation=atan2(self.ty-robotPose.y,self.tx-robotPose.x)
         output=self.thetaPid.calculate(robotPose.rotation().radians(),desiredRotation)
@@ -35,7 +36,6 @@ class targetPointWithLeadCommand(commands2.Command): #This class is used for est
         self.thetaPid=wpimath.controller.ProfiledPIDControllerRadians(65,0.06,0.1,wpimath.trajectory.TrapezoidProfileRadians.Constraints(2*pi,2*pi))
         self.thetaPid.setIntegratorRange(-1,1)
         self.thetaPid.enableContinuousInput(-pi,pi)
-        self.lookupTable=pandas.read_csv("deploy/lookupTables/shooter.csv")
     def _get_alliance(self): #We need this information so that we dont score in the wrong hub.
         try:
             alliance = wpilib.DriverStation.getAlliance()
