@@ -177,6 +177,10 @@ class driveTrainSubsys(commands2.Subsystem):
     def periodic(self):
 
         time = Timer.getFPGATimestamp()
+        robotYaw = self.compass.getRotation2d()
+
+        self.limelight3.setRobotOrientation(robotYaw)
+        self.limelight3a.setRobotOrientation(robotYaw)
 
         limelight3Detected = self.limelight3.hasDetection()
         limelight3aDetected = self.limelight3a.hasDetection()
@@ -184,7 +188,7 @@ class driveTrainSubsys(commands2.Subsystem):
         wpilib.SmartDashboard.putBoolean("Limelight3a Detection", limelight3aDetected)
 
         # Update wheel/gyro odometry once, then fuse any available camera measurements.
-        currentPose = self.poseEstimator.update(self.compass.getRotation2d(), self.getSwerveState())
+        currentPose = self.poseEstimator.update(robotYaw, self.getSwerveState())
         cameraReadings = (
             (limelight3Detected, self.limelight3),
             (limelight3aDetected, self.limelight3a),
@@ -192,7 +196,7 @@ class driveTrainSubsys(commands2.Subsystem):
         for hasDetection, camera in cameraReadings:
             if not hasDetection:
                 continue
-            posedata, latency = camera.getPoseData(self.compass.getRotation2d().degrees())
+            posedata, latency = camera.getPoseData(robotYaw)
             if posedata is None or latency is None:
                 continue
             lockTime = time - (latency / 1000.0) #Take the locktime minus the latency (in miliseconds) to know how long in the past locking was
@@ -211,7 +215,7 @@ class driveTrainSubsys(commands2.Subsystem):
         wpilib.SmartDashboard.putNumber("Pose X", currentPose.x_feet)
         wpilib.SmartDashboard.putNumber("Pose Y", currentPose.y_feet)
         wpilib.SmartDashboard.putNumber("Pose Deg", currentPose.rotation().degrees())
-        wpilib.SmartDashboard.putNumber("Gyro degrees", self.compass.getRotation2d().degrees())
+        wpilib.SmartDashboard.putNumber("Gyro degrees", robotYaw.degrees())
 
     #    return super().periodic()
     def getSwerveState(self):

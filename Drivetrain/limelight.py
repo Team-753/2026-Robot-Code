@@ -50,8 +50,8 @@ class LimelightCamera(Subsystem):
         return self.tv.get(0.0) == 1.0
         
 
-    def getPoseData(self,yaw) -> tuple[geometry.Pose2d | None, float | None]:
-        # robot_orientation_set requires numeric values; coerce Rotation2d or raw numeric yaw to float degrees
+    def setRobotOrientation(self, yaw) -> None:
+        # MegaTag2 expects robot yaw in degrees each loop.
         if isinstance(yaw, geometry.Rotation2d):
             self.yaw = float(yaw.degrees())
         else:
@@ -59,8 +59,11 @@ class LimelightCamera(Subsystem):
                 self.yaw = float(yaw)
             except (TypeError, ValueError):
                 self.yaw = 0.0
-        """ Returns the *last* calculated robot Pose2D and the pipeline latency, or (None, None) if unavailable """
         self.table.getEntry("robot_orientation_set").setDoubleArray([self.yaw,0.0,0.0,0.0,0.0,0.0])
+
+    def getPoseData(self,yaw) -> tuple[geometry.Pose2d | None, float | None]:
+        """ Returns the *last* calculated robot Pose2D and the pipeline latency, or (None, None) if unavailable """
+        self.setRobotOrientation(yaw)
         bot_pose_data = self.table.getEntry("botpose_orb_wpiblue").getDoubleArray([0.5,0,0,0,0,0])
         if len(bot_pose_data) < 7:
             return (None, None)
