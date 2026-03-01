@@ -26,6 +26,11 @@ class indexerSubsys(commands2.Subsystem):
         self.XPressed = False
         self.prevVal = False
         self.XChanged = False
+        #CHRIS MOD
+        self.BPressed = False
+        self.prevVal2 = False
+        self.BChanged = False
+        #END CHRIS MOD
         self.toggleshoot = False
         self.waiting = False
         self.timer.reset()
@@ -52,16 +57,20 @@ class indexerSubsys(commands2.Subsystem):
         self.prevVal = self.XPressed
         self.XPressed = self.controller.getRawAxis(auxiliaryConfig.indexerEnableBtnIdx)
         self.XChanged = (self.prevVal < 0.5 and self.XPressed > 0.5) or (self.prevVal > 0.5 and self.XPressed < 0.5)
-
+        #CHRIS MOD
+        self.prevVal2 = self.BPressed
+        self.BPressed = self.controller.getRawButton(auxiliaryConfig.intakeSpinEnableBtnIdx)
+        self.BChanged = self.BChanged = self.prevVal2 == False and self.BPressed == True
+        #CHRIS MOD END
         if self.state == 'teleop':
-           
-            if self.XChanged and not self.toggleshoot:
+           #MODIFIED "self.XChanged" ---> "(self.XChanged or self.BChanged)"
+            if (self.XChanged or self.BChanged) and not self.toggleshoot:
                 self.toggleshoot = True
                 self.waiting = True
                 self.timer2.start()
                 print('waiting for big motor speed')
                 
-            elif self.XChanged and self.toggleshoot:
+            elif (self.XChanged or self.BChanged) and self.toggleshoot:
                 self.toggleshoot = False
                 self.waiting = False
                 self.timer2.reset()
