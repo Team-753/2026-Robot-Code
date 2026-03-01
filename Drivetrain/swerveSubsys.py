@@ -169,6 +169,11 @@ class driveTrainSubsys(commands2.Subsystem):
     def getPoseState(self):
         return self.poseEstimator.getEstimatedPosition()
 
+    def resetPose(self,pose):
+        # Reset the estimator to the selected auto start pose before autonomous begins.
+        self.poseEstimator.resetPosition(self.compass.getRotation2d(),self.getSwerveState(),pose)
+        self.field.setRobotPose(pose)
+
     def periodic(self):
 
         time = Timer.getFPGATimestamp()

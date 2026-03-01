@@ -83,9 +83,16 @@ class robotContainer():
         print('entering teleop')
 
     def autoInit(self):
-        pass
         selectedTrajectoryName=self.getSelectedTrajectoryName()
-        self.driveSubsystem.setDefaultCommand(autoDriveTrainCommand(self.driveSubsystem,selectedTrajectoryName))
+        self.autoCommand=autoDriveTrainCommand(self.driveSubsystem,selectedTrajectoryName)
+        initialPose=self.autoCommand.getInitialPose()
+        # Align the estimator with the chosen path so the first sample is field-correct.
+        if initialPose is not None:
+            self.driveSubsystem.resetPose(initialPose)
+            wpilib.SmartDashboard.putString("Auto Start Pose",f"{initialPose.X():.3f}, {initialPose.Y():.3f}, {initialPose.rotation().degrees():.1f}")
+        else:
+            wpilib.SmartDashboard.putString("Auto Start Pose","Unavailable")
+        self.driveSubsystem.setDefaultCommand(self.autoCommand)
         self.shooterSubsystem.autoInit()
         self.intakeSubsystem.autoInit()
         self.indexerSubsystem.autoInit()
