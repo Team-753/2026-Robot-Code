@@ -11,13 +11,13 @@ shooterMotorID4=16 # - velocity
 shooterEnableBtnIdx=3 # AXIS index for enable button
 shooterVelocityUpBtnIdx=4 # raw button index for velocity up increment
 shooterVelocityDownBtnIdx=1 # raw button index for velocity down increment
-shooterIndexDutyCycle = 0.8 # fixed duty cycle of the rev indexer
-shooterStartupTime = 2
+shooterIndexDutyCycle = 0.7 # fixed duty cycle of the rev indexer
+shooterStartupTime = 2 #seconds
 
 #Indexer Subsystem config
 indexerSpeed=0.5 #1 is 100% power
 indexerMotorIndexNumberLIKETHEONLYMOTOR = 17
-indexerEnableBtnIdx=2
+indexerEnableBtnIdx=3 # AXIS index for enable button - matches the shooter
 
 #Intake Subsystem config
 intakeUpDownMotorID=9 #?

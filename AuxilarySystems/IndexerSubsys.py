@@ -27,6 +27,7 @@ class indexerSubsys(commands2.Subsystem):
         self.prevVal = False
         self.XChanged = False
         self.toggleshoot = False
+        self.waiting = False
         self.timer.reset()
         self.timer.start()
 
@@ -49,22 +50,30 @@ class indexerSubsys(commands2.Subsystem):
     def executeState(self):
         
         self.prevVal = self.XPressed
-        self.XPressed = self.controller.getRawButton(auxiliaryConfig.indexerEnableBtnIdx)
-        self.XChanged = self.prevVal == False and self.XPressed == True
+        self.XPressed = self.controller.getRawAxis(auxiliaryConfig.indexerEnableBtnIdx)
+        self.XChanged = (self.prevVal < 0.5 and self.XPressed > 0.5) or (self.prevVal > 0.5 and self.XPressed < 0.5)
 
         if self.state == 'teleop':
            
             if self.XChanged and not self.toggleshoot:
                 self.toggleshoot = True
+                self.waiting = True
+                self.timer2.start()
                 print('waiting for big motor speed')
-                if self.timer2 == auxiliaryConfig.shooterStartupTime:
-                    self.numberOne.set(auxiliaryConfig.indexerSpeed)
-                    print ('indexer starting motor')
+                
             elif self.XChanged and self.toggleshoot:
                 self.toggleshoot = False
+                self.waiting = False
+                self.timer2.reset()
                 print ('Indexer stopping motor')
                 self.numberOne.set(0) 
+            
             if self.timer.get() > .99 :
                 #print(f'current velocity:{self.numberOne.get_velocity().value}')
                 self.timer.reset()
                 self.timer.start()            
+
+            if self.timer2.get() >= auxiliaryConfig.shooterStartupTime and self.waiting == True:
+                self.numberOne.set(auxiliaryConfig.indexerSpeed)
+                print ('indexer starting motor')
+                self.waiting = False

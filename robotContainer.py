@@ -82,6 +82,9 @@ class robotContainer():
     def autoInit(self):
         selectedTrajectoryName=self.getSelectedTrajectoryName()
         self.driveSubsystem.setDefaultCommand(autoDriveTrainCommand(self.driveSubsystem,selectedTrajectoryName))
+        self.shooterSubsystem.autoInit()
+        self.intakeSubsystem.autoInit()
+        self.indexerSubsystem.autoInit()
     def buttonBindings(self):
 
         ##Stick recenter bindings
