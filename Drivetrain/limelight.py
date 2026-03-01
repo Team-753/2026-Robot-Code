@@ -22,6 +22,7 @@ class LimelightCamera(Subsystem):
         self.ta = self.table.getDoubleTopic("ta").getEntry(0.0)
         self.tv = self.table.getDoubleTopic("tv").getEntry(0.0)
         self.hb = self.table.getIntegerTopic("hb").getEntry(0)
+        self.table.getEntry("imumode_set").setInteger(0)
         self.lastHeartbeat = 0
         self.lastHeartbeatTime = 0
         self.heartbeating = False
@@ -59,6 +60,7 @@ class LimelightCamera(Subsystem):
                 self.yaw = float(yaw)
             except (TypeError, ValueError):
                 self.yaw = 0.0
+                print("ERROR GETTING LL YAW")
         """ Returns the *last* calculated robot Pose2D and the pipeline latency, or (None, None) if unavailable """
         self.table.getEntry("robot_orientation_set").setDoubleArray([self.yaw,0.0,0.0,0.0,0.0,0.0])
         bot_pose_data = self.table.getEntry("botpose_orb").getDoubleArray([0.5,0,0,0,0,0])
