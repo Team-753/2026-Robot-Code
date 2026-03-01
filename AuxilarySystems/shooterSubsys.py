@@ -59,14 +59,15 @@ class shooterSubsys(commands2.Subsystem):
     def setToIdle(self):
         self.state = 'idle'
 
-    def autoShootToggle(self):
-        if self.state == 'auto':
+    def autoShootStart(self):
+        if self.state == 'auto' and not self.toggleshoot:
             self.XChanged = True
-            if not self.toggleshoot:
-                print('enabling shooter from auto')
-            else:
-                print('disabling shooter from auto')
-        # otherwise ignore command
+            print('enabling shooter from auto')
+    
+    def autoShootStop(self):
+        if self.state == 'auto' and self.toggleshoot:
+            self.XChanged = True
+            print('disabling shooter from auto')
 
     def periodic(self):
 
