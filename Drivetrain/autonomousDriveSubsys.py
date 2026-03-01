@@ -61,5 +61,6 @@ class autoDriveTrainCommand(commands2.Command):
     def setShooting(self,shooterState):
         if shooterState:
             print("shooting")
-            commands2.RunCommand(targetPointCommand(self.driveSubsys,1,1))
+            #targetPointCommand(self.driveSubsys,1,1).asProxy()
+            commands2.RepeatCommand(targetPointCommand(self.driveSubsys,1,1))
 

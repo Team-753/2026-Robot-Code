@@ -16,13 +16,21 @@ class targetPointCommand(commands2.Command): #This class points the robot in the
         self.thetaPid=wpimath.controller.ProfiledPIDControllerRadians(65,0.06,0.1,wpimath.trajectory.TrapezoidProfileRadians.Constraints(2*pi,2*pi))
         self.thetaPid.setIntegratorRange(-1,1)
         self.thetaPid.enableContinuousInput(-pi,pi)
+        print("targeting1",self.tx,",",self.ty)
+        ##
+        robotPose=self.driveSubsys.getPoseState()
+        desiredRotation=atan2(self.ty-robotPose.y,self.tx-robotPose.x)
+        output=self.thetaPid.calculate(robotPose.rotation().radians(),desiredRotation)
+        self.driveSubsys.overideInput(rot=output)
+        ##
     def execute(self):
-        print("targeting",self.tx,",",self.ty)
+        print("targeting2",self.tx,",",self.ty)
         robotPose=self.driveSubsys.getPoseState()
         desiredRotation=atan2(self.ty-robotPose.y,self.tx-robotPose.x)
         output=self.thetaPid.calculate(robotPose.rotation().radians(),desiredRotation)
         self.driveSubsys.overideInput(rot=output)
     def end(self,interrupted):
+        print("targeting3",self.tx,",",self.ty)
         self.driveSubsys.overideInput()
 
 
