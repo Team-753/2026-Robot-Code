@@ -4,6 +4,7 @@ from Drivetrain.swerveSubsys import driveTrainSubsys
 import choreo
 class autoDriveTrainCommand(commands2.Command):
     def __init__(self,driveSubsys:driveTrainSubsys,trajectoryName:str=""):
+        self.eventList=[]
         self.addRequirements(driveSubsys)
         self.driveSubsys=driveSubsys
         cont=wpimath.controller
@@ -28,8 +29,11 @@ class autoDriveTrainCommand(commands2.Command):
         else:
             self.traj=None
             wpilib.SmartDashboard.putString("Auto Trajectory Loaded","None")
+        for i in range(len(self.traj.events)):
+            self.eventList.append((self.traj.events[i].timestamp,self.traj.events[i].event))
         self.clock=wpilib.Timer()
         self.clock.start()
+        print(self.traj.events)
     def getSpeeds(self, sample):
         # Get the current pose of the robot
         pose = self.driveSubsys.getPoseState()
@@ -45,9 +49,10 @@ class autoDriveTrainCommand(commands2.Command):
         if self.traj is None:
             self.driveSubsys.setState(0,0,0)
             return
+        for i in self.eventList:
+            if self.clock.get()>i[0]:
+                print(i[0])
         self.goal=self.traj.sample_at(self.clock.get())
-        print(self.traj.events)
-        #speeds=self.holoCont.calculate(self.driveSubsys.getPoseState(),self.goal.get_pose(),wpimath.geometry.Rotation2d.fromDegrees(self.goal.heading))
         speeds=self.getSpeeds(self.goal)
         #print(self.driveSubsys.getPoseState())#,self.driveSubsys.getPoseState().y_feet)
         #print(self.driveSubsys.getPoseState())
