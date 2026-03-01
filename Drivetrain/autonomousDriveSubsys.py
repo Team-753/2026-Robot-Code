@@ -5,12 +5,14 @@ from Drivetrain.Targeting2 import targetPointCommand
 import choreo
 class autoDriveTrainCommand(commands2.Command):
     def __init__(self,driveSubsys:driveTrainSubsys,trajectoryName:str=""):
+        super().__init__()
         self.eventList=[]
-        self.addRequirements(driveSubsys)
         self.driveSubsys=driveSubsys
+        self.traj=None
+        self.initialPose=None
+        self.addRequirements(driveSubsys)
         cont=wpimath.controller
         wpigeo=wpimath.geometry
-        super().__init__()
 
         #config.setReversed(True)
         #IMPORTANT STUFF
@@ -20,21 +22,40 @@ class autoDriveTrainCommand(commands2.Command):
         self.xPid=cont.PIDController(4,0.05,0)
         self.yPid=cont.PIDController(4,0.05,0)
         self.omegaPid=cont.ProfiledPIDControllerRadians(8,0.2,0.1,wpimath.trajectory.TrapezoidProfileRadians.Constraints(2*pi,2*pi))
+        # Load the selected Choreo path once so auto can fail safe if the selection is missing.
         if trajectoryName:
             try:
                 self.traj=choreo.load_swerve_trajectory(trajectoryName)
+                startSample=self.traj.sample_at(0)
+                self.initialPose=wpigeo.Pose2d(
+                    startSample.x,
+                    startSample.y,
+                    wpigeo.Rotation2d(startSample.heading),
+                )
+                for eventMarker in self.traj.events:
+                    self.eventList.append((eventMarker.timestamp,eventMarker.event))
                 wpilib.SmartDashboard.putString("Auto Trajectory Loaded",trajectoryName)
+                wpilib.SmartDashboard.putString("Auto Trajectory Error","")
             except Exception as ex:
                 self.traj=None
+                self.initialPose=None
+                self.eventList=[]
+                wpilib.SmartDashboard.putString("Auto Trajectory Loaded","None")
                 wpilib.SmartDashboard.putString("Auto Trajectory Error",str(ex))
         else:
-            self.traj=None
             wpilib.SmartDashboard.putString("Auto Trajectory Loaded","None")
-        for i in range(len(self.traj.events)):
-            self.eventList.append((self.traj.events[i].timestamp,self.traj.events[i].event))
+            wpilib.SmartDashboard.putString("Auto Trajectory Error","")
         self.clock=wpilib.Timer()
+
+    def initialize(self):
+        self.clock.reset()
         self.clock.start()
-        print(self.traj.events)
+        if self.traj is not None:
+            print(self.traj.events)
+
+    def getInitialPose(self):
+        return self.initialPose
+
     def getSpeeds(self, sample):
         # Get the current pose of the robot
         pose = self.driveSubsys.getPoseState()
