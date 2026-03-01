@@ -192,7 +192,7 @@ class driveTrainSubsys(commands2.Subsystem):
         for hasDetection, camera in cameraReadings:
             if not hasDetection:
                 continue
-            posedata, latency = camera.getPoseData(self.compass.getRotation2d())
+            posedata, latency = camera.getPoseData(self.compass.getRotation2d().degrees())
             if posedata is None or latency is None:
                 continue
             lockTime = time - (latency / 1000.0) #Take the locktime minus the latency (in miliseconds) to know how long in the past locking was
