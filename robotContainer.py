@@ -91,6 +91,9 @@ class robotContainer():
         self.indexerSubsystem.autoInit()
         #self.flipSubsystem.autoInit()
         print('entering auto')
+    
+    def autoPeriodic(self):
+        pass
 
     def disabledInit(self): # keep states in subsystems clean by entering disabled mode
         self.shooterSubsystem.setToIdle()

@@ -9,5 +9,7 @@ class myRobot(commands2.TimedCommandRobot):
         self.rContainer.teleopInit()
     def autonomousInit(self):
         self.rContainer.autoInit()
+    def autonomousPeriodic(self):
+        self.rContainer.autoPeriodic
     def disabledInit(self):
         self.rContainer.disabledInit()
