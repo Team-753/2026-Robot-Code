@@ -1,5 +1,7 @@
 import os
 import wpilib,commands2,Drivetrain.swerveConfig as swerveConfig
+# disable warnings about the joystick
+wpilib.DriverStation.silenceJoystickConnectionWarning(True)
 
 #IMPORT FROM Drivetrain
 from Drivetrain.swerveSubsys import driveTrainCommand,JoystickSubsys,driveTrainSubsys,XboxControllerSubsys,VKBJoystickSubsys,fieldOrientReorient,overideRobotInput,pointToVelocityVectorCommand
@@ -78,6 +80,7 @@ class robotContainer():
         self.indexerSubsystem.teleopInit()
         self.intakeSubsystem.teleopInit()
         #self.flipSubsystem.teleopInit()
+        print('entering teleop')
 
     def autoInit(self):
         pass
@@ -86,6 +89,16 @@ class robotContainer():
         self.shooterSubsystem.autoInit()
         self.intakeSubsystem.autoInit()
         self.indexerSubsystem.autoInit()
+        #self.flipSubsystem.autoInit()
+        print('entering auto')
+
+    def disabledInit(self): # keep states in subsystems clean by entering disabled mode
+        self.shooterSubsystem.setToIdle()
+        self.intakeSubsystem.setToIdle()
+        self.indexerSubsystem.setToIdle()
+        #self.flipSubsystem.setToIdle()
+        print('entering disabled')
+
     def buttonBindings(self):
 
         ##Stick recenter bindings

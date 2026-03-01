@@ -41,6 +41,9 @@ class indexerSubsys(commands2.Subsystem):
 
     def autoInit(self):
         self.state = 'auto'
+        
+    def setToIdle(self):
+        self.state = 'idle'
 
     def periodic(self):
 
@@ -48,7 +51,7 @@ class indexerSubsys(commands2.Subsystem):
             self.executeState()
         else:
             self.toggleshoot = False
-            #self.numberOne.set_control(self.brake)
+            self.numberOne.set(0) 
 
 
 

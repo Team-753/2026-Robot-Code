@@ -82,6 +82,9 @@ class intakeSubsys(commands2.Subsystem):
 
     def autoInit(self):
         self.state = 'auto'
+        
+    def setToIdle(self):
+        self.state = 'idle'
 
     def periodic(self):
 
