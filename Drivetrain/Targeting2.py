@@ -17,16 +17,10 @@ class targetPointCommand(commands2.Command): #This class points the robot in the
         self.thetaPid.setIntegratorRange(-1,1)
         self.thetaPid.enableContinuousInput(-pi,pi)
         print("targeting1",self.tx,",",self.ty)
-        ##
-        robotPose=self.driveSubsys.getPoseState()
-        desiredRotation=atan2(self.ty-robotPose.y,self.tx-robotPose.x)
-        output=self.thetaPid.calculate(robotPose.rotation().radians(),desiredRotation)
-        self.driveSubsys.overideInput(rot=output)
-        ##
     def execute(self):
         print("targeting2",self.tx,",",self.ty)
         robotPose=self.driveSubsys.getPoseState()
-        desiredRotation=atan2(self.ty-robotPose.y,self.tx-robotPose.x)
+        desiredRotation=atan2(-self.ty+robotPose.y,-self.tx+robotPose.x)
         output=self.thetaPid.calculate(robotPose.rotation().radians(),desiredRotation)
         self.driveSubsys.overideInput(rot=output)
     def end(self,interrupted):
@@ -58,7 +52,8 @@ class targetPointWithLeadCommand(commands2.Command): #This class is used for est
         return [self.TARGET_POINT_BLUE[0],self.TARGET_POINT_BLUE[1]]
     
     def getTOF(self):
-        print(self.lookupTable.loc[self.lookupTable["rpm"].get(1)])
+        pass
+        #print(self.lookupTable.loc[self.lookupTable["rpm"].get(1)])
     def calucateVelocity(self): #Used to calculate the velocity of the robot so that we can adjust the target point
         try:
             pastPosition=self.robotPose
@@ -91,8 +86,7 @@ class targetPointWithLeadCommand(commands2.Command): #This class is used for est
         velocities=self.calucateVelocity()
         leadTargetPoint=self.adjustedTargetPoint(self._get_target_point(),0.4,velocities)
         desiredRotation=atan2(leadTargetPoint[1]-self.robotPose.y,leadTargetPoint[0]-self.robotPose.x)
-        output=self.thetaPid.calculate(self.robotPose.rotation().radians(),desiredRotation)
-        self.getTOF()
+        output=self.thetaPid.calculate(wpimath.geometry.Rotation2d(self.robotPose.rotation().radians()-pi).radians(),desiredRotation)
         self.driveSubsys.overideInput(rot=output)
     def end(self,interrupted):
         self.driveSubsys.overideInput()

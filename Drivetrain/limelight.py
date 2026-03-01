@@ -61,7 +61,7 @@ class LimelightCamera(Subsystem):
                 self.yaw = 0.0
         """ Returns the *last* calculated robot Pose2D and the pipeline latency, or (None, None) if unavailable """
         self.table.getEntry("robot_orientation_set").setDoubleArray([self.yaw,0.0,0.0,0.0,0.0,0.0])
-        bot_pose_data = self.table.getEntry("botpose_orb_wpiblue").getDoubleArray([0.5,0,0,0,0,0])
+        bot_pose_data = self.table.getEntry("botpose_orb").getDoubleArray([0.5,0,0,0,0,0])
         if len(bot_pose_data) < 7:
             return (None, None)
         pose_2d = geometry.Pose2d(
