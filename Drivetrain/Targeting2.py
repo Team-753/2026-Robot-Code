@@ -1,5 +1,4 @@
 import commands2,wpimath.controller,wpimath.trajectory
-import pandas
 from math import atan2,pi
 import wpilib
 from Drivetrain.swerveSubsys import overideRobotInput,driveTrainSubsys
