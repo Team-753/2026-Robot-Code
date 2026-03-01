@@ -19,12 +19,12 @@
     "###FMS": {
       "Collapsed": "0",
       "Pos": "6,675",
-      "Size": "202,214"
+      "Size": "235,244"
     },
     "###Joysticks": {
       "Collapsed": "0",
       "Pos": "312,581",
-      "Size": "976,278"
+      "Size": "1156,91"
     },
     "###Keyboard 0 Settings": {
       "Collapsed": "0",
@@ -49,12 +49,12 @@
     "###System Joysticks": {
       "Collapsed": "0",
       "Pos": "13,420",
-      "Size": "232,254"
+      "Size": "273,290"
     },
     "###Timing": {
       "Collapsed": "0",
       "Pos": "6,187",
-      "Size": "162,168"
+      "Size": "188,186"
     },
     "Debug##Default": {
       "Collapsed": "0",
@@ -64,7 +64,7 @@
     "Robot State": {
       "Collapsed": "0",
       "Pos": "5,20",
-      "Size": "118,134"
+      "Size": "137,152"
     }
   }
 }

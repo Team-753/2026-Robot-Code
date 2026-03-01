@@ -39,6 +39,8 @@ class shooterSubsys(commands2.Subsystem):
         self.XPressed = False
         self.prevVal = False
         self.XChanged = False
+        self.LBChanged = False
+        self.RBChanged = False
         self.toggleshoot = False
         self.RBPressed = False
         self.LBPressed = False
