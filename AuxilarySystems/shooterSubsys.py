@@ -134,7 +134,7 @@ class shooterSubsys(commands2.Subsystem):
             self.bigBoy2.set_control(self.request.with_velocity(self.targetVelocity).with_feed_forward(0.2))
             self.bigBoy3.set_control(self.request.with_velocity(self.targetVelocity).with_feed_forward(0.2))
             self.bigBoy4.set_control(self.request.with_velocity(self.targetVelocity).with_feed_forward(0.2))
-            self.littleone.set(auxiliaryConfig.shooterIndexDutyCycle)
+            self.littleone.set(0) #auxiliaryConfig.shooterIndexDutyCycle)
             self.timer2.reset()
             self.timer2.start()
             print ('starting all shooter motors')

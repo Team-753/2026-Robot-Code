@@ -26,6 +26,7 @@ class indexerSubsys(commands2.Subsystem):
         self.XPressed = False
         self.prevVal = False
         self.XChanged = False
+        self.intakeRunning = False
         #CHRIS MOD
         self.BPressed = False
         self.prevVal2 = False
@@ -60,11 +61,12 @@ class indexerSubsys(commands2.Subsystem):
         if self.state == 'teleop':
             self.prevVal = self.XPressed
             self.XPressed = self.controller.getRawAxis(auxiliaryConfig.indexerEnableBtnIdx)
-            self.XChanged = (self.prevVal < 0.5 and self.XPressed > 0.5) or (self.prevVal > 0.5 and self.XPressed < 0.5)
+            self.XStart = self.prevVal < 0.5 and self.XPressed > 0.5
+            self.XStop = self.prevVal > 0.5 and self.XPressed < 0.5
             #CHRIS MOD
             self.prevVal2 = self.BPressed
             self.BPressed = self.controller.getRawButton(auxiliaryConfig.intakeSpinEnableBtnIdx)
-            self.BChanged = self.BChanged = self.prevVal2 == False and self.BPressed == True
+            self.BChanged = self.prevVal2 == False and self.BPressed == True
             #CHRIS MOD END
             self.executeState()
         elif self.state == 'auto':
@@ -78,25 +80,23 @@ class indexerSubsys(commands2.Subsystem):
         
         
         #MODIFIED "self.XChanged" ---> "(self.XChanged or self.BChanged)"
-        if (self.XChanged or self.BChanged) and not self.toggleshoot:
+        if (self.XStart or self.BChanged) and not self.toggleshoot:
             self.toggleshoot = True
-            self.waiting = True
-            self.timer2.start()
-            print('waiting for big motor speed')
+            self.intakeRunning = self.BChanged
+            self.numberOne.set(auxiliaryConfig.indexerSpeed)
+            print ('indexer starting motor')
             
-        elif (self.XChanged or self.BChanged) and self.toggleshoot:
+        elif (self.XStop and self.toggleshoot) and not self.intakeRunning:
             self.toggleshoot = False
-            self.waiting = False
-            self.timer2.reset()
             print ('Indexer stopping motor')
             self.numberOne.set(0) 
+        
+        elif (self.BChanged and self.intakeRunning) and self.toggleshoot:
+            self.intakeRunning = False
+            self.numberOne.set(0)
+            print('indexer stopping motor')
         
         if self.timer.get() > .99 :
             #print(f'current velocity:{self.numberOne.get_velocity().value}')
             self.timer.reset()
             self.timer.start()            
-
-        if self.timer2.get() >= auxiliaryConfig.shooterStartupTime and self.waiting == True:
-            self.numberOne.set(auxiliaryConfig.indexerSpeed)
-            print ('indexer starting motor')
-            self.waiting = False

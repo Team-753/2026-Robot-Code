@@ -78,7 +78,7 @@ class autoDriveTrainCommand(commands2.Command):
         speeds=self.getSpeeds(self.goal)
         #print(self.driveSubsys.getPoseState())#,self.driveSubsys.getPoseState().y_feet)
         #print(self.driveSubsys.getPoseState())
-        self.driveSubsys.setState(-speeds.vx,speeds.vy,speeds.omega)
+        self.driveSubsys.setState(speeds.vx,-speeds.vy,speeds.omega)
     def setShooting(self,shooterState):
         if shooterState:
             print("shooting")

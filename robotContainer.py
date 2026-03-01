@@ -6,7 +6,7 @@ wpilib.DriverStation.silenceJoystickConnectionWarning(True)
 #IMPORT FROM Drivetrain
 from Drivetrain.swerveSubsys import driveTrainCommand,JoystickSubsys,driveTrainSubsys,XboxControllerSubsys,VKBJoystickSubsys,fieldOrientReorient,overideRobotInput,pointToVelocityVectorCommand
 from Drivetrain.autonomousDriveSubsys import autoDriveTrainCommand
-from Drivetrain.Targeting2 import targetPointCommand
+from Drivetrain.Targeting2 import targetPointCommand,targetPointWithLeadCommand
 
 ##IMPORT FROM AuxiliarySystems
 from AuxilarySystems import auxiliaryConfig, shooterSubsys, IndexerSubsys, IntakeSubsys, flipSubsys
@@ -118,7 +118,7 @@ class robotContainer():
             self.controller.button(1).whileTrue(commands2.RepeatCommand(pointToVelocityVectorCommand(self.driveSubsystem,self.joystick)))
         if swerveConfig.driveController=="VKBJoystick":
             self.controller.button(15).whileTrue(fieldOrientReorient(self.driveSubsystem))
-            self.controller.button(3).whileTrue(commands2.RepeatCommand(targetPointCommand(self.driveSubsystem,11.91497, 4.03514)))
+            self.controller.button(3).whileTrue(commands2.RepeatCommand(targetPointWithLeadCommand(self.driveSubsystem)))
             self.controller.button(1).whileTrue(commands2.RepeatCommand(pointToVelocityVectorCommand(self.driveSubsystem,self.joystick)))
         if swerveConfig.driveController=="XboxController":
             self.controller.a().whileTrue(fieldOrientReorient(self.driveSubsystem))

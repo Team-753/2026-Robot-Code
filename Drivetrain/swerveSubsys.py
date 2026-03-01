@@ -97,7 +97,7 @@ class swerveSubsys():
             return self.turnSensor.get_absolute_position().value
 
     def getState(self):
-        return wpimath.kinematics.SwerveModulePosition(-self.driveMotor.get_position().value*swerveConfig.swerveWheelDiameter*pi,wpimath.geometry.Rotation2d.fromRotations(-self.turnMotor.get_position().value))
+        return wpimath.kinematics.SwerveModulePosition(self.driveMotor.get_position().value*swerveConfig.swerveWheelDiameter*pi,wpimath.geometry.Rotation2d.fromRotations(-self.turnMotor.get_position().value))
 
     def debug(self):
         return self.turnSensor.get_position().value
@@ -156,6 +156,7 @@ class driveTrainSubsys(commands2.Subsystem):
         for i in range(3):
             if self.overidedInputs[i]!=None:
                 inputs[i]=self.overidedInputs[i]
+                print("overide",i)
         if self.resetCompass:
             self.compass.reset()
         
@@ -250,7 +251,7 @@ class JoystickSubsys(commands2.Subsystem):
     def getX(self):
         return wpimath.applyDeadband(self.myJoy.getRawAxis(axis=0),0.05)
     def getZ(self):
-        return wpimath.applyDeadband(self.myJoy.getRawAxis(axis=2),0.05)
+        return wpimath.applyDeadband(self.myJoy.getRawAxis(axis=2),0.2)
     def getY(self):
         return wpimath.applyDeadband(self.myJoy.getRawAxis(axis=1),0.05)
 
@@ -304,7 +305,7 @@ class pointToVelocityVectorCommand(commands2.Command):
         self.thetaPid.enableContinuousInput(-pi,pi)
     def execute(self):
         robotPose=self.dt.getPoseState()
-        desiredRotation=math.atan2(self.joystick.getX(),self.joystick.getY())
+        desiredRotation=math.atan2(-self.joystick.getX(),-self.joystick.getY())
         output=self.thetaPid.calculate(robotPose.rotation().radians(),desiredRotation)
         self.dt.overideInput(rot=output)
     def end(self,interrupted):

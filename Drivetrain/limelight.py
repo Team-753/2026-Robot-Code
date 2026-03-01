@@ -22,6 +22,7 @@ class LimelightCamera(Subsystem):
         self.ta = self.table.getDoubleTopic("ta").getEntry(0.0)
         self.tv = self.table.getDoubleTopic("tv").getEntry(0.0)
         self.hb = self.table.getIntegerTopic("hb").getEntry(0)
+        self.table.getEntry("imumode_set").setInteger(0)
         self.lastHeartbeat = 0
         self.lastHeartbeatTime = 0
         self.heartbeating = False
