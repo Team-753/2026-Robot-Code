@@ -62,7 +62,7 @@ class shooterSubsys(commands2.Subsystem):
             self.XChanged = True
             if not self.toggleshoot:
                 print('enabling shooter from auto')
-            else
+            else:
                 print('disabling shooter from auto')
         # otherwise ignore command
 
