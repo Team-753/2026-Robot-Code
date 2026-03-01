@@ -6,14 +6,11 @@ class LimelightCamera(Subsystem):
     
     def __init__(self, cameraName: str) -> None:
         super().__init__()
-
-
         self.cameraName = _fix_name(cameraName)
-
         instance = NetworkTableInstance.getDefault()
         self.table = instance.getTable(self.cameraName)
         self._path = self.table.getPath()
-
+        self.yaw=0.0
         self.pipelineIndexRequest = self.table.getDoubleTopic("pipeline").publish()
         self.pipelineIndex = self.table.getDoubleTopic("getpipe").getEntry(-1)
         # "cl" and "tl" are additional latencies in milliseconds
@@ -25,6 +22,7 @@ class LimelightCamera(Subsystem):
         self.ta = self.table.getDoubleTopic("ta").getEntry(0.0)
         self.tv = self.table.getDoubleTopic("tv").getEntry(0.0)
         self.hb = self.table.getIntegerTopic("hb").getEntry(0)
+        self.table.getEntry("imumode_set").setInteger(0)
         self.lastHeartbeat = 0
         self.lastHeartbeatTime = 0
         self.heartbeating = False
@@ -53,9 +51,21 @@ class LimelightCamera(Subsystem):
         return self.tv.get(0.0) == 1.0
         
 
-    def getPoseData(self) -> tuple[geometry.Pose2d | None, float | None]:
+    def setRobotOrientation(self, yaw) -> None:
+        # MegaTag2 expects robot yaw in degrees each loop.
+        if isinstance(yaw, geometry.Rotation2d):
+            self.yaw = float(yaw.degrees())
+        else:
+            try:
+                self.yaw = float(yaw)
+            except (TypeError, ValueError):
+                self.yaw = 0.0
+        self.table.getEntry("robot_orientation_set").setDoubleArray([self.yaw,0.0,0.0,0.0,0.0,0.0])
+
+    def getPoseData(self,yaw) -> tuple[geometry.Pose2d | None, float | None]:
         """ Returns the *last* calculated robot Pose2D and the pipeline latency, or (None, None) if unavailable """
-        bot_pose_data = self.table.getEntry("botpose_wpiblue").getDoubleArray([])
+        self.setRobotOrientation(yaw)
+        bot_pose_data = self.table.getEntry("botpose_orb_wpiblue").getDoubleArray([0.5,0,0,0,0,0])
         if len(bot_pose_data) < 7:
             return (None, None)
         pose_2d = geometry.Pose2d(

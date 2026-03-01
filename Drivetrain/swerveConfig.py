@@ -6,9 +6,9 @@
 #|____/_/    \_\_____/|_____\_____|  \_____\____/|_| \_|_|    |_____\_____|
 
 driveSpeed=50
-driveTurnSpeed=30
+driveTurnSpeed=60
 
-driveController="Joystick" #Options:XboxController,Joystick,VKBJoystick
+driveController="Joystick" #Options:XboxController,Joystick,VKBJoystick #NOTE ADD automatic
 driveControllerSlot=0 #USB NUMBER IN DRIVESTATION
 
 # Button to hold for targeting (raw button number for HID)
@@ -27,29 +27,33 @@ startPoseDeg = 0.0
     #HOW DO I GET THESE NUMBERS?
     #I MANUALLY SET THE SWERVES TO THE FORWARD POSITION AND THEN PRINTED OUT THE OFFSETS OF EACH ENCODER AND RECORDED THEM
     #0.071533203125,-0.396728515625,0.16455078125,0.45654296875,
-offsetList=[-0.396728515625,0.071533203125,0.16455078125,0.45654296875] ##ONLY APPLIES IF USEING WPI ENCODERS(NOT CANCODER)
+offsetList=[-0.40771484375,0.387939453125,0.4208984375,0.293701171875] ##ONLY APPLIES IF USEING WPI ENCODERS(NOT CANCODER)
+debugOffsets=False
 ##quack 0.7083120783296617,0.3599781216554734,0.13246701675334055,0.5696525556151847##
-##WIWO 0.7083120783296617,0.3599781216554734,0.13246701675334055,0.5696525556151847## TESTBOT0.45654296875,-0.396728515625,0.071533203125,0.16455078125
+##WIWO 0.7083120783296617,0.3599781216554734,0.13246701675334055,0.5696525556151847##\
+##NEWROBOT -0.40771484375 0.387939453125 0.4208984375 0.293701171875 
+
 swerveEncoderType="canCoder" #canCoder,wpilibEncoder #IF NOT USING AN ENCODER LEAVE swerveEncoderIds BLANK
 robotCompassType="pidgeon" #navx,pidgeon #NOTE navx not working, need to get inport working
-robotCompassId=13 #FOR PIDGEON ONLY
+robotCompassId=0 #FOR PIDGEON ONLY
+swerveCanivoreName="whoevernamedthiswascool"#Set to None is no canivore, put a string with the name of the canivore if canivore
 
-#SWERVE CAN IDS
-swerveDriveIds=[4,7,10,1]   #1,4,7,10]
-swerveTurnIds=[6,9,12,3]  # 3,6,9,12]
-swerveEncoderIds=[5,8,0,2]#2,5,8,0] #EXTERNAL ENCODERS, NOT MOTORS
+#SWERVE CAN IDS #FL,FR,BL,BR
+swerveDriveIds=[1,4,7,10]   #1,4,7,10]
+swerveTurnIds=[2,5,8,11]  # 3,6,9,12]
+swerveEncoderIds=[3,6,9,12]#2,5,8,0] #EXTERNAL ENCODERS, NOT MOTORS
 
 #SWERVE MECHANISM RATIOS
     #HOW TO GET?
     #PRINT OUT MOTOR POSITION AND ROTATE THE MECHANISM ~1FULL ROTATION USE END MOTOR POSITION
     #YOU CAN ALSO GOOGLE IT <-------(THIS IS THE BETTER WAY)
 swerveDriveRatio=(6.2)#NOT NECESSARY FOR ROBOT MOVEMENT, ONLY FOR ACCURATE AUTO #quack 8.14 #wiwo 5.68 #
-swerveWheelDiameter=(0.0991) #METERS
+swerveWheelDiameter=(0.1016) #METERS
 swerveTurnRatio=(1)  #NECECCARY IF NOT USING A CANCODER #quack 12.8
 
 #MEASURE FROM POINT WHEEL CONTACTS GROUND
-swerveBaseWidth=(0.64) #METERS
-swerveBaseLength=(0.64) #METERS
+swerveBaseWidth=(0.61) #METERS
+swerveBaseLength=(0.505) #METERS
 
 #ODOMETRY TRUST Levels 
 #0-1 scale that is used in the Kalman filter. 0 is full trust, while 1 is full distrust. Hence, the distrust level
@@ -57,4 +61,5 @@ visionDistrustLevel = 0.7,0.7,0.7
 wheelDistrustLevel = 0.3,0.3,0.3 
 
 #Limelight Camera Name and Settings 
-cameraName = ("limelight-jamal")
+cameraName3 = ("limelight-jamal")
+cameraName3a = ("limelight-bubba")

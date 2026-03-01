@@ -1,14 +1,18 @@
 import commands2,wpimath,wpimath.controller,wpimath.trajectory,wpimath.kinematics,wpilib
 from math import pi
 from Drivetrain.swerveSubsys import driveTrainSubsys
+from Drivetrain.Targeting2 import targetPointCommand
 import choreo
 class autoDriveTrainCommand(commands2.Command):
-    def __init__(self,driveSubsys:driveTrainSubsys):
-        self.addRequirements(driveSubsys)
+    def __init__(self,driveSubsys:driveTrainSubsys,trajectoryName:str=""):
+        super().__init__()
+        self.eventList=[]
         self.driveSubsys=driveSubsys
+        self.traj=None
+        self.initialPose=None
+        self.addRequirements(driveSubsys)
         cont=wpimath.controller
         wpigeo=wpimath.geometry
-        super().__init__()
 
         #config.setReversed(True)
         #IMPORTANT STUFF
@@ -18,9 +22,40 @@ class autoDriveTrainCommand(commands2.Command):
         self.xPid=cont.PIDController(4,0.05,0)
         self.yPid=cont.PIDController(4,0.05,0)
         self.omegaPid=cont.ProfiledPIDControllerRadians(8,0.2,0.1,wpimath.trajectory.TrapezoidProfileRadians.Constraints(2*pi,2*pi))
-        self.traj=choreo.load_swerve_trajectory("Path2")
+        # Load the selected Choreo path once so auto can fail safe if the selection is missing.
+        if trajectoryName:
+            try:
+                self.traj=choreo.load_swerve_trajectory(trajectoryName)
+                startSample=self.traj.sample_at(0)
+                self.initialPose=wpigeo.Pose2d(
+                    startSample.x,
+                    startSample.y,
+                    wpigeo.Rotation2d(startSample.heading),
+                )
+                for eventMarker in self.traj.events:
+                    self.eventList.append((eventMarker.timestamp,eventMarker.event))
+                wpilib.SmartDashboard.putString("Auto Trajectory Loaded",trajectoryName)
+                wpilib.SmartDashboard.putString("Auto Trajectory Error","")
+            except Exception as ex:
+                self.traj=None
+                self.initialPose=None
+                self.eventList=[]
+                wpilib.SmartDashboard.putString("Auto Trajectory Loaded","None")
+                wpilib.SmartDashboard.putString("Auto Trajectory Error",str(ex))
+        else:
+            wpilib.SmartDashboard.putString("Auto Trajectory Loaded","None")
+            wpilib.SmartDashboard.putString("Auto Trajectory Error","")
         self.clock=wpilib.Timer()
+
+    def initialize(self):
+        self.clock.reset()
         self.clock.start()
+        if self.traj is not None:
+            print(self.traj.events)
+
+    def getInitialPose(self):
+        return self.initialPose
+
     def getSpeeds(self, sample):
         # Get the current pose of the robot
         pose = self.driveSubsys.getPoseState()
@@ -33,9 +68,20 @@ class autoDriveTrainCommand(commands2.Command):
         )
         return speeds
     def execute(self):
+        if self.traj is None:
+            self.driveSubsys.setState(0,0,0)
+            return
+        for i in range(len(self.eventList)):
+            if self.clock.get()>self.eventList[i][0]:
+                exec("self."+str(self.eventList[i][1]))
         self.goal=self.traj.sample_at(self.clock.get())
-        #speeds=self.holoCont.calculate(self.driveSubsys.getPoseState(),self.goal.get_pose(),wpimath.geometry.Rotation2d.fromDegrees(self.goal.heading))
         speeds=self.getSpeeds(self.goal)
         #print(self.driveSubsys.getPoseState())#,self.driveSubsys.getPoseState().y_feet)
-        print(self.driveSubsys.getPoseState())
-        self.driveSubsys.setState(-speeds.vx,speeds.vy,speeds.omega)
+        #print(self.driveSubsys.getPoseState())
+        self.driveSubsys.setState(speeds.vx,-speeds.vy,speeds.omega)
+    def setShooting(self,shooterState):
+        if shooterState:
+            print("shooting")
+            #targetPointCommand(self.driveSubsys,1,1).asProxy()
+            commands2.RepeatCommand(targetPointCommand(self.driveSubsys,1,1))
+
