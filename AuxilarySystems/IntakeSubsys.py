@@ -82,7 +82,16 @@ class intakeSubsys(commands2.Subsystem):
 
     def autoInit(self):
         self.state = 'auto'
+        self.AChanged = True
+    
+    def autoGrabStart(self):
+        if self.state == 'auto' and not self.spinToggle:
+            self.YChanged = True
         
+    def autoGrabStop(self):
+        if self.state == 'auto' and self.spinToggle:
+            self.YChanged = True
+
     def setToIdle(self):
         self.state = 'idle'
 
@@ -91,61 +100,70 @@ class intakeSubsys(commands2.Subsystem):
         #print (self.AbsEncoder.get())
 
         if self.state == 'teleop':
+            
+            self.prevVal = self.YPressed
+            self.YPressed = self._getRawButtonSafe(auxiliaryConfig.intakeSpinEnableBtnIdx)
+            self.YChanged = self.prevVal == False and self.YPressed == True
+
+            self.prevVal2 = self.APressed
+            self.APressed = self._getRawButtonSafe(auxiliaryConfig.intakeUpdownToggleBtnIdx)
+            self.AChanged = self.prevVal2 == False and self.APressed == True
+
+            self.prevVal3 = self.inRange
+            AbsEncoderConverted = 0#self.convertAbsRotations(self.AbsEncoder.get())
+            self.inRange = (AbsEncoderConverted < auxiliaryConfig.intakeDownPosition/360 + 15/360) and (AbsEncoderConverted > auxiliaryConfig.intakeDownPosition/360 - 5/360)
+            self.enteredRange = self.prevVal3 == False and self.inRange == True
+
             self.executeState()
+        elif self.state == 'auto':
+            self.executeState()
+            self.inRange = True
+            self.YChanged = False
+            self.AChanged = False
+        else:
+            self.spinToggle = False
+            self.spin.set(0)
 
     def executeState(self):
         
-        self.prevVal = self.YPressed
-        self.YPressed = self._getRawButtonSafe(auxiliaryConfig.intakeSpinEnableBtnIdx)
-        self.YChanged = self.prevVal == False and self.YPressed == True
-
-        self.prevVal2 = self.APressed
-        self.APressed = self._getRawButtonSafe(auxiliaryConfig.intakeUpdownToggleBtnIdx)
-        self.AChanged = self.prevVal2 == False and self.APressed == True
-
-        self.prevVal3 = self.inRange
-        AbsEncoderConverted = 0#self.convertAbsRotations(self.AbsEncoder.get())
-        self.inRange = (AbsEncoderConverted < auxiliaryConfig.intakeDownPosition/360 + 15/360) and (AbsEncoderConverted > auxiliaryConfig.intakeDownPosition/360 - 5/360)
-        self.enteredRange = self.prevVal3 == False and self.inRange == True
+        
 
         if not self.inRange:
             self.spin.set_control(self.request.with_velocity(0))
             self.spinToggle = False
 
-        if self.state == 'teleop':
+        if self.YChanged and self.inRange:
+            
+            self.spinToggle = not self.spinToggle
+            if self.spinToggle == True:
+                self.spin.set(-auxiliaryConfig.intakeSpinnerSpeed)
+                print('intake start spinning')
+            else:
+                self.spin.set(0)
+                print('intake stop spinning')
 
-            if self.YChanged and self.inRange:
-                
-                self.spinToggle = not self.spinToggle
-                if self.spinToggle == True:
-                    self.spin.set(-auxiliaryConfig.intakeSpinnerSpeed)
-                    print('intake start spinning')
-                else:
-                    self.spin.set(0)
-                    print('intake stop spinning')
+        if self.AChanged:
+            if self.intakeIsDown:
+                targetDirection = ((auxiliaryConfig.intakeUpPosition / 360) * auxiliaryConfig.intakeupdowngearratio)
+                self.intakeIsDown = False
+                targetLabel = "up"
+            else:
+                targetDirection = ((auxiliaryConfig.intakeDownPosition / 360) * auxiliaryConfig.intakeupdowngearratio)
+                self.intakeIsDown = True
+                targetLabel = "down"
 
-            if self.AChanged:
-                if self.intakeIsDown:
-                    targetDirection = ((auxiliaryConfig.intakeUpPosition / 360) * auxiliaryConfig.intakeupdowngearratio)
-                    self.intakeIsDown = False
-                    targetLabel = "up"
-                else:
-                    targetDirection = ((auxiliaryConfig.intakeDownPosition / 360) * auxiliaryConfig.intakeupdowngearratio)
-                    self.intakeIsDown = True
-                    targetLabel = "down"
-
-                # call for position move
-                err = self.updownController.setSetpoint(
-                    targetDirection,
-                    rev.SparkMax.ControlType.kPosition,
-                    rev.ClosedLoopSlot.kSlot0,
-                )
-                # also call it from the test updown
-                # self.updownAlt.set_control(self.positionRequest.with_position(targetDirection))
-                if err == rev.REVLibError.kOk:
-                    print(f'intake moving {targetLabel} to {targetDirection}')
-                else:
-                    print(f'intake move {targetLabel} failed: {err}')
+            # call for position move
+            err = self.updownController.setSetpoint(
+                targetDirection,
+                rev.SparkMax.ControlType.kPosition,
+                rev.ClosedLoopSlot.kSlot0,
+            )
+            # also call it from the test updown
+            # self.updownAlt.set_control(self.positionRequest.with_position(targetDirection))
+            if err == rev.REVLibError.kOk:
+                print(f'intake moving {targetLabel} to {targetDirection}')
+            else:
+                print(f'intake move {targetLabel} failed: {err}')
             
             
 

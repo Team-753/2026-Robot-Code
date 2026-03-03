@@ -108,7 +108,7 @@ class shooterSubsys(commands2.Subsystem):
     def setTargetDistance(self, distance):
         # convert distance to a target motor velocity
         # need to fit test data with polynomial
-        self.targetVelocity = 2 * distance
+        self.targetVelocity = (20.0 / 9.0) * distance # 9 meters give 20 rps
 
     def executeState(self):
     
