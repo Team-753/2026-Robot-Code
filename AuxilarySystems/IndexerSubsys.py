@@ -23,6 +23,8 @@ class indexerSubsys(commands2.Subsystem):
         self.request = controls.VelocityVoltage(0).with_slot(0)
         self.controller = wpilib.XboxController(1) #wpilib.Joystick(2)
         self.brake = controls.NeutralOut()
+        self.XStart = False 
+        self.XStop = False
         self.XPressed = False
         self.prevVal = False
         self.XChanged = False
