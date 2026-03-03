@@ -47,8 +47,8 @@ class shooterSubsys(commands2.Subsystem):
         self.timer2.reset()
         self.timer.reset()
         self.timer.start()
-        self.targetVelocity = 2 # initial target velocity for all BigBoy's
-        self.VelocityIncrement = 0.25 # velocity increment when performing shooting test
+        self.targetVelocity = 16 # initial target velocity for all BigBoy's
+        self.VelocityIncrement = 2 # velocity increment when performing shooting test
 
     def teleopInit(self):
         self.state = 'teleop'
@@ -108,7 +108,7 @@ class shooterSubsys(commands2.Subsystem):
     def setTargetDistance(self, distance):
         # convert distance to a target motor velocity
         # need to fit test data with polynomial
-        self.targetVelocity = distance
+        self.targetVelocity = 2 * distance
 
     def executeState(self):
     
