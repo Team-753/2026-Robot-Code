@@ -5,10 +5,11 @@ from Drivetrain.Targeting2 import targetPointCommand,targetPointWithLeadCommand
 from AuxilarySystems import shooterSubsys
 import choreo
 class autoDriveTrainCommand(commands2.Command):
-    def __init__(self,driveSubsys:driveTrainSubsys,trajectoryName:str=""):
+    def __init__(self,shooterSubsys:shooterSubsys.shooterSubsys,driveSubsys:driveTrainSubsys,trajectoryName:str=""):
         super().__init__()
         self.eventList=[]
         self.driveSubsys=driveSubsys
+        self.shooterSubsys=shooterSubsys
         self.traj=None
         self.initialPose=None
         self.addRequirements(driveSubsys)
@@ -85,9 +86,9 @@ class autoDriveTrainCommand(commands2.Command):
             #targetPointCommand(self.driveSubsys,1,1).asProxy()
             #commands2.InstantCommand(targetPointCommand(self.driveSubsys,1,1))
             targetPointWithLeadCommand(self.driveSubsys).execute()
-            #shooterSubsys.shooterSubsys.autoShootStart()
+            self.shooterSubsys.autoShootStart()
             #commands2.RepeatCommand(targetPointCommand(self.driveSubsys,1,1))
         else:
             targetPointWithLeadCommand(self.driveSubsys).end(interrupted=True)
-            #shooterSubsys.shooterSubsys.autoShootStop()
+            self.shooterSubsys.autoShootStop()
 

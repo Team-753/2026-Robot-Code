@@ -84,7 +84,7 @@ class robotContainer():
 
     def autoInit(self):
         selectedTrajectoryName=self.getSelectedTrajectoryName()
-        self.autoCommand=autoDriveTrainCommand(self.driveSubsystem,selectedTrajectoryName)
+        self.autoCommand=autoDriveTrainCommand(self.shooterSubsystem,self.driveSubsystem,selectedTrajectoryName)
         initialPose=self.autoCommand.getInitialPose()
         # Align the estimator with the chosen path so the first sample is field-correct.
         if initialPose is not None:
