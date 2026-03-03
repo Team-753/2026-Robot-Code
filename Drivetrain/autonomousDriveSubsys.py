@@ -1,7 +1,8 @@
 import commands2,wpimath,wpimath.controller,wpimath.trajectory,wpimath.kinematics,wpilib
 from math import pi
 from Drivetrain.swerveSubsys import driveTrainSubsys
-from Drivetrain.Targeting2 import targetPointCommand
+from Drivetrain.Targeting2 import targetPointCommand,targetPointWithLeadCommand
+from AuxilarySystems import shooterSubsys
 import choreo
 class autoDriveTrainCommand(commands2.Command):
     def __init__(self,driveSubsys:driveTrainSubsys,trajectoryName:str=""):
@@ -81,7 +82,12 @@ class autoDriveTrainCommand(commands2.Command):
         self.driveSubsys.setState(speeds.vx,-speeds.vy,speeds.omega)
     def setShooting(self,shooterState):
         if shooterState:
-            print("shooting")
             #targetPointCommand(self.driveSubsys,1,1).asProxy()
-            commands2.RepeatCommand(targetPointCommand(self.driveSubsys,1,1))
+            #commands2.InstantCommand(targetPointCommand(self.driveSubsys,1,1))
+            targetPointWithLeadCommand(self.driveSubsys).execute()
+            #shooterSubsys.shooterSubsys.autoShootStart()
+            #commands2.RepeatCommand(targetPointCommand(self.driveSubsys,1,1))
+        else:
+            targetPointWithLeadCommand(self.driveSubsys).end(interrupted=True)
+            #shooterSubsys.shooterSubsys.autoShootStop()
 

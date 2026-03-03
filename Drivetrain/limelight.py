@@ -70,7 +70,7 @@ class LimelightCamera(Subsystem):
             return (None, None)
         pose_2d = geometry.Pose2d(
             geometry.Translation2d(bot_pose_data[0], bot_pose_data[1]),
-            geometry.Rotation2d.fromDegrees(bot_pose_data[5]),
+            geometry.Rotation2d.fromDegrees(self.yaw),
         )
         latency = bot_pose_data[6]
         return (pose_2d, latency)

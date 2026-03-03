@@ -189,7 +189,6 @@ class driveTrainSubsys(commands2.Subsystem):
         wpilib.SmartDashboard.putBoolean("Limelight3a Detection", limelight3aDetected)
 
         # Update wheel/gyro odometry once, then fuse any available camera measurements.
-        currentPose = self.poseEstimator.update(robotYaw, self.getSwerveState())
         cameraReadings = (
             (limelight3Detected, self.limelight3),
             (limelight3aDetected, self.limelight3a),
@@ -202,7 +201,7 @@ class driveTrainSubsys(commands2.Subsystem):
                 continue
             lockTime = time - (latency / 1000.0) #Take the locktime minus the latency (in miliseconds) to know how long in the past locking was
             self.poseEstimator.addVisionMeasurement(posedata, lockTime)
-
+        self.poseEstimator.update(robotYaw, self.getSwerveState())
         currentPose = self.poseEstimator.getEstimatedPosition()
         #update the pose estimator with our most up to date info on where the robot is from all the systems
 
