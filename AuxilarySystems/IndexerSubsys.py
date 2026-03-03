@@ -54,12 +54,12 @@ class indexerSubsys(commands2.Subsystem):
 
     def autoShootStart(self):
         if self.state == 'auto' and not self.toggleshoot:
-            self.XChanged = True
+            self.XStart = True
             print('enabling shooter from auto')
     
     def autoShootStop(self):
         if self.state == 'auto' and self.toggleshoot:
-            self.XChanged = True
+            self.XStop = True
             print('disabling shooter from auto')
 
     def periodic(self):
@@ -77,7 +77,8 @@ class indexerSubsys(commands2.Subsystem):
             self.executeState()
         elif self.state == 'auto':
             self.executeState()
-            self.XChanged = False
+            self.XStart = False
+            self.XStop = False
         else:
             self.toggleshoot = False
             self.numberOne.set(0) 
@@ -108,8 +109,11 @@ class indexerSubsys(commands2.Subsystem):
         if self.indexerToggle and self.indexerLogic:
             print ('indexer starting motor')
             self.numberOne.set(auxiliaryConfig.indexerSpeed)
+            self.toggleshoot= True
+
         elif self.indexerToggle and not self.indexerLogic:
             print('indexer stopping motor')
+            self.toggleshoot= False
             self.numberOne.set(0)
                 
         # #MODIFIED "self.XChanged" ---> "(self.XChanged or self.BChanged)"
