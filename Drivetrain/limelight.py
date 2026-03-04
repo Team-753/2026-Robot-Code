@@ -1,4 +1,6 @@
-from wpilib import Timer
+import math
+
+from wpilib import Timer, SmartDashboard
 from commands2 import Subsystem
 from ntcore import NetworkTableInstance
 from wpimath import geometry
@@ -26,6 +28,15 @@ class LimelightCamera(Subsystem):
         self.lastHeartbeat = 0
         self.lastHeartbeatTime = 0
         self.heartbeating = False
+        self.lastAcceptedPose = None
+        self.pendingPose = None
+        self.pendingLatency = None
+        self.pendingCount = 0
+        self.maxPoseJumpMeters = 0.75
+        self.maxPoseJumpDegrees = 30.0
+        self.pendingPoseToleranceMeters = 0.45
+        self.pendingPoseToleranceDegrees = 20.0
+        self.acceptAfterPersistentCycles = 4
 
     def setPipeline(self, index: int):
         self.pipelineIndexRequest.set(float(index))
@@ -73,7 +84,72 @@ class LimelightCamera(Subsystem):
             geometry.Rotation2d.fromDegrees(self.yaw),
         )
         latency = bot_pose_data[6]
-        return (pose_2d, latency)
+        return self._filterPoseMeasurement(pose_2d, latency)
+
+    def _poseDistanceMeters(self, a: geometry.Pose2d, b: geometry.Pose2d) -> float:
+        return math.hypot(a.X() - b.X(), a.Y() - b.Y())
+
+    def _rotationDeltaDegrees(self, a: geometry.Rotation2d, b: geometry.Rotation2d) -> float:
+        deltaRadians = math.atan2(math.sin(a.radians() - b.radians()), math.cos(a.radians() - b.radians()))
+        return abs(math.degrees(deltaRadians))
+
+    def _clearPendingPose(self) -> None:
+        self.pendingPose = None
+        self.pendingLatency = None
+        self.pendingCount = 0
+
+    def _publishPoseFilterStatus(self, status: str, jumpMeters: float = 0.0, jumpDegrees: float = 0.0) -> None:
+        SmartDashboard.putString(f"{self.cameraName} Pose Filter", status)
+        SmartDashboard.putNumber(f"{self.cameraName} Pose Jump (m)", jumpMeters)
+        SmartDashboard.putNumber(f"{self.cameraName} Pose Jump (deg)", jumpDegrees)
+        SmartDashboard.putNumber(f"{self.cameraName} Pose Pending Count", self.pendingCount)
+
+    def _filterPoseMeasurement(
+        self,
+        pose_2d: geometry.Pose2d,
+        latency: float,
+    ) -> tuple[geometry.Pose2d | None, float | None]:
+        if self.lastAcceptedPose is None:
+            self.lastAcceptedPose = pose_2d
+            self._clearPendingPose()
+            self._publishPoseFilterStatus("accepted-initial")
+            return (pose_2d, latency)
+
+        jumpMeters = self._poseDistanceMeters(pose_2d, self.lastAcceptedPose)
+        jumpDegrees = self._rotationDeltaDegrees(pose_2d.rotation(), self.lastAcceptedPose.rotation())
+
+        if jumpMeters <= self.maxPoseJumpMeters and jumpDegrees <= self.maxPoseJumpDegrees:
+            self.lastAcceptedPose = pose_2d
+            self._clearPendingPose()
+            self._publishPoseFilterStatus("accepted", jumpMeters, jumpDegrees)
+            return (pose_2d, latency)
+
+        if self.pendingPose is not None:
+            pendingJumpMeters = self._poseDistanceMeters(pose_2d, self.pendingPose)
+            pendingJumpDegrees = self._rotationDeltaDegrees(pose_2d.rotation(), self.pendingPose.rotation())
+            if (
+                pendingJumpMeters <= self.pendingPoseToleranceMeters
+                and pendingJumpDegrees <= self.pendingPoseToleranceDegrees
+            ):
+                self.pendingCount += 1
+            else:
+                self.pendingCount = 1
+        else:
+            self.pendingCount = 1
+
+        self.pendingPose = pose_2d
+        self.pendingLatency = latency
+
+        if self.pendingCount >= self.acceptAfterPersistentCycles:
+            acceptedPose = self.pendingPose
+            acceptedLatency = self.pendingLatency
+            self.lastAcceptedPose = acceptedPose
+            self._clearPendingPose()
+            self._publishPoseFilterStatus("accepted-persistent-jump", jumpMeters, jumpDegrees)
+            return (acceptedPose, acceptedLatency)
+
+        self._publishPoseFilterStatus("rejected-spike", jumpMeters, jumpDegrees)
+        return (None, None)
 
 
     def getSecondsSinceLastHeartbeat(self) -> float:
@@ -89,6 +165,8 @@ class LimelightCamera(Subsystem):
         if heartbeating != self.heartbeating:
             print(f"Camera {self.cameraName} is " + ("UPDATING" if heartbeating else "NO LONGER UPDATING"))
         self.heartbeating = heartbeating
+        if not self.heartbeating:
+            self._clearPendingPose()
 
 
 def _fix_name(name: str):

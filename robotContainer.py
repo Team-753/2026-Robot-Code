@@ -1,4 +1,5 @@
 import os
+import choreo
 import wpilib,commands2,Drivetrain.swerveConfig as swerveConfig
 # disable warnings about the joystick
 wpilib.DriverStation.silenceJoystickConnectionWarning(True)
@@ -13,6 +14,7 @@ from AuxilarySystems import auxiliaryConfig, shooterSubsys, IndexerSubsys, Intak
 
 class robotContainer():
     def __init__(self):
+        self.previewedTrajectoryName=None
 
         if swerveConfig.driveController=="Joystick"or swerveConfig.driveController=="VKBJoystick":
             self.controllerType="Joystick"
@@ -30,6 +32,7 @@ class robotContainer():
 
         exec("self.joystick="+str(swerveConfig.driveController)+"Subsys(self.controller)")
         self.initializeTrajectoryChooser()
+        self.updateTrajectoryPreview(force=True)
         
         #Set default Command (runs over and over)
         self.driveSubsystem.setDefaultCommand(driveTrainCommand(self.driveSubsystem,self.joystick))
@@ -73,6 +76,58 @@ class robotContainer():
                 selected=""
         wpilib.SmartDashboard.putString("Auto Trajectory Selected",selected if selected else "None")
         return selected
+
+    def updateTrajectoryPreview(self,force=False):
+        selectedTrajectoryName=self.getSelectedTrajectoryName()
+        if not force and selectedTrajectoryName==self.previewedTrajectoryName:
+            return
+
+        self.previewedTrajectoryName=selectedTrajectoryName
+        previewPathObject=self.driveSubsystem.field.getObject("Auto Preview Path")
+        previewStartObject=self.driveSubsystem.field.getObject("Auto Preview Start")
+        previewEndObject=self.driveSubsystem.field.getObject("Auto Preview End")
+
+        if not selectedTrajectoryName:
+            previewPathObject.setPoses([])
+            previewStartObject.setPoses([])
+            previewEndObject.setPoses([])
+            wpilib.SmartDashboard.putString("Auto Preview Trajectory","None")
+            wpilib.SmartDashboard.putString("Auto Preview Start Pose","Unavailable")
+            wpilib.SmartDashboard.putString("Auto Preview End Pose","Unavailable")
+            wpilib.SmartDashboard.putString("Auto Preview Error","No trajectory selected")
+            return
+
+        try:
+            trajectory=choreo.load_swerve_trajectory(selectedTrajectoryName)
+            pathPoses=[sample.get_pose() for sample in trajectory.samples]
+            initialPose=trajectory.get_initial_pose()
+            finalPose=trajectory.get_final_pose()
+
+            previewPathObject.setPoses(pathPoses)
+            if initialPose is not None:
+                previewStartObject.setPose(initialPose)
+                wpilib.SmartDashboard.putString("Auto Preview Start Pose",f"{initialPose.X():.3f}, {initialPose.Y():.3f}, {initialPose.rotation().degrees():.1f}")
+            else:
+                previewStartObject.setPoses([])
+                wpilib.SmartDashboard.putString("Auto Preview Start Pose","Unavailable")
+
+            if finalPose is not None:
+                previewEndObject.setPose(finalPose)
+                wpilib.SmartDashboard.putString("Auto Preview End Pose",f"{finalPose.X():.3f}, {finalPose.Y():.3f}, {finalPose.rotation().degrees():.1f}")
+            else:
+                previewEndObject.setPoses([])
+                wpilib.SmartDashboard.putString("Auto Preview End Pose","Unavailable")
+
+            wpilib.SmartDashboard.putString("Auto Preview Trajectory",selectedTrajectoryName)
+            wpilib.SmartDashboard.putString("Auto Preview Error","")
+        except Exception as ex:
+            previewPathObject.setPoses([])
+            previewStartObject.setPoses([])
+            previewEndObject.setPoses([])
+            wpilib.SmartDashboard.putString("Auto Preview Trajectory",selectedTrajectoryName)
+            wpilib.SmartDashboard.putString("Auto Preview Start Pose","Unavailable")
+            wpilib.SmartDashboard.putString("Auto Preview End Pose","Unavailable")
+            wpilib.SmartDashboard.putString("Auto Preview Error",str(ex))
 
     def teleopInit(self):
         self.driveSubsystem.setDefaultCommand(driveTrainCommand(self.driveSubsystem,self.joystick))
