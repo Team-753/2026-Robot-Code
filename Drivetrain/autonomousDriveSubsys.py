@@ -1,21 +1,27 @@
 import commands2,wpimath,wpimath.controller,wpimath.trajectory,wpimath.kinematics,wpilib
 from math import pi
-from Drivetrain.swerveSubsys import driveTrainSubsys
+from Drivetrain.swerveSubsys import driveTrainSubsys,pointToVelocityVectorCommand
 from Drivetrain.Targeting2 import targetPointCommand,targetPointWithLeadCommand
-from AuxilarySystems import shooterSubsys
+from AuxilarySystems import shooterSubsys,IntakeSubsys,IndexerSubsys
 import choreo
 class autoDriveTrainCommand(commands2.Command):
-    def __init__(self,shooterSubsys:shooterSubsys.shooterSubsys,driveSubsys:driveTrainSubsys,trajectoryName:str=""):
+    def __init__(self,shooterSubsys:shooterSubsys.shooterSubsys,intakeSubsys:IntakeSubsys.intakeSubsys,indexerSubsys:IndexerSubsys.indexerSubsys,driveSubsys:driveTrainSubsys,trajectoryName:str=""):
         super().__init__()
         self.eventList=[]
+        #SUBSYS
         self.driveSubsys=driveSubsys
         self.shooterSubsys=shooterSubsys
+        self.intakeSubsys=intakeSubsys
+        self.indexerSubsys=indexerSubsys
         self.traj=None
         self.initialPose=None
         self.addRequirements(driveSubsys)
         cont=wpimath.controller
         wpigeo=wpimath.geometry
-
+        ##AUX VARS
+        self.shooterState=False
+        self.intakeDown=True
+        self.intakeSpin=False
         #config.setReversed(True)
         #IMPORTANT STUFF
         startPos=wpigeo.Pose2d.fromFeet(0,0,wpigeo.Rotation2d.fromDegrees(0))
@@ -81,14 +87,39 @@ class autoDriveTrainCommand(commands2.Command):
         #print(self.driveSubsys.getPoseState())#,self.driveSubsys.getPoseState().y_feet)
         #print(self.driveSubsys.getPoseState())
         self.driveSubsys.setState(speeds.vx,-speeds.vy,speeds.omega)
-    def setShooting(self,shooterState):
-        if shooterState:
+        #LIST OF COMMANDS
+        #setShooting(bool)
+        #setIntakeDown(bool)
+        #setIntakeSpin(bool)
+        #setPointVV(bool)
+        if self.shooterState:
             #targetPointCommand(self.driveSubsys,1,1).asProxy()
             #commands2.InstantCommand(targetPointCommand(self.driveSubsys,1,1))
+            #commands2.CommandScheduler.schedule(commands2.CommandScheduler.getInstance(),commands2.RepeatCommand(targetPointWithLeadCommand(self.driveSubsys)))
             targetPointWithLeadCommand(self.driveSubsys).execute()
             self.shooterSubsys.autoShootStart()
+            self.indexerSubsys.autoShootStart()
             #commands2.RepeatCommand(targetPointCommand(self.driveSubsys,1,1))
         else:
             targetPointWithLeadCommand(self.driveSubsys).end(interrupted=True)
             self.shooterSubsys.autoShootStop()
+            self.indexerSubsys.autoShootStop()
+        
+        if self.intakeDown:
+            pass
+            #commands2.RepeatCommand(targetPointCommand(self.driveSubsys,1,1))
+        else:
+            #targetPointWithLeadCommand(self.driveSubsys).end(interrupted=True)
+            pass
+        
+        if self.intakeSpin:
+            self.intakeSubsys.autoGrabStart()
+        else:
+            self.intakeSubsys.autoGrabStop()
 
+    def setShooting(self,shooterState):
+        self.shooterState=shooterState
+    def setIntakeDown(self,intakeDown):
+        self.intakeDown=intakeDown
+    def setIntakeSpin(self,intakeSpinning):
+        self.intakeSpin=intakeSpinning
