@@ -28,7 +28,7 @@ intakeUpDownEncoderOffset = 0 #how far off is the motor that moves the intake up
 intakeSpinnerSpeed = 0.8 #dutyCycle
 intakeupdowngearratio = 1
 intakeSpinEnableBtnIdx = 3
-intakeUpdownToggleBtnIdx = 5
+intakeUpdownToggleBtnIdx = 6
 
 # flip configs
 graberlv1=0.1

@@ -4,6 +4,13 @@ from Drivetrain.swerveSubsys import driveTrainSubsys,pointToVelocityVectorComman
 from Drivetrain.Targeting2 import targetPointCommand,targetPointWithLeadCommand
 from AuxilarySystems import shooterSubsys,IntakeSubsys,IndexerSubsys
 import choreo
+
+
+def _shouldFlipTrajectoryForAlliance():
+    alliance=wpilib.DriverStation.getAlliance()
+    return alliance == wpilib.DriverStation.Alliance.kRed
+
+
 class autoDriveTrainCommand(commands2.Command):
     def __init__(self,shooterSubsys:shooterSubsys.shooterSubsys,intakeSubsys:IntakeSubsys.intakeSubsys,indexerSubsys:IndexerSubsys.indexerSubsys,driveSubsys:driveTrainSubsys,trajectoryName:str=""):
         super().__init__()
@@ -15,6 +22,7 @@ class autoDriveTrainCommand(commands2.Command):
         self.indexerSubsys=indexerSubsys
         self.traj=None
         self.initialPose=None
+        self.flipForRedAlliance=_shouldFlipTrajectoryForAlliance()
         self.addRequirements(driveSubsys)
         cont=wpimath.controller
         wpigeo=wpimath.geometry
@@ -34,24 +42,22 @@ class autoDriveTrainCommand(commands2.Command):
         if trajectoryName:
             try:
                 self.traj=choreo.load_swerve_trajectory(trajectoryName)
-                startSample=self.traj.sample_at(0)
-                self.initialPose=wpigeo.Pose2d(
-                    startSample.x,
-                    startSample.y,
-                    wpigeo.Rotation2d(startSample.heading),
-                )
+                self.initialPose=self.traj.get_initial_pose(self.flipForRedAlliance)
                 for eventMarker in self.traj.events:
                     self.eventList.append((eventMarker.timestamp,eventMarker.event))
                 wpilib.SmartDashboard.putString("Auto Trajectory Loaded",trajectoryName)
+                wpilib.SmartDashboard.putString("Auto Trajectory Alliance","Red" if self.flipForRedAlliance else "Blue")
                 wpilib.SmartDashboard.putString("Auto Trajectory Error","")
             except Exception as ex:
                 self.traj=None
                 self.initialPose=None
                 self.eventList=[]
                 wpilib.SmartDashboard.putString("Auto Trajectory Loaded","None")
+                wpilib.SmartDashboard.putString("Auto Trajectory Alliance","Unknown")
                 wpilib.SmartDashboard.putString("Auto Trajectory Error",str(ex))
         else:
             wpilib.SmartDashboard.putString("Auto Trajectory Loaded","None")
+            wpilib.SmartDashboard.putString("Auto Trajectory Alliance","Unknown")
             wpilib.SmartDashboard.putString("Auto Trajectory Error","")
         self.clock=wpilib.Timer()
 
@@ -82,7 +88,7 @@ class autoDriveTrainCommand(commands2.Command):
         for i in range(len(self.eventList)):
             if self.clock.get()>self.eventList[i][0]:
                 exec("self."+str(self.eventList[i][1]))
-        self.goal=self.traj.sample_at(self.clock.get())
+        self.goal=self.traj.sample_at(self.clock.get(),self.flipForRedAlliance)
         speeds=self.getSpeeds(self.goal)
         self.driveSubsys.setState(speeds.vx,-speeds.vy,speeds.omega)
         #LIST OF COMMANDS

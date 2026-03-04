@@ -15,6 +15,7 @@ from AuxilarySystems import auxiliaryConfig, shooterSubsys, IndexerSubsys, Intak
 class robotContainer():
     def __init__(self):
         self.previewedTrajectoryName=None
+        self.previewedFlipForRedAlliance=None
 
         if swerveConfig.driveController=="Joystick"or swerveConfig.driveController=="VKBJoystick":
             self.controllerType="Joystick"
@@ -77,15 +78,25 @@ class robotContainer():
         wpilib.SmartDashboard.putString("Auto Trajectory Selected",selected if selected else "None")
         return selected
 
+    def shouldFlipTrajectoryForAlliance(self):
+        alliance=wpilib.DriverStation.getAlliance()
+        return alliance == wpilib.DriverStation.Alliance.kRed
+
+    def getTrajectoryAllianceLabel(self):
+        return "Red" if self.shouldFlipTrajectoryForAlliance() else "Blue"
+
     def updateTrajectoryPreview(self,force=False):
         selectedTrajectoryName=self.getSelectedTrajectoryName()
-        if not force and selectedTrajectoryName==self.previewedTrajectoryName:
+        flipForRedAlliance=self.shouldFlipTrajectoryForAlliance()
+        if not force and selectedTrajectoryName==self.previewedTrajectoryName and flipForRedAlliance==self.previewedFlipForRedAlliance:
             return
 
         self.previewedTrajectoryName=selectedTrajectoryName
+        self.previewedFlipForRedAlliance=flipForRedAlliance
         previewPathObject=self.driveSubsystem.field.getObject("Auto Preview Path")
         previewStartObject=self.driveSubsystem.field.getObject("Auto Preview Start")
         previewEndObject=self.driveSubsystem.field.getObject("Auto Preview End")
+        wpilib.SmartDashboard.putString("Auto Preview Alliance",self.getTrajectoryAllianceLabel())
 
         if not selectedTrajectoryName:
             previewPathObject.setPoses([])
@@ -99,9 +110,9 @@ class robotContainer():
 
         try:
             trajectory=choreo.load_swerve_trajectory(selectedTrajectoryName)
-            pathPoses=[sample.get_pose() for sample in trajectory.samples]
-            initialPose=trajectory.get_initial_pose()
-            finalPose=trajectory.get_final_pose()
+            pathPoses=[sample.flipped().get_pose() if flipForRedAlliance else sample.get_pose() for sample in trajectory.samples]
+            initialPose=trajectory.get_initial_pose(flipForRedAlliance)
+            finalPose=trajectory.get_final_pose(flipForRedAlliance)
 
             previewPathObject.setPoses(pathPoses)
             if initialPose is not None:
