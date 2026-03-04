@@ -82,7 +82,6 @@ class intakeSubsys(commands2.Subsystem):
 
     def autoInit(self):
         self.state = 'auto'
-        self.AChanged = True
     
     def autoGrabStart(self):
         if self.state == 'auto' and not self.spinToggle:
@@ -91,6 +90,14 @@ class intakeSubsys(commands2.Subsystem):
     def autoGrabStop(self):
         if self.state == 'auto' and self.spinToggle:
             self.YChanged = True
+    
+    def autoIntakeDown(self):
+        if self.state == 'auto' and not self.intakeIsDown:
+            self.AChanged = True
+
+    def autoIntakeUp(self):
+        if self.state == 'auto' and self.intakeIsDown:
+            self.AChanged = True
 
     def setToIdle(self):
         self.state = 'idle'
