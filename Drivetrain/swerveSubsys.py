@@ -299,8 +299,8 @@ class pointToVelocityVectorCommand(commands2.Command):
     def __init__(self,driveSubsys:driveTrainSubsys,joySubsys:globals()[swerveConfig.driveController+"Subsys"]):
         self.dt=driveSubsys
         self.joystick=joySubsys
-        self.thetaPid=wpimath.controller.ProfiledPIDControllerRadians(60,0.0001,0.35,wpimath.trajectory.TrapezoidProfileRadians.Constraints(4*pi,4*pi))
-        self.thetaPid.setIntegratorRange(-1,1)
+        self.thetaPid=wpimath.controller.ProfiledPIDControllerRadians(60,0.0001,0.5,wpimath.trajectory.TrapezoidProfileRadians.Constraints(4*pi,4*pi))
+        self.thetaPid.setIntegratorRange(-0.2,0.2)
         self.thetaPid.enableContinuousInput(-pi,pi)
     def execute(self):
         robotPose=self.dt.getPoseState()

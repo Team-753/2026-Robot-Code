@@ -1,6 +1,6 @@
 import commands2,wpimath,wpimath.controller,wpimath.trajectory,wpimath.kinematics,wpilib
 from math import pi
-from Drivetrain.swerveSubsys import driveTrainSubsys
+from Drivetrain.swerveSubsys import driveTrainSubsys,pointToVelocityVectorCommand
 from Drivetrain.Targeting2 import targetPointCommand,targetPointWithLeadCommand
 from AuxilarySystems import shooterSubsys,IntakeSubsys,IndexerSubsys
 import choreo
@@ -91,6 +91,7 @@ class autoDriveTrainCommand(commands2.Command):
         #setShooting(bool)
         #setIntakeDown(bool)
         #setIntakeSpin(bool)
+        #setPointVV(bool)
         if self.shooterState:
             #targetPointCommand(self.driveSubsys,1,1).asProxy()
             #commands2.InstantCommand(targetPointCommand(self.driveSubsys,1,1))
