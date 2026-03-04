@@ -36,6 +36,8 @@ class targetPointWithLeadCommand(commands2.Command): #This class is used for est
         self.thetaPid=wpimath.controller.ProfiledPIDControllerRadians(45,0.0001,0.15,wpimath.trajectory.TrapezoidProfileRadians.Constraints(2*pi,2*pi))
         self.thetaPid.setIntegratorRange(-1,1)
         self.thetaPid.enableContinuousInput(-pi,pi)
+        self.thetaPid.setTolerance(0.2)
+        self.thetaPid.atSetpoint()
     def _get_alliance(self): #We need this information so that we dont score in the wrong hub.
         try:
             alliance = wpilib.DriverStation.getAlliance()
@@ -87,5 +89,6 @@ class targetPointWithLeadCommand(commands2.Command): #This class is used for est
         desiredRotation=atan2(leadTargetPoint[1]-self.robotPose.y,leadTargetPoint[0]-self.robotPose.x)
         output=self.thetaPid.calculate(wpimath.geometry.Rotation2d(self.robotPose.rotation().radians()-pi).radians(),desiredRotation)
         self.driveSubsys.overideInput(rot=output)
+        return self.thetaPid.atGoal()
     def end(self,interrupted):
         self.driveSubsys.overideInput()

@@ -84,8 +84,6 @@ class autoDriveTrainCommand(commands2.Command):
                 exec("self."+str(self.eventList[i][1]))
         self.goal=self.traj.sample_at(self.clock.get())
         speeds=self.getSpeeds(self.goal)
-        #print(self.driveSubsys.getPoseState())#,self.driveSubsys.getPoseState().y_feet)
-        #print(self.driveSubsys.getPoseState())
         self.driveSubsys.setState(speeds.vx,-speeds.vy,speeds.omega)
         #LIST OF COMMANDS
         #setShooting(bool)
@@ -96,19 +94,21 @@ class autoDriveTrainCommand(commands2.Command):
             #targetPointCommand(self.driveSubsys,1,1).asProxy()
             #commands2.InstantCommand(targetPointCommand(self.driveSubsys,1,1))
             #commands2.CommandScheduler.schedule(commands2.CommandScheduler.getInstance(),commands2.RepeatCommand(targetPointWithLeadCommand(self.driveSubsys)))
-            targetPointWithLeadCommand(self.driveSubsys).execute()
-            self.shooterSubsys.autoShootStart()
-            self.indexerSubsys.autoShootStart()
+            val=targetPointWithLeadCommand(self.driveSubsys).execute()
+            if val:
+                self.shooterSubsys.autoShootStart()
+                self.indexerSubsys.autoShootStart()
             #commands2.RepeatCommand(targetPointCommand(self.driveSubsys,1,1))
         else:
             targetPointWithLeadCommand(self.driveSubsys).end(interrupted=True)
             self.shooterSubsys.autoShootStop()
             self.indexerSubsys.autoShootStop()
-        
         if self.intakeDown:
+            self.intakeSubsys.autoIntakeDown()
             pass
             #commands2.RepeatCommand(targetPointCommand(self.driveSubsys,1,1))
         else:
+            self.intakeSubsys.autoIntakeUp()
             #targetPointWithLeadCommand(self.driveSubsys).end(interrupted=True)
             pass
         

@@ -42,7 +42,7 @@ class intakeSubsys(commands2.Subsystem):
         big_config.k_v = 0.12
         
         self.updownConfig = rev.SparkMaxConfig()
-        self.updownConfig.closedLoop.P(0.5)
+        self.updownConfig.closedLoop.P(0.75)
         self.updownConfig.closedLoop.I(0.00001)
         self.updownConfig.closedLoop.D(0.0)
         self.updownConfig.closedLoop.IMaxAccum(0.2)
