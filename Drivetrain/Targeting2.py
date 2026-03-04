@@ -83,7 +83,7 @@ class targetPointWithLeadCommand(commands2.Command): #This class is used for est
     def execute(self):
         velocities=self.calucateVelocity()
         leadTargetPoint=self.adjustedTargetPoint(self._get_target_point(),0.9,velocities)
-        print("velcoity=",velocities)
+        print(self._get_alliance)
         desiredRotation=atan2(leadTargetPoint[1]-self.robotPose.y,leadTargetPoint[0]-self.robotPose.x)
         output=self.thetaPid.calculate(wpimath.geometry.Rotation2d(self.robotPose.rotation().radians()-pi).radians(),desiredRotation)
         self.driveSubsys.overideInput(rot=output)

@@ -5,6 +5,8 @@ from robotContainer import robotContainer
 class myRobot(commands2.TimedCommandRobot):
     def robotInit(self):
         self.rContainer=robotContainer()
+    def robotPeriodic(self):
+        self.rContainer.updateTrajectoryPreview()
     def teleopInit(self):
         self.rContainer.teleopInit()
     def autonomousInit(self):
