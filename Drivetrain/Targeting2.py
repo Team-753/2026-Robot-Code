@@ -36,8 +36,7 @@ class targetPointWithLeadCommand(commands2.Command): #This class is used for est
         self.thetaPid=wpimath.controller.ProfiledPIDControllerRadians(45,0.0001,0.15,wpimath.trajectory.TrapezoidProfileRadians.Constraints(2*pi,2*pi))
         self.thetaPid.setIntegratorRange(-1,1)
         self.thetaPid.enableContinuousInput(-pi,pi)
-        self.thetaPid.setTolerance(0.2)
-        self.thetaPid.atSetpoint()
+        self.thetaPid.setTolerance(0.6)
     def _get_alliance(self): #We need this information so that we dont score in the wrong hub.
         try:
             alliance = wpilib.DriverStation.getAlliance()

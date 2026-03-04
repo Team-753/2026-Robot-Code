@@ -37,7 +37,7 @@ class autoDriveTrainCommand(commands2.Command):
         self.holoCont=cont.HolonomicDriveController(cont.PIDController(2.5,0.1,0),cont.PIDController(2.5,0.1,0),cont.ProfiledPIDControllerRadians(0.3,0,0,wpimath.trajectory.TrapezoidProfileRadians.Constraints(pi,pi)))
         self.xPid=cont.PIDController(4,0.05,0)
         self.yPid=cont.PIDController(4,0.05,0)
-        self.omegaPid=cont.ProfiledPIDControllerRadians(8,0.2,0.1,wpimath.trajectory.TrapezoidProfileRadians.Constraints(2*pi,2*pi))
+        self.omegaPid=cont.ProfiledPIDControllerRadians(13,0.2,0.1,wpimath.trajectory.TrapezoidProfileRadians.Constraints(6*pi,6*pi))
         # Load the selected Choreo path once so auto can fail safe if the selection is missing.
         if trajectoryName:
             try:
@@ -101,9 +101,8 @@ class autoDriveTrainCommand(commands2.Command):
             #commands2.InstantCommand(targetPointCommand(self.driveSubsys,1,1))
             #commands2.CommandScheduler.schedule(commands2.CommandScheduler.getInstance(),commands2.RepeatCommand(targetPointWithLeadCommand(self.driveSubsys)))
             val=targetPointWithLeadCommand(self.driveSubsys).execute()
-            if val:
-                self.shooterSubsys.autoShootStart()
-                self.indexerSubsys.autoShootStart()
+            self.shooterSubsys.autoShootStart()
+            self.indexerSubsys.autoShootStart()
             #commands2.RepeatCommand(targetPointCommand(self.driveSubsys,1,1))
         else:
             targetPointWithLeadCommand(self.driveSubsys).end(interrupted=True)

@@ -42,11 +42,14 @@ class intakeSubsys(commands2.Subsystem):
         big_config.k_v = 0.12
         
         self.updownConfig = rev.SparkMaxConfig()
-        self.updownConfig.closedLoop.P(0.75)
-        self.updownConfig.closedLoop.I(0.00001)
+        self.updownConfig.closedLoop.P(1.3)
+        self.updownConfig.closedLoop.I(0.0002)
         self.updownConfig.closedLoop.D(0.0)
         self.updownConfig.closedLoop.IMaxAccum(0.2)
         self.updownConfig.closedLoop.setFeedbackSensor(rev.FeedbackSensor.kAbsoluteEncoder)
+        self.updownConfig.closedLoop.positionWrappingMinInput(0)
+        self.updownConfig.closedLoop.positionWrappingMaxInput(1)
+        self.updownConfig.closedLoop.positionWrappingEnabled(True)
         self.updown.configure(self.updownConfig, rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
 
         self.spin.configurator.apply(big_config)
@@ -118,7 +121,7 @@ class intakeSubsys(commands2.Subsystem):
 
             self.prevVal3 = self.inRange
             AbsEncoderConverted = 0#self.convertAbsRotations(self.AbsEncoder.get())
-            self.inRange = (AbsEncoderConverted < auxiliaryConfig.intakeDownPosition/360 + 15/360) and (AbsEncoderConverted > auxiliaryConfig.intakeDownPosition/360 - 5/360)
+            self.inRange = True # (AbsEncoderConverted < auxiliaryConfig.intakeDownPosition/360 + 15/360) and (AbsEncoderConverted > auxiliaryConfig.intakeDownPosition/360 - 5/360)
             self.enteredRange = self.prevVal3 == False and self.inRange == True
 
             self.executeState()
@@ -175,7 +178,7 @@ class intakeSubsys(commands2.Subsystem):
             
 
             if self.timer.get() > .99 :
-                #print (f'AbsEncoderConverted {AbsEncoderConverted}')
+                print (f'intake encoder {self.AbsEncoder.get()}')
                 self.timer.reset()
                 self.timer.start()
 

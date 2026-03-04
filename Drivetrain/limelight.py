@@ -1,6 +1,7 @@
 import math
 
 from wpilib import Timer, SmartDashboard
+import wpilib
 from commands2 import Subsystem
 from ntcore import NetworkTableInstance
 from wpimath import geometry
@@ -71,6 +72,7 @@ class LimelightCamera(Subsystem):
                 self.yaw = float(yaw)
             except (TypeError, ValueError):
                 self.yaw = 0.0
+
         self.table.getEntry("robot_orientation_set").setDoubleArray([self.yaw,0.0,0.0,0.0,0.0,0.0])
 
     def getPoseData(self,yaw) -> tuple[geometry.Pose2d | None, float | None]:
