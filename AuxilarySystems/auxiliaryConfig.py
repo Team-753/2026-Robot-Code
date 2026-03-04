@@ -22,8 +22,8 @@ indexerEnableBtnIdx=3 # AXIS index for enable button - matches the shooter
 #Intake Subsystem config
 intakeUpDownMotorID=9 #?
 intakeSpinMotorID=20
-intakeDownPosition = 0  #these are in degrees
-intakeUpPosition = 120 #these are in degrees
+intakeDownPosition = 120  #these are in degrees
+intakeUpPosition = 0 #these are in degrees
 intakeUpDownEncoderOffset = 0 #how far off is the motor that moves the intake up and down(in rotations)
 intakeSpinnerSpeed = 0.8 #dutyCycle
 intakeupdowngearratio = 1

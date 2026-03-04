@@ -61,7 +61,7 @@ class intakeSubsys(commands2.Subsystem):
         self.prevVal2 = False
         self.AChanged = False
         # Assume intake starts in the down position so first toggle goes up.
-        self.intakeIsDown = True
+        self.intakeIsDown = False
         self.timer.reset()
         self.timer.start()
         self.targetVelocity = 0
