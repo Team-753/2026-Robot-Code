@@ -168,7 +168,11 @@ class driveTrainSubsys(commands2.Subsystem):
             self.swerveNumbers[i].optimize(wpimath.geometry.Rotation2d.fromRotations(self.swerveModules[i].getRot()))
             self.swerveModules[i].setState(self.swerveNumbers[i].angle.radians()/(2*pi),self.swerveNumbers[i].speed)
     def getPoseState(self):
-        return self.poseEstimator.getEstimatedPosition()
+        if wpilib.DriverStation.getAlliance() == wpilib.DriverStation.Alliance.kRed:
+            currentPose = wpimath.geometry.Pose2d(self.poseEstimator.getEstimatedPosition().translation(),self.poseEstimator.getEstimatedPosition().rotation().rotateBy(wpimath.geometry.Rotation2d(pi)))
+        else:
+            currentPose = self.poseEstimator.getEstimatedPosition()
+        return currentPose
 
     def getRobotYaw(self):
         robotYaw = self.compass.getRotation2d()
@@ -185,7 +189,14 @@ class driveTrainSubsys(commands2.Subsystem):
     def periodic(self):
 
         time = Timer.getFPGATimestamp()
+<<<<<<< HEAD
         robotYaw = self.getRobotYaw()
+=======
+        if wpilib.DriverStation.getAlliance()==wpilib.DriverStation.Alliance.kRed:
+            robotYaw=self.compass.getRotation2d().rotateBy(wpimath.geometry.Rotation2d(pi))
+        else:
+            robotYaw = self.compass.getRotation2d()
+>>>>>>> a60830d104a9b3707e6dbb093cdb3a5dc4df88eb
 
         self.limelight3.setRobotOrientation(robotYaw)
         self.limelight3a.setRobotOrientation(robotYaw)
@@ -209,7 +220,11 @@ class driveTrainSubsys(commands2.Subsystem):
             lockTime = time - (latency / 1000.0) #Take the locktime minus the latency (in miliseconds) to know how long in the past locking was
             self.poseEstimator.addVisionMeasurement(posedata, lockTime)
         self.poseEstimator.update(robotYaw, self.getSwerveState())
-        currentPose = self.poseEstimator.getEstimatedPosition()
+        if False:#wpilib.DriverStation.getAlliance() == wpilib.DriverStation.Alliance.kRed:
+            currentPose = wpimath.geometry.Pose2d(self.poseEstimator.getEstimatedPosition().translation(),self.poseEstimator.getEstimatedPosition().rotation().rotateBy(wpimath.geometry.Rotation2d(pi)))
+            print("red",currentPose.rotation())
+        else:
+            currentPose = self.poseEstimator.getEstimatedPosition()
         #update the pose estimator with our most up to date info on where the robot is from all the systems
 
 
