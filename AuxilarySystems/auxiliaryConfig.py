@@ -47,3 +47,8 @@ graber_k_d_config=0
 graberhomespeed=0
 armhomespeed=0
 flipMotorID=19
+
+FLipINButtonINdex=1
+FLipOutButtonINdex=2
+FLipLeftButtonINdex=3
+FLipRightButtonINdex=4
