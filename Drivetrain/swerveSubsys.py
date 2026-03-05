@@ -178,7 +178,10 @@ class driveTrainSubsys(commands2.Subsystem):
     def periodic(self):
 
         time = Timer.getFPGATimestamp()
-        robotYaw = self.compass.getRotation2d()
+        if wpilib.DriverStation.Alliance.kRed:
+            robotYaw=self.compass.getRotation2d().rotateBy(wpimath.geometry.Rotation2d(pi))
+        else:
+            robotYaw = self.compass.getRotation2d()
 
         self.limelight3.setRobotOrientation(robotYaw)
         self.limelight3a.setRobotOrientation(robotYaw)

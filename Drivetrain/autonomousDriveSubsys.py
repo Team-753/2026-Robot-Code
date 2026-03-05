@@ -35,9 +35,9 @@ class autoDriveTrainCommand(commands2.Command):
         startPos=wpigeo.Pose2d.fromFeet(0,0,wpigeo.Rotation2d.fromDegrees(0))
         endPos=wpigeo.Pose2d.fromFeet(20,0,wpigeo.Rotation2d.fromDegrees(0))
         self.holoCont=cont.HolonomicDriveController(cont.PIDController(2.5,0.1,0),cont.PIDController(2.5,0.1,0),cont.ProfiledPIDControllerRadians(0.3,0,0,wpimath.trajectory.TrapezoidProfileRadians.Constraints(pi,pi)))
-        self.xPid=cont.PIDController(4,0.05,0)
-        self.yPid=cont.PIDController(4,0.05,0)
-        self.omegaPid=cont.ProfiledPIDControllerRadians(13,0.2,0.1,wpimath.trajectory.TrapezoidProfileRadians.Constraints(6*pi,6*pi))
+        self.xPid=cont.PIDController(12,0.05,0.1)
+        self.yPid=cont.PIDController(12,0.05,0.1)
+        self.omegaPid=cont.ProfiledPIDControllerRadians(14,0.00001,0.3,wpimath.trajectory.TrapezoidProfileRadians.Constraints(6*pi,6*pi))
         # Load the selected Choreo path once so auto can fail safe if the selection is missing.
         if trajectoryName:
             try:
@@ -90,7 +90,12 @@ class autoDriveTrainCommand(commands2.Command):
                 exec("self."+str(self.eventList[i][1]))
         self.goal=self.traj.sample_at(self.clock.get(),self.flipForRedAlliance)
         speeds=self.getSpeeds(self.goal)
-        self.driveSubsys.setState(speeds.vx,-speeds.vy,speeds.omega)
+        #NOTE EXPLAIN LATER
+        if wpilib.DriverStation.Alliance.kRed:
+            self.driveSubsys.setState(-speeds.vx,speeds.vy,speeds.omega)
+        else:
+            self.driveSubsys.setState(speeds.vx,-speeds.vy,speeds.omega)
+
         #LIST OF COMMANDS
         #setShooting(bool)
         #setIntakeDown(bool)
