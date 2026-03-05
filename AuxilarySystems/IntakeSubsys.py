@@ -42,14 +42,15 @@ class intakeSubsys(commands2.Subsystem):
         big_config.k_v = 0.12
         
         self.updownConfig = rev.SparkMaxConfig()
-        self.updownConfig.closedLoop.P(1.3)
-        self.updownConfig.closedLoop.I(0.0002)
+        self.updownConfig.closedLoop.P(2.0)
+        self.updownConfig.closedLoop.I(0.0)
         self.updownConfig.closedLoop.D(0.0)
         self.updownConfig.closedLoop.IMaxAccum(0.2)
         self.updownConfig.closedLoop.setFeedbackSensor(rev.FeedbackSensor.kAbsoluteEncoder)
         self.updownConfig.closedLoop.positionWrappingMinInput(0)
         self.updownConfig.closedLoop.positionWrappingMaxInput(1)
         self.updownConfig.closedLoop.positionWrappingEnabled(True)
+        self.updownConfig.absoluteEncoder.zeroOffset(0.34)
         self.updown.configure(self.updownConfig, rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
 
         self.spin.configurator.apply(big_config)
@@ -177,10 +178,10 @@ class intakeSubsys(commands2.Subsystem):
             
             
 
-            if self.timer.get() > .99 :
-                print (f'intake encoder {self.updownEncoder.getPosition()}')
-                self.timer.reset()
-                self.timer.start()
+        if self.timer.get() > .99 :
+            print (f'intake encoder {self.updown.getAbsoluteEncoder().getPosition()}')
+            self.timer.reset()
+            self.timer.start()
 
     def _getRawButtonSafe(self, buttonIdx: int) -> bool:
         buttonCount = wpilib.DriverStation.getStickButtonCount(self.controllerPort)
