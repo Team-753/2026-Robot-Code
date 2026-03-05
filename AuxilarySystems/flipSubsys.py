@@ -32,12 +32,9 @@ class flipsubsys(commands2.Subsystem):
         self.armmotor.configure(self.armconfigs,rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
         self.grabermotor.configurator.apply(graberconfigs)
 
-        self.grabermotor.set_position(0)
-        self.encoder.setPosition(0)
-
         self.armrequests = controls.VelocityVoltage(0).with_slot(0)
         self.graberrequests = controls.PositionVoltage(0).with_slot(1)
-        self.controller = wpilib.XboxController(0)
+        self.controller = wpilib.XboxController(4)
 
         self.state = 'init'
         self.substate = 'none'
@@ -53,30 +50,46 @@ class flipsubsys(commands2.Subsystem):
         self.positionset = 1.0
         self.position2set = -1.0
         self.target = 0
+        
+        self.INPressed = False
+        self.prevValIN = False
+        self.INStart = False
+        self.INStop = False
 
-        self.limitswitch1 = wpilib.DigitalInput(0)
-        self.limitswitch1pressesed = True
-        self.limitswitch2pressesed = True
+        self.OutPressed = False
+        self.prevValOut = False
+        self.INStart = False
+        self.INStop = False
 
-    def home(self):
-        if self.homingstate == 'start' :
-            target_rotations_per_minute = 1
-            self.armmotorController.setSetpoint(target_rotations_per_minute, rev.SparkMax.ControlType.kVelocity, rev.ClosedLoopSlot(0))
-            self.homingstate = 'waitForLimit'
-            print("I'm going home.")
+        self.RightPressed = False
+        self.prevValRight = False
+        self.INStart = False
+        self.INStop = False
 
-        elif self.homingstate == 'waitForLimit' :
-            if self.limitswitch1pressesed == False:
-                target_rotations_per_minute=0
-                self.armmotorController.setSetpoint(target_rotations_per_minute, rev.SparkMax.ControlType.kVelocity, rev.ClosedLoopSlot(0))
-                self.homingstate = 'complete' 
-                print("Tell the world I'm going home.")  
+        self.LeftPressed = False
+        self.prevValLeft = False
+        self.INStart = False
+        self.INStop = False
 
-        elif self.homingstate == 'complete':
-                self.encoder.setPosition(0)
-                self.homingstate = 'startagain'
-                print("I'm home.")
-                self.enabled = False
+    #def home(self):
+     #   if self.homingstate == 'start' :
+      #      target_rotations_per_minute = 1
+       #     self.armmotorController.setSetpoint(target_rotations_per_minute, rev.SparkMax.ControlType.kVelocity, rev.ClosedLoopSlot(0))
+        #    self.homingstate = 'waitForLimit'
+         #   print("I'm going home.")
+
+#        elif self.homingstate == 'waitForLimit' :
+#            if self.limitswitch1pressesed == False:
+ #               target_rotations_per_minute=0
+  #              self.armmotorController.setSetpoint(target_rotations_per_minute, rev.SparkMax.ControlType.kVelocity, rev.ClosedLoopSlot(0))
+   #             self.homingstate = 'complete' 
+    #            print("Tell the world I'm going home.")  
+#
+ #       elif self.homingstate == 'complete':
+  #              self.encoder.setPosition(0)
+   #             self.homingstate = 'startagain'
+    #            print("I'm home.")
+     #s           self.enabled = False
 
     def go_down(self):
         self.grabermotor.set_control(self.graberrequests.with_position(self.graberout))
@@ -151,42 +164,104 @@ class flipsubsys(commands2.Subsystem):
     def autoInit(self):
         self.state = 'auto'
 
+    def testexacute(self):
+        donePressed = self.controller.getLeftBumperButtonPressed()
+        INSpeed = 1
+        LeftSpeed = 1
+
+        self.prevValIN = self.INPressed
+        self.INPressed = self.controller.getRawButton(auxiliaryConfig.FLipINButtonINdex)
+        self.INStart = self.prevValIN == False and self.INPressed == True
+        self.INStop = self.prevValIN == True and self.INPressed == False
+
+        self.prevValOut = self.OutPressed
+        self.OutPressed = self.controller.getRawButton(auxiliaryConfig.FLipOutButtonINdex)
+        self.OutStart = self.prevValOut == False and self.OutPressed == True
+        self.OutStop = self.prevValOut == True and self.OutPressed == False
+
+        self.prevValLeft = self.LeftPressed
+        self.LeftPressed = self.controller.getRawButton(auxiliaryConfig.FLipLeftButtonINdex)
+        self.LeftStart = self.prevValLeft == False and self.LeftPressed == True
+        self.LeftStop = self.prevValLeft == True and self.LeftPressed == False
+
+        self.prevValRight = self.RightPressed
+        self.RightPressed = self.controller.getRawButton(auxiliaryConfig.FLipRightButtonINdex)
+        self.RightStart = self.prevValRight == False and self.RightPressed == True
+        self.RightStop = self.prevValRight == True and self.RightPressed == False
+
+        if self.INStart:
+            self.armmotor.set(INSpeed)
+            print('Moving in')
+
+        elif self.INStop:
+            self.armmotor.set(0)
+            print('not Moving in')
+
+        elif self.OutStop:
+            self.armmotor.set(0)
+            print('not Moving out')
+
+        elif self.OutStart:
+            self.armmotor.set(-INSpeed)
+            print('Moving out')
+
+        elif self.RightStart:
+            self.grabermotor.set(-LeftSpeed)
+            print('Moving Right')
+
+        elif self.RightStop:
+            self.grabermotor.set(0)
+            print('Not Moving Right')
+
+        elif self.LeftStop:
+            self.grabermotor.set(0)
+            print('Not Moving Left')
+
+        elif self.LeftStart:
+            self.grabermotor.set(LeftSpeed)
+            print('Moving Left')
+
+        elif donePressed:
+            self.encoder.setPosition(0)
+            self.grabermotor.set_position(0)
+            print('Home.')
+
+
+
+        
+
 
     def periodic(self):
-        APressed = self.controller.getAButtonPressed()
-        BPressed = self.controller.getBButtonPressed()
-        Homepressed = self.controller.getXButtonPressed()
-        go_downPressed = self.controller.getYButtonPressed()
-        Go_homePressed = self.controller.getLeftBumperPressed()
-        lv3flipPressed = self.controller.getRightBumperPressed()
-        self.limitswitch1pressesed = self.limitswitch1.get()
-        self.limitswitch2pressesed = self.controller.getRightBumperButtonPressed()
 
         if self.state == 'teleop': 
+             
+            APressed = self.controller.getAButtonPressed()
+            BPressed = self.controller.getBButtonPressed()
+            go_downPressed = self.controller.getYButtonPressed()
+            Go_homePressed = self.controller.getLeftBumperPressed()
+            lv3flipPressed = self.controller.getRightBumperPressed()
+            homePressed = self.controller.getXButtonPressed()
 
-            if APressed and APressed != self.enabled :
-                APressed = self.enabled
+            if APressed:
                 self.position_home()
                 
-            elif Go_homePressed and Go_homePressed != self.enabled :
-                Go_homePressed = self.enabled
+            elif Go_homePressed:
                 self.position_out()
 
-            elif Homepressed and Homepressed != self.enabled :
-                Homepressed = self.enabled
-                self.home()
-
-            elif go_downPressed and go_downPressed != self.enabled :
-                go_downPressed = self.enabled
+            elif go_downPressed:
                 self.go_down()
 
-            elif lv3flipPressed and lv3flipPressed != self.enabled:
-                self.enabled = lv3flipPressed
+            elif lv3flipPressed:
                 self.lv3flip()
 
-            elif BPressed and BPressed != self.enabled:
-                self.enabled = BPressed
+            elif BPressed:
                 self.lv1flip()
+
+            elif homePressed:
+                self.state = 'test'
 
         if self.state == 'auto':
             pass
+
+        if self.state == 'test':
+            self.testexacute()
