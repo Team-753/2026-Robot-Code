@@ -170,18 +170,22 @@ class driveTrainSubsys(commands2.Subsystem):
     def getPoseState(self):
         return self.poseEstimator.getEstimatedPosition()
 
+    def getRobotYaw(self):
+        robotYaw = self.compass.getRotation2d()
+        alliance = wpilib.DriverStation.getAlliance()
+        if alliance == wpilib.DriverStation.Alliance.kRed:
+            return robotYaw.rotateBy(wpimath.geometry.Rotation2d(pi))
+        return robotYaw
+
     def resetPose(self,pose):
         # Reset the estimator to the selected auto start pose before autonomous begins.
-        self.poseEstimator.resetPosition(self.compass.getRotation2d(),self.getSwerveState(),pose)
+        self.poseEstimator.resetPosition(self.getRobotYaw(),self.getSwerveState(),pose)
         self.field.setRobotPose(pose)
 
     def periodic(self):
 
         time = Timer.getFPGATimestamp()
-        if wpilib.DriverStation.Alliance.kRed:
-            robotYaw=self.compass.getRotation2d().rotateBy(wpimath.geometry.Rotation2d(pi))
-        else:
-            robotYaw = self.compass.getRotation2d()
+        robotYaw = self.getRobotYaw()
 
         self.limelight3.setRobotOrientation(robotYaw)
         self.limelight3a.setRobotOrientation(robotYaw)

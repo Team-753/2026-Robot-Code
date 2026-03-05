@@ -91,7 +91,8 @@ class autoDriveTrainCommand(commands2.Command):
         self.goal=self.traj.sample_at(self.clock.get(),self.flipForRedAlliance)
         speeds=self.getSpeeds(self.goal)
         #NOTE EXPLAIN LATER
-        if wpilib.DriverStation.Alliance.kRed:
+        alliance = wpilib.DriverStation.getAlliance()
+        if alliance == wpilib.DriverStation.Alliance.kRed:
             self.driveSubsys.setState(-speeds.vx,speeds.vy,speeds.omega)
         else:
             self.driveSubsys.setState(speeds.vx,-speeds.vy,speeds.omega)
