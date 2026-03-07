@@ -35,14 +35,14 @@ class intakeSubsys(commands2.Subsystem):
         # self.updownAlt.set_position(0)
 
         big_config = phoenix6.configs.Slot0Configs()
-        big_config.k_p = 0.11
+        big_config.k_p = 0.5
         big_config.k_i = 0
         big_config.k_d = 0
         big_config.k_s = 0.1
         big_config.k_v = 0.12
         
         self.updownConfig = rev.SparkMaxConfig()
-        self.updownConfig.closedLoop.P(2.0)
+        self.updownConfig.closedLoop.P(4.5)
         self.updownConfig.closedLoop.I(0.0)
         self.updownConfig.closedLoop.D(0.0)
         self.updownConfig.closedLoop.IMaxAccum(0.2)

@@ -49,8 +49,8 @@ graber_k_v_config=0
 graber_k_d_config=0
 graberhomespeed=0.25
 armhomespeed=0.25
-flipMotorID=19 # motor id for rev spark max arm motor
-flipGrabMotorID=99 # motor id for kraken rotation motor
+flipMotorID=21 # motor id for rev spark max arm motor
+flipGrabMotorID=19 # motor id for kraken rotation motor
 
 # button indices for teleop commands
 Flip_Go_Home_BtnIdx = 1

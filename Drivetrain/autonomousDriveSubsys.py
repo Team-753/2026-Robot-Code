@@ -37,7 +37,8 @@ class autoDriveTrainCommand(commands2.Command):
         self.holoCont=cont.HolonomicDriveController(cont.PIDController(2.5,0.1,0),cont.PIDController(2.5,0.1,0),cont.ProfiledPIDControllerRadians(0.3,0,0,wpimath.trajectory.TrapezoidProfileRadians.Constraints(pi,pi)))
         self.xPid=cont.PIDController(12,0.05,0.1)
         self.yPid=cont.PIDController(12,0.05,0.1)
-        self.omegaPid=cont.ProfiledPIDControllerRadians(14,0.00001,0.3,wpimath.trajectory.TrapezoidProfileRadians.Constraints(6*pi,6*pi))
+        self.omegaPid=cont.ProfiledPIDControllerRadians(16,0.0002,0.3,wpimath.trajectory.TrapezoidProfileRadians.Constraints(6*pi,6*pi))
+        self.omegaPid.enableContinuousInput(-pi,pi)
         # Load the selected Choreo path once so auto can fail safe if the selection is missing.
         if trajectoryName:
             try:
@@ -78,7 +79,7 @@ class autoDriveTrainCommand(commands2.Command):
         speeds = wpimath.kinematics.ChassisSpeeds(
             sample.vx + self.xPid.calculate(pose.X(), sample.x),
             sample.vy + self.yPid.calculate(pose.Y(), sample.y),
-            sample.omega + self.omegaPid.calculate(pose.rotation().radians(), sample.heading)
+            sample.omega + self.omegaPid.calculate(wpimath.geometry.Rotation2d(pose.rotation().radians()+pi).radians(), sample.heading)
         )
         return speeds
     def execute(self):

@@ -6,7 +6,7 @@
 #|____/_/    \_\_____/|_____\_____|  \_____\____/|_| \_|_|    |_____\_____|
 
 driveSpeed=50
-driveTurnSpeed=60
+driveTurnSpeed=50
 
 driveController="Joystick" #Options:XboxController,Joystick,VKBJoystick #NOTE ADD automatic
 driveControllerSlot=0 #USB NUMBER IN DRIVESTATION

@@ -35,7 +35,7 @@ class flipsubsys(commands2.Subsystem):
 
         # self.armrequests = controls.VelocityVoltage(0).with_slot(0)
         self.graberrequests = controls.PositionVoltage(0).with_slot(0)
-        self.controller = wpilib.XboxController(2)
+        self.controller = wpilib.XboxController(1)
 
         self.state = 'init'
         self.substate = 'none'
@@ -58,6 +58,21 @@ class flipsubsys(commands2.Subsystem):
         self.Go_StartPosPressed = False
         self.Go_homePressed = False
         self.Go_DownPressed = False
+        
+        self.lv1flipPressedPrev = False
+        self.lv3flipPressedPrev = False
+        self.Go_StartPosPressedPrev = False
+        self.Go_homePressedPrev = False
+        self.Go_DownPressedPrev = False
+        
+        self.lv1flipChanged = False
+        self.lv3flipChanged = False
+        self.Go_StartPosChanged = False
+        self.Go_homeChanged = False
+        self.Go_DownChanged = False
+
+        self.pov = 0
+        self.povprev = 0
         
         self.INPressed = False
         self.prevValIN = False
@@ -281,11 +296,43 @@ class flipsubsys(commands2.Subsystem):
 
         if self.state == 'teleop': 
             # gather button inputs
-            self.lv1flipPressed = self.controller.getRawButtonPressed(auxiliaryConfig.Flip_Climb_Lv1_BtnIdx)
-            self.lv3flipPressed = self.controller.getRawButtonPressed(auxiliaryConfig.Flip_Climb_Lv3_BtnIdx)
-            self.Go_StartPosPressed = self.controller.getRawButtonPressed(auxiliaryConfig.Flip_Go_Start_BtnIdx)
-            self.Go_homePressed = self.controller.getRawButtonPressed(auxiliaryConfig.Flip_Go_Home_BtnIdx)
-            self.Go_DownPressed = self.controller.getRawButtonPressed(auxiliaryConfig.flip_Go_Down_BtnIdx)
+            # self.lv1flipPressed = self.controller.getRawButtonPressed(auxiliaryConfig.Flip_Climb_Lv1_BtnIdx)
+            # self.lv3flipPressed = self.controller.getRawButtonPressed(auxiliaryConfig.Flip_Climb_Lv3_BtnIdx)
+            # self.Go_StartPosPressed = self.controller.getRawButtonPressed(auxiliaryConfig.Flip_Go_Start_BtnIdx)
+            # self.Go_homePressed = self.controller.getRawButtonPressed(auxiliaryConfig.Flip_Go_Home_BtnIdx)
+            # self.Go_DownPressed = self.controller.getRawButtonPressed(auxiliaryConfig.flip_Go_Down_BtnIdx)
+
+            self.Go_homePressedPrev = self.Go_homePressed
+            self.Go_StartPosPressedPrev = self.Go_StartPosPressed
+            self.lv1flipPressedPrev = self.lv1flipPressed
+            self.lv3flipPressedPrev = self.lv3flipPressed
+
+
+            self.povprev = self.pov
+            self.pov = self.controller.getPOV()
+            
+            if self.pov != -1 :
+                if self.pov > 180 - 5 and self.pov < 180 + 5 :
+                    self.Go_homePressed = True
+                elif self.pov > 270 - 5 and self.pov < 270 + 5 :
+                    self.Go_StartPosPressed = True
+                elif self.pov > 90 - 5 and self.pov < 90 + 5:
+                    self.lv1flipPressed = True
+                elif self.pov > 0 - 5 and self.pov < 0 + 5:
+                    self.lv3flipPressed = True
+            else:
+                self.lv1flipPressed = False
+                self.lv3flipPressed = False
+                self.Go_StartPosPressed = False
+                self.Go_homePressed = False
+                self.Go_DownPressed = False
+
+            self.Go_homeChanged = self.Go_homePressedPrev == False and self.Go_homePressed == True
+            self.Go_StartPosChanged = self.Go_StartPosPressedPrev == False and self.Go_StartPosPressed == True
+            self.lv1flipChanged = self.lv1flipPressedPrev == False and self.lv1flipPressed == True
+            self.lv3flipChanged = self.lv3flipPressedPrev == False and self.lv3flipPressed == True
+            
+
             #excute state
             self.execute()
 
@@ -299,6 +346,11 @@ class flipsubsys(commands2.Subsystem):
             self.Go_StartPosPressed = False
             self.Go_homePressed = False
             self.Go_DownPressed = False
+            self.lv1flipChanged = False
+            self.lv3flipChanged = False
+            self.Go_StartPosChanged = False
+            self.Go_homeChanged = False
+            self.Go_DownChanged = False
 
         elif self.state == 'test':
             self.testexacute()
@@ -311,26 +363,31 @@ class flipsubsys(commands2.Subsystem):
             self.Go_StartPosPressed = False
             self.Go_homePressed = False
             self.Go_DownPressed = False
+            self.lv1flipChanged = False
+            self.lv3flipChanged = False
+            self.Go_StartPosChanged = False
+            self.Go_homeChanged = False
+            self.Go_DownChanged = False
 
     def execute(self):
 
-        if self.Go_homePressed:
+        if self.Go_homeChanged:
             self.homepointarm = 'start'
             self.substate = 'goHome'
 
-        elif self.Go_StartPosPressed:
+        elif self.Go_StartPosChanged:
             self.armout = 'start'
             self.substate = 'goStart'
 
-        elif self.Go_DownPressed: # rotate robot from flipped state back down to the ground
+        elif self.Go_DownChanged: # rotate robot from flipped state back down to the ground
             self.godownstate = 'start'
             self.substate = 'goDown'
 
-        elif self.lv3flipPressed:
+        elif self.lv3flipChanged:
             self.lv3flipgo = 'start'
             self.substate = 'lv3flip'
 
-        elif self.lv1flipPressed:
+        elif self.lv1flipChanged:
             self.lv1flipgo = 'start'
             self.substate = 'lv1flip'
 
@@ -345,3 +402,32 @@ class flipsubsys(commands2.Subsystem):
             self.lv3flip()
         elif self.substate == 'goDown':
             self.go_down()
+    def setGrabber(self,speed):
+        print("grab",speed)
+        if speed==0.016:
+            self.grabermotor.setNeutralMode(phoenix6.signals.NeutralModeValue.BRAKE)
+        self.grabermotor.set(speed)
+    def setTrack(self,speed):
+        print('track',speed)
+        self.armmotor.set(speed)
+
+class flipGrabberCommand(commands2.Command):
+    def __init__(self,flipsub:flipsubsys,speed):
+        super().__init__()
+        self.flip=flipsub
+        self.speed=speed
+    def execute(self):
+        self.flip.setGrabber(self.speed)
+    def end(self,interrupted):
+        self.flip.setGrabber(0)
+
+class flipTrackCommand(commands2.Command):
+    def __init__(self,flipsub:flipsubsys,speed):
+        super().__init__()
+        self.flip=flipsub
+        self.speed=speed
+    def execute(self):
+        print("track")
+        self.flip.setTrack(self.speed)
+    def end(self,interupted):
+        self.flip.setTrack(0.016)

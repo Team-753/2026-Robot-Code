@@ -167,6 +167,7 @@ class driveTrainSubsys(commands2.Subsystem):
             #IF JITTERING WITH CORRECT PID, REVERSE OPTIMIZE ANGLE INPUT
             self.swerveNumbers[i].optimize(wpimath.geometry.Rotation2d.fromRotations(self.swerveModules[i].getRot()))
             self.swerveModules[i].setState(self.swerveNumbers[i].angle.radians()/(2*pi),self.swerveNumbers[i].speed)
+        print(self.swerveNumbers[0].angle.degrees(),self.swerveNumbers[1].angle.degrees(),self.swerveNumbers[2].angle.degrees(),self.swerveNumbers[3].angle.degrees())
     def getPoseState(self):
         if wpilib.DriverStation.getAlliance() == wpilib.DriverStation.Alliance.kRed:
             currentPose = wpimath.geometry.Pose2d(self.poseEstimator.getEstimatedPosition().translation(),self.poseEstimator.getEstimatedPosition().rotation().rotateBy(wpimath.geometry.Rotation2d(pi)))

@@ -29,7 +29,7 @@ class robotContainer():
         self.shooterSubsystem=shooterSubsys.shooterSubsys()
         self.indexerSubsystem=IndexerSubsys.indexerSubsys()
         self.intakeSubsystem=IntakeSubsys.intakeSubsys()
-        #self.flipSubsystem=flipSubsys.flipsubsys()
+        self.flipSubsystem=flipSubsys.flipsubsys()
 
         exec("self.joystick="+str(swerveConfig.driveController)+"Subsys(self.controller)")
         self.initializeTrajectoryChooser()
@@ -172,7 +172,7 @@ class robotContainer():
         self.shooterSubsystem.setToIdle()
         self.intakeSubsystem.setToIdle()
         self.indexerSubsystem.setToIdle()
-        #self.flipSubsystem.setToIdle()
+        self.flipSubsystem.setToIdle()
         print('entering disabled')
 
     def buttonBindings(self):
@@ -180,7 +180,7 @@ class robotContainer():
         ##Stick recenter bindings
         if swerveConfig.driveController=="Joystick":
             self.controller.button(6).whileTrue(fieldOrientReorient(self.driveSubsystem))
-            self.controller.button(2).whileTrue(commands2.RepeatCommand(targetPointCommand(self.driveSubsystem,11.91497, 4.03514)))
+            self.controller.button(2).whileTrue(commands2.RepeatCommand(targetPointWithLeadCommand(self.driveSubsystem)))
             self.controller.button(1).whileTrue(commands2.RepeatCommand(pointToVelocityVectorCommand(self.driveSubsystem,self.joystick)))
         if swerveConfig.driveController=="VKBJoystick":
             self.controller.button(15).whileTrue(fieldOrientReorient(self.driveSubsystem))
@@ -190,6 +190,13 @@ class robotContainer():
             self.controller.a().whileTrue(fieldOrientReorient(self.driveSubsystem))
             self.controller.x().whileTrue(commands2.RepeatCommand(targetPointCommand(self.driveSubsystem,11.91497, 4.03514)))
             self.controller.rightTrigger().whileTrue(commands2.RepeatCommand(pointToVelocityVectorCommand(self.driveSubsystem,self.joystick)))
+        if True:
+            self.auxController.povUp().whileTrue(flipSubsys.flipGrabberCommand(self.flipSubsystem,-0.1))
+            self.auxController.povDown().whileTrue(flipSubsys.flipGrabberCommand(self.flipSubsystem,0.5))
+            self.auxController.povLeft().whileTrue(flipSubsys.flipTrackCommand(self.flipSubsystem,0.7))
+            self.auxController.povRight().whileTrue(flipSubsys.flipTrackCommand(self.flipSubsystem,-0.5))
+
+            pass
 
         ##Shooter bindings
         #if auxiliaryConfig.auxController=="XboxController":
@@ -197,3 +204,6 @@ class robotContainer():
            # self.auxController.x().whileTrue(commands2.RepeatCommand(targetPointCommand(self.driveSubsystem,4.62507, 4.03514)))
             #self.auxController.y().whileTrue(commands2.RepeatCommand(overideRobotInput(self.driveSubsystem,theta=0.1)))
             #pass
+    def testInit(self):
+        #self.flipSubsystem.testInit()
+        pass

@@ -33,7 +33,7 @@ class targetPointWithLeadCommand(commands2.Command): #This class is used for est
         self.driveSubsys = driveSubsys
         self.TARGET_POINT_BLUE = (4.62507, 4.03514)
         self.TARGET_POINT_RED = (11.91497,4.03514)
-        self.thetaPid=wpimath.controller.ProfiledPIDControllerRadians(45,0.0001,0.15,wpimath.trajectory.TrapezoidProfileRadians.Constraints(2*pi,2*pi))
+        self.thetaPid=wpimath.controller.ProfiledPIDControllerRadians(45,0.0007,0.15,wpimath.trajectory.TrapezoidProfileRadians.Constraints(2*pi,2*pi))
         self.thetaPid.setIntegratorRange(-1,1)
         self.thetaPid.enableContinuousInput(-pi,pi)
         self.thetaPid.setTolerance(0.6)
@@ -86,6 +86,7 @@ class targetPointWithLeadCommand(commands2.Command): #This class is used for est
         velocities=self.calucateVelocity()
         leadTargetPoint=self.adjustedTargetPoint(self._get_target_point(),0.9,velocities)
         desiredRotation=atan2(leadTargetPoint[1]-self.robotPose.y,leadTargetPoint[0]-self.robotPose.x)
+        print(leadTargetPoint)
         output=self.thetaPid.calculate(wpimath.geometry.Rotation2d(self.robotPose.rotation().radians()-pi).radians(),desiredRotation)
         self.driveSubsys.overideInput(rot=output)
         return self.thetaPid.atGoal()

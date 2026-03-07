@@ -15,3 +15,5 @@ class myRobot(commands2.TimedCommandRobot):
         self.rContainer.autoPeriodic
     def disabledInit(self):
         self.rContainer.disabledInit()
+    def testInit(self):
+        self.rContainer.testInit()
