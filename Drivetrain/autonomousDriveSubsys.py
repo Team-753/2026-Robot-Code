@@ -111,8 +111,8 @@ class autoDriveTrainCommand(commands2.Command):
             #commands2.InstantCommand(targetPointCommand(self.driveSubsys,1,1))
             #commands2.CommandScheduler.schedule(commands2.CommandScheduler.getInstance(),commands2.RepeatCommand(targetPointWithLeadCommand(self.driveSubsys)))
             val=targetPointWithLeadCommand(self.driveSubsys).execute()
-            #self.shooterSubsys.autoShootStart()
-            #self.indexerSubsys.autoShootStart()
+            self.shooterSubsys.autoShootStart()
+            self.indexerSubsys.autoShootStart()
             #commands2.RepeatCommand(targetPointCommand(self.driveSubsys,1,1))
         else:
             targetPointWithLeadCommand(self.driveSubsys).end(interrupted=True)
