@@ -116,8 +116,8 @@ class autoDriveTrainCommand(commands2.Command):
             #commands2.RepeatCommand(targetPointCommand(self.driveSubsys,1,1))
         else:
             targetPointWithLeadCommand(self.driveSubsys).end(interrupted=True)
-            #self.shooterSubsys.autoShootStop()
-            #self.indexerSubsys.autoShootStop()
+            self.shooterSubsys.autoShootStop()
+            self.indexerSubsys.autoShootStop()
         
         if self.intakeDown:
             self.intakeSubsys.autoIntakeDown()
