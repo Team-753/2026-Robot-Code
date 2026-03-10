@@ -41,12 +41,13 @@ class targetPointWithLeadCommand(commands2.Command): #This class is used for est
         try:
             alliance = wpilib.DriverStation.getAlliance()
         except Exception:
+            print("getAllianceError")
             return None
         return alliance
 
     def _get_target_point(self): #Sets the target point based on the team we are on. 
         alliance = self._get_alliance()
-        if alliance == wpilib.DriverStation.Alliance.kRed:
+        if  not alliance == wpilib.DriverStation.Alliance.kRed:
             return [self.TARGET_POINT_RED[0],self.TARGET_POINT_RED[1]]
         return [self.TARGET_POINT_BLUE[0],self.TARGET_POINT_BLUE[1]]
     

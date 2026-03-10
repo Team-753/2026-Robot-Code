@@ -74,12 +74,15 @@ class autoDriveTrainCommand(commands2.Command):
     def getSpeeds(self, sample):
         # Get the current pose of the robot
         pose = self.driveSubsys.getPoseState()
-
+        if wpilib.DriverStation.getAlliance() == wpilib.DriverStation.Alliance.kRed:
+            offset=pi
+        else:
+            offset=0
         # Generate the next speeds for the robot
         speeds = wpimath.kinematics.ChassisSpeeds(
             sample.vx + self.xPid.calculate(pose.X(), sample.x),
             sample.vy + self.yPid.calculate(pose.Y(), sample.y),
-            sample.omega + self.omegaPid.calculate(wpimath.geometry.Rotation2d(pose.rotation().radians()+pi).radians(), sample.heading)
+            sample.omega + self.omegaPid.calculate(wpimath.geometry.Rotation2d(pose.rotation().radians()+offset).radians(), sample.heading)
         )
         return speeds
     def execute(self):
@@ -108,18 +111,18 @@ class autoDriveTrainCommand(commands2.Command):
             #commands2.InstantCommand(targetPointCommand(self.driveSubsys,1,1))
             #commands2.CommandScheduler.schedule(commands2.CommandScheduler.getInstance(),commands2.RepeatCommand(targetPointWithLeadCommand(self.driveSubsys)))
             val=targetPointWithLeadCommand(self.driveSubsys).execute()
-            self.shooterSubsys.autoShootStart()
-            self.indexerSubsys.autoShootStart()
+            #self.shooterSubsys.autoShootStart()
+            #self.indexerSubsys.autoShootStart()
             #commands2.RepeatCommand(targetPointCommand(self.driveSubsys,1,1))
         else:
             targetPointWithLeadCommand(self.driveSubsys).end(interrupted=True)
-            self.shooterSubsys.autoShootStop()
-            self.indexerSubsys.autoShootStop()
+            #self.shooterSubsys.autoShootStop()
+            #self.indexerSubsys.autoShootStop()
         
         if self.intakeDown:
             self.intakeSubsys.autoIntakeDown()
         else:
-            self.intakeSubsys.autoIntakeUp()
+            self.intakeSubsys.autoIntakeDown()
         
         if self.intakeSpin:
             self.intakeSubsys.autoGrabStart()

@@ -191,9 +191,9 @@ class robotContainer():
             self.controller.x().whileTrue(commands2.RepeatCommand(targetPointCommand(self.driveSubsystem,11.91497, 4.03514)))
             self.controller.rightTrigger().whileTrue(commands2.RepeatCommand(pointToVelocityVectorCommand(self.driveSubsystem,self.joystick)))
         if True:
-            self.auxController.povUp().whileTrue(flipSubsys.flipGrabberCommand(self.flipSubsystem,-0.1))
-            self.auxController.povDown().whileTrue(flipSubsys.flipGrabberCommand(self.flipSubsystem,0.5))
-            self.auxController.povLeft().whileTrue(flipSubsys.flipTrackCommand(self.flipSubsystem,0.7))
+            self.auxController.povUp().whileTrue(flipSubsys.flipGrabberCommand(self.flipSubsystem,-0.5))
+            self.auxController.povDown().whileTrue(flipSubsys.flipGrabberCommand(self.flipSubsystem,0.1))
+            self.auxController.povLeft().whileTrue(flipSubsys.flipTrackCommand(self.flipSubsystem,0.5))
             self.auxController.povRight().whileTrue(flipSubsys.flipTrackCommand(self.flipSubsystem,-0.5))
 
             pass
