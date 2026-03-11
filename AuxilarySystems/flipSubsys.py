@@ -32,6 +32,7 @@ class flipsubsys(commands2.Subsystem):
 
         self.armmotor.configure(self.armconfigs,rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
         self.grabermotor.configurator.apply(graberconfigs)
+        self.grabermotor.configurator.apply(grabberFeedbackConfig)
 
         # self.armrequests = controls.VelocityVoltage(0).with_slot(0)
         self.graberrequests = controls.PositionVoltage(0).with_slot(0)
