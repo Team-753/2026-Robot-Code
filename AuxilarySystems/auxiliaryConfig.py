@@ -37,7 +37,7 @@ graberlv3=0.3
 #Gear ratio between the Kraken motor and the rotating part of the climber. 
 #For each 506.66666 rotations of the motor, the climber rotates once.
 #(506.6666/1) 
-krakenGearRatio = 506.66666
+krakenGearRatio = 506.66666 #still true?
 
 graber_k_s_config=0
 graber_k_i_config=0

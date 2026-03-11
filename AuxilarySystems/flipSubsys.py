@@ -9,7 +9,7 @@ from AuxilarySystems import auxiliaryConfig
 
 class flipsubsys(commands2.Subsystem):
     def __init__(self):
-        super().__init__()
+        super().__init__() 
         self.armmotor = rev.SparkMax(auxiliaryConfig.flipMotorID,rev.SparkMax.MotorType.kBrushless)
         self.grabermotor=phoenix6.hardware.TalonFX(2)
         self.encoder = self.armmotor.getEncoder()

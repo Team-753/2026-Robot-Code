@@ -17,7 +17,7 @@ class indexerSubsys(commands2.Subsystem):
         big_config.k_p = .11
         big_config.k_i = 0
         big_config.k_d = 0
-        big_config.k_s = 0.3
+        big_config.k_s = 0.3 
         big_config.k_v = 0.63
         #self.numberOne.configurator.apply(big_config)
         self.request = controls.VelocityVoltage(0).with_slot(0)
