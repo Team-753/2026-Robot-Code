@@ -286,5 +286,6 @@
  "events":[
    {"name":"setIntakeDown(True)", "from":{"target":4, "targetTimestamp":2.57923, "offset":{"exp":"0 s", "val":0.0}}, "event":null},
    {"name":"setIntakeSpin(True)", "from":{"target":4, "targetTimestamp":2.57923, "offset":{"exp":"0 s", "val":0.0}}, "event":null},
-   {"name":"setIntakeSpin(False)", "from":{"target":null, "targetTimestamp":null, "offset":{"exp":"0 s", "val":0.0}}, "event":null}]
+   {"name":"setIntakeSpin(False)", "from":{"target":null, "targetTimestamp":null, "offset":{"exp":"0 s", "val":0.0}}, "event":null},
+   {"name":"setIntakeSpin(False)", "from":{"target":10, "targetTimestamp":9.67225, "offset":{"exp":"0 s", "val":0.0}}, "event":null}]
 }
