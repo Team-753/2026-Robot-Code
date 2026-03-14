@@ -1,13 +1,13 @@
 import commands2,wpimath.controller,wpimath.trajectory
-from math import atan2,pi
+from math import atan2,pi,sqrt
 import wpilib
 from Drivetrain.swerveSubsys import overideRobotInput,driveTrainSubsys
 from wpilib import Timer
 import wpilib
-        
+import AuxilarySystems.shooterSubsys
+from customFunctions import pythag
 #NOTICE: This targeting system assumes the metric system. 
 #Unfortunantly, Cheeseburgers-per-hour was not easy to implement into the code (plus I am lazy) -Ryan T
-
 
 class targetPointCommand(commands2.Command): #This class points the robot in the direction it is heading. 
     def __init__(self,driveSubsys:driveTrainSubsys,tx,ty)-> None:
@@ -90,6 +90,81 @@ class targetPointWithLeadCommand(commands2.Command): #This class is used for est
         print(leadTargetPoint)
         output=self.thetaPid.calculate(wpimath.geometry.Rotation2d(self.robotPose.rotation().radians()-pi).radians(),desiredRotation)
         self.driveSubsys.overideInput(rot=output)
-        return self.thetaPid.atGoal()
+            
+    def end(self,interrupted):
+        self.driveSubsys.overideInput()
+
+
+class targetPointWithShootingCommand(commands2.Command): #This class is used for estimating where the robot needs to look based on its velocity. 
+    def __init__(self,driveSubsys:driveTrainSubsys,shootSubsys:AuxilarySystems.shooterSubsys.shooterSubsys):
+        super().__init__()
+        self.driveSubsys = driveSubsys
+        self.shooterSubsys= shootSubsys
+        self.TARGET_POINT_BLUE = (4.62507, 4.03514)
+        self.TARGET_POINT_RED = (11.91497,4.03514)
+        self.thetaPid=wpimath.controller.ProfiledPIDControllerRadians(45,0.0007,0.15,wpimath.trajectory.TrapezoidProfileRadians.Constraints(2*pi,2*pi))
+        self.thetaPid.setIntegratorRange(-1,1)
+        self.thetaPid.enableContinuousInput(-pi,pi)
+        self.thetaPid.setTolerance(0.6)
+    def _get_alliance(self): #We need this information so that we dont score in the wrong hub.
+        try:
+            alliance = wpilib.DriverStation.getAlliance()
+        except Exception:
+            print("getAllianceError")
+            return None
+        return alliance
+
+    def _get_target_point(self): #Sets the target point based on the team we are on. 
+        alliance = self._get_alliance()
+        if  not alliance == wpilib.DriverStation.Alliance.kRed:
+            return [self.TARGET_POINT_RED[0],self.TARGET_POINT_RED[1]]
+        return [self.TARGET_POINT_BLUE[0],self.TARGET_POINT_BLUE[1]]
+    
+    def getTOF(self):
+        pass
+        #print(self.lookupTable.loc[self.lookupTable["rpm"].get(1)])
+    def calucateVelocity(self): #Used to calculate the velocity of the robot so that we can adjust the target point
+        try:
+            print(pastPosition)
+            pastPosition=self.robotPose
+            pastTime=self.currentTime
+        except:
+            print("Error Storing Position to past")
+        self.robotPose=self.driveSubsys.getPoseState()
+        self.currentTime=Timer.getFPGATimestamp()
+        try:
+            if pastPosition:
+                deltaTime=self.currentTime-pastTime
+                velx=self.robotPose.x-pastPosition.x
+                vely=self.robotPose.y-pastPosition.y
+                velx=velx*(1/deltaTime)
+                vely=vely*(1/deltaTime)
+        except:
+            velx=0
+            vely=0
+            deltaTime=0
+            print("error calculating velocity")
+        pastPosition=self.robotPose
+        return [velx,vely,deltaTime]
+
+    def adjustedTargetPoint(self,targetPoint,tof,velocities): #Returns the point we are looking for. 
+        tx=targetPoint[0]-(tof*velocities[0])
+        ty=targetPoint[1]-(tof*velocities[1])
+        return[tx,ty]
+
+    def execute(self):
+        velocities=self.calucateVelocity()
+        leadTargetPoint=self.adjustedTargetPoint(self._get_target_point(),0.9,velocities)
+        desiredRotation=atan2(leadTargetPoint[1]-self.robotPose.y,leadTargetPoint[0]-self.robotPose.x)
+        print(leadTargetPoint)
+        output=self.thetaPid.calculate(wpimath.geometry.Rotation2d(self.robotPose.rotation().radians()-pi).radians(),desiredRotation)
+        self.driveSubsys.overideInput(rot=output)
+        if self.thetaPid.getPositionError()<=0.17:
+            distance=pythag(self.robotPose.x,self.robotPose.y,leadTargetPoint[0],leadTargetPoint[1])
+            self.shooterSubsys.setTargetDistance(distance)
+            self.shooterSubsys.autoShootStart()
+        else:
+            self.shooterSubsys.autoShootStop()
+
     def end(self,interrupted):
         self.driveSubsys.overideInput()
