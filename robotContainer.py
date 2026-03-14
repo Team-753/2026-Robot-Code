@@ -18,7 +18,6 @@ class robotContainer():
         self.primaryAutoCommand=None
         self.previewedTrajectoryName=None
         self.previewedFlipForRedAlliance=None
-        self.secondAutoTransitionDelaySeconds=0.5
 
         if swerveConfig.driveController=="Joystick"or swerveConfig.driveController=="VKBJoystick":
             self.controllerType="Joystick"
@@ -210,24 +209,24 @@ class robotContainer():
     def createAutoDriveCommand(self,trajectoryName):
         return autoDriveTrainCommand(self.shooterSubsystem,self.intakeSubsystem,self.indexerSubsystem,self.driveSubsystem,trajectoryName)
 
-    def beginSecondAutoTransition(self):
+    def beginAutoTransition(self):
         self.driveSubsystem.setState(0,0,0)
+        self.intakeSubsystem.autoGrabStop()
+        self.shooterSubsystem.autoShootStart()
+        self.indexerSubsystem.autoShootStart()
+        wpilib.SmartDashboard.putString("Auto Transition Status","Launching")
+
+    def finishAutoTransition(self):
         self.shooterSubsystem.autoShootStop()
         self.indexerSubsystem.autoShootStop()
         self.intakeSubsystem.autoGrabStop()
-        wpilib.SmartDashboard.putString("Auto Transition Status","Running")
-
-    def finishSecondAutoTransition(self):
-        self.shooterSubsystem.autoInit()
-        self.intakeSubsystem.autoInit()
-        self.indexerSubsystem.autoInit()
         wpilib.SmartDashboard.putString("Auto Transition Status","Complete")
 
-    def buildSecondAutoTransitionCommand(self):
+    def buildAutoTransitionCommand(self):
         return commands2.SequentialCommandGroup(
-            commands2.InstantCommand(self.beginSecondAutoTransition,self.driveSubsystem),
-            commands2.WaitCommand(self.secondAutoTransitionDelaySeconds),
-            commands2.InstantCommand(self.finishSecondAutoTransition,self.driveSubsystem),
+            commands2.InstantCommand(self.beginAutoTransition,self.driveSubsystem),
+            commands2.WaitCommand(auxiliaryConfig.autoTransitionDelaySeconds),
+            commands2.InstantCommand(self.finishAutoTransition,self.driveSubsystem),
         )
 
     def buildAutonomousCommand(self):
@@ -235,10 +234,14 @@ class robotContainer():
         selectedSecondTrajectoryName=self.getSelectedSecondTrajectoryName()
         self.primaryAutoCommand=self.createAutoDriveCommand(selectedTrajectoryName)
         autoCommands=[self.primaryAutoCommand]
+        hasEnabledSecondAuto=self.isSecondAutoEnabled() and selectedSecondTrajectoryName
 
-        if self.isSecondAutoEnabled() and selectedSecondTrajectoryName:
-            autoCommands.append(self.buildSecondAutoTransitionCommand())
+        if hasEnabledSecondAuto:
+            autoCommands.append(self.buildAutoTransitionCommand())
             autoCommands.append(self.createAutoDriveCommand(selectedSecondTrajectoryName))
+
+        if selectedTrajectoryName or hasEnabledSecondAuto:
+            autoCommands.append(self.buildAutoTransitionCommand())
             wpilib.SmartDashboard.putString("Auto Transition Status","Ready")
         else:
             wpilib.SmartDashboard.putString("Auto Transition Status","Disabled")
