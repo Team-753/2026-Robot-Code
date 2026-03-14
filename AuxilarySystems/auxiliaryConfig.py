@@ -18,6 +18,7 @@ shooterStartupTime = 1.0 #seconds
 indexerSpeed=0.8 #1 is 100% power
 indexerMotorIndexNumberLIKETHEONLYMOTOR = 17
 indexerEnableBtnIdx=3 # AXIS index for enable button - matches the shooter
+autoTransitionDelaySeconds = 7
 
 #Intake Subsystem config
 intakeUpDownMotorID=9 #?

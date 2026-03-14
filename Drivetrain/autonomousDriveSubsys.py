@@ -15,6 +15,7 @@ class autoDriveTrainCommand(commands2.Command):
     def __init__(self,shooterSubsys:shooterSubsys.shooterSubsys,intakeSubsys:IntakeSubsys.intakeSubsys,indexerSubsys:IndexerSubsys.indexerSubsys,driveSubsys:driveTrainSubsys,trajectoryName:str=""):
         super().__init__()
         self.eventList=[]
+        self.nextEventIndex=0
         #SUBSYS
         self.driveSubsys=driveSubsys
         self.shooterSubsys=shooterSubsys
@@ -22,6 +23,7 @@ class autoDriveTrainCommand(commands2.Command):
         self.indexerSubsys=indexerSubsys
         self.traj=None
         self.initialPose=None
+        self.totalTime=0.0
         self.flipForRedAlliance=_shouldFlipTrajectoryForAlliance()
         self.addRequirements(driveSubsys)
         cont=wpimath.controller
@@ -44,6 +46,7 @@ class autoDriveTrainCommand(commands2.Command):
             try:
                 self.traj=choreo.load_swerve_trajectory(trajectoryName)
                 self.initialPose=self.traj.get_initial_pose(self.flipForRedAlliance)
+                self.totalTime=self.traj.get_total_time()
                 for eventMarker in self.traj.events:
                     self.eventList.append((eventMarker.timestamp,eventMarker.event))
                 wpilib.SmartDashboard.putString("Auto Trajectory Loaded",trajectoryName)
@@ -65,6 +68,7 @@ class autoDriveTrainCommand(commands2.Command):
     def initialize(self):
         self.clock.reset()
         self.clock.start()
+        self.nextEventIndex=0
         if self.traj is not None:
             print(self.traj.events)
 
@@ -89,9 +93,9 @@ class autoDriveTrainCommand(commands2.Command):
         if self.traj is None:
             self.driveSubsys.setState(0,0,0)
             return
-        for i in range(len(self.eventList)):
-            if self.clock.get()>self.eventList[i][0]:
-                exec("self."+str(self.eventList[i][1]))
+        while self.nextEventIndex < len(self.eventList) and self.clock.get() >= self.eventList[self.nextEventIndex][0]:
+            exec("self."+str(self.eventList[self.nextEventIndex][1]))
+            self.nextEventIndex+=1
         self.goal=self.traj.sample_at(self.clock.get(),self.flipForRedAlliance)
         speeds=self.getSpeeds(self.goal)
         #NOTE EXPLAIN LATER
@@ -118,12 +122,24 @@ class autoDriveTrainCommand(commands2.Command):
         if self.intakeDown:
             self.intakeSubsys.autoIntakeDown()
         else:
-            self.intakeSubsys.autoIntakeDown()
+            self.intakeSubsys.autoIntakeUp()
         
         if self.intakeSpin:
             self.intakeSubsys.autoGrabStart()
         else:
             self.intakeSubsys.autoGrabStop()
+
+    def end(self,interrupted):
+        self.clock.stop()
+        self.driveSubsys.setState(0,0,0)
+        self.shooterSubsys.autoShootStop()
+        self.indexerSubsys.autoShootStop()
+        self.intakeSubsys.autoGrabStop()
+
+    def isFinished(self):
+        if self.traj is None:
+            return True
+        return self.clock.get() >= self.totalTime
 
     def setShooting(self,shooterState):
         self.shooterState=shooterState
