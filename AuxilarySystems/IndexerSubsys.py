@@ -89,7 +89,7 @@ class indexerSubsys(commands2.Subsystem):
     def executeState(self):
 
         if self.BChanged:
-            print('intake toggled')
+            # print('intake toggled')
             self.intakeRunning = not self.intakeRunning
 
         if self.XStart and not self.shooterRunning:

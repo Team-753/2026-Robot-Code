@@ -60,7 +60,8 @@ class intakeSubsys(commands2.Subsystem):
         self._warnedMissingController = False
         self.YPressed = False
         self.prevVal = False
-        self.YChanged = False
+        self.YStart = False
+        self.YStop = False
         self.APressed = False
         self.prevVal2 = False
         self.AChanged = False
@@ -89,11 +90,11 @@ class intakeSubsys(commands2.Subsystem):
     
     def autoGrabStart(self):
         if self.state == 'auto' and not self.spinToggle:
-            self.YChanged = True
+            self.YStart = True
         
     def autoGrabStop(self):
         if self.state == 'auto' and self.spinToggle:
-            self.YChanged = True
+            self.YStop = True
     
     def autoIntakeDown(self):
         if self.state == 'auto' and not self.intakeIsDown:
@@ -114,7 +115,8 @@ class intakeSubsys(commands2.Subsystem):
             
             self.prevVal = self.YPressed
             self.YPressed = self._getRawButtonSafe(auxiliaryConfig.intakeSpinEnableBtnIdx)
-            self.YChanged = self.prevVal == False and self.YPressed == True
+            self.YStart = self.prevVal == False and self.YPressed == True
+            self.YStop = self.prevVal == True and self.YPressed == False
 
             self.prevVal2 = self.APressed
             self.APressed = self._getRawButtonSafe(auxiliaryConfig.intakeUpdownToggleBtnIdx)
@@ -129,9 +131,13 @@ class intakeSubsys(commands2.Subsystem):
         elif self.state == 'auto':
             self.executeState()
             self.inRange = True
-            self.YChanged = False
+            self.YStart = False
+            self.YStop = False
             self.AChanged = False
         else:
+            self.YStart = False
+            self.YStop = False
+            self.AChanged = False
             self.spinToggle = False
             self.spin.set(0)
 
@@ -139,19 +145,20 @@ class intakeSubsys(commands2.Subsystem):
         
         
 
-        if not self.inRange:
-            self.spin.set_control(self.request.with_velocity(0))
-            self.spinToggle = False
+        # if not self.inRange:
+        #     self.spin.set_control(self.request.with_velocity(0))
+        #     self.spinToggle = False
 
-        if self.YChanged and self.inRange:
+        if self.YStart and self.inRange:
             
-            self.spinToggle = not self.spinToggle
-            if self.spinToggle == True:
-                self.spin.set(-auxiliaryConfig.intakeSpinnerSpeed)
-                print('intake start spinning')
-            else:
-                self.spin.set(0)
-                print('intake stop spinning')
+            self.spin.set(-auxiliaryConfig.intakeSpinnerSpeed)
+            self.spinToggle = True
+            print('intake start spinning')
+            
+        if self.YStop or not self.inRange:
+            self.spin.set(0)
+            self.spinToggle = False
+            print('intake stop spinning')
 
         if self.AChanged:
             if self.intakeIsDown:
@@ -179,7 +186,7 @@ class intakeSubsys(commands2.Subsystem):
             
 
         if self.timer.get() > .99 :
-            print (f'intake encoder {self.updown.getAbsoluteEncoder().getPosition()}')
+            #print (f'intake encoder {self.updown.getAbsoluteEncoder().getPosition()}')
             self.timer.reset()
             self.timer.start()
 
