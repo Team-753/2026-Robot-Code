@@ -101,10 +101,10 @@ class indexerSubsys(commands2.Subsystem):
 
         self.LogicPrevVal = self.indexerLogic
 
-        if self.shooterRunning or self.intakeRunning:
+        if self.shooterRunning:#or self.intakeRunning:
             self.indexerLogic = True
         
-        if not self.shooterRunning and not self.intakeRunning:
+        if not self.shooterRunning:# and not self.intakeRunning:
             self.indexerLogic = False
         
         self.indexerToggle = self.LogicPrevVal != self.indexerLogic
