@@ -1,6 +1,7 @@
 import os
 import choreo
-import wpilib,commands2,Drivetrain.swerveConfig as swerveConfig
+from math import pi
+import wpilib,commands2,wpimath,Drivetrain.swerveConfig as swerveConfig
 # disable warnings about the joystick
 wpilib.DriverStation.silenceJoystickConnectionWarning(True)
 
@@ -18,6 +19,9 @@ class robotContainer():
         self.primaryAutoCommand=None
         self.previewedTrajectoryName=None
         self.previewedFlipForRedAlliance=None
+        self.autoTransitionHeadingRadians=None
+        self.autoTransitionHeadingPid=wpimath.controller.ProfiledPIDControllerRadians(16,0.0002,0.3,wpimath.trajectory.TrapezoidProfileRadians.Constraints(6*pi,6*pi))
+        self.autoTransitionHeadingPid.enableContinuousInput(-pi,pi)
 
         if swerveConfig.driveController=="Joystick"or swerveConfig.driveController=="VKBJoystick":
             self.controllerType="Joystick"
@@ -210,6 +214,8 @@ class robotContainer():
         return autoDriveTrainCommand(self.shooterSubsystem,self.intakeSubsystem,self.indexerSubsystem,self.driveSubsystem,trajectoryName)
 
     def beginAutoTransition(self):
+        self.autoTransitionHeadingRadians=self.driveSubsystem.getRobotYaw().radians()
+        self.autoTransitionHeadingPid.reset(self.autoTransitionHeadingRadians)
         self.driveSubsystem.setState(0,0,0)
         self.intakeSubsystem.autoGrabStop()
         self.shooterSubsystem.autoShootStart()
@@ -217,9 +223,15 @@ class robotContainer():
         wpilib.SmartDashboard.putString("Auto Transition Status","Launching")
 
     def executeAutoTransition(self):
-        self.driveSubsystem.setState(0,0,0)
+        if self.autoTransitionHeadingRadians is None:
+            self.driveSubsystem.setState(0,0,0)
+            return
+        currentHeadingRadians=self.driveSubsystem.getRobotYaw().radians()
+        holdHeadingOutput=self.autoTransitionHeadingPid.calculate(currentHeadingRadians,self.autoTransitionHeadingRadians)
+        self.driveSubsystem.setState(0,0,holdHeadingOutput)
 
     def finishAutoTransition(self):
+        self.autoTransitionHeadingRadians=None
         self.shooterSubsystem.autoShootStop()
         self.indexerSubsystem.autoShootStop()
         self.intakeSubsystem.autoGrabStop()
