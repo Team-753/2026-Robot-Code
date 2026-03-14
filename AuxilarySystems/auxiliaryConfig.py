@@ -14,11 +14,11 @@ shooterVelocityDownBtnIdx=1 # raw button index for velocity down increment
 shooterIndexDutyCycle = 0.7 # fixed duty cycle of the rev indexer
 shooterStartupTime = 1.0 #seconds
 
+
 #Indexer Subsystem config
 indexerSpeed=0.8 #1 is 100% power
 indexerMotorIndexNumberLIKETHEONLYMOTOR = 17
 indexerEnableBtnIdx=3 # AXIS index for enable button - matches the shooter
-autoTransitionDelaySeconds = 7
 
 #Intake Subsystem config
 intakeUpDownMotorID=9 #?
@@ -66,3 +66,7 @@ FLipOutButtonINdex=4
 FLipLeftButtonINdex=3
 FLipRightButtonINdex=2
 FLipHomeDoneButtonINdex=5
+
+#Auto Transition Settings 
+autoTransitionDelaySeconds = 7 #How long we estimate it take to empty hopper
+autoShootStartToIntakeUpDelaySeconds = 2 #Delay between raising the intake and starting the motor

@@ -2,7 +2,7 @@ import commands2,wpimath,wpimath.controller,wpimath.trajectory,wpimath.kinematic
 from math import pi
 from Drivetrain.swerveSubsys import driveTrainSubsys,pointToVelocityVectorCommand
 from Drivetrain.Targeting2 import targetPointCommand,targetPointWithLeadCommand
-from AuxilarySystems import shooterSubsys,IntakeSubsys,IndexerSubsys
+from AuxilarySystems import auxiliaryConfig, shooterSubsys,IntakeSubsys,IndexerSubsys
 import choreo
 
 
@@ -32,6 +32,7 @@ class autoDriveTrainCommand(commands2.Command):
         self.shooterState=False
         self.intakeDown=True
         self.intakeSpin=False
+        self.autoShootStartTime=None
         #config.setReversed(True)
         #IMPORTANT STUFF
         startPos=wpigeo.Pose2d.fromFeet(0,0,wpigeo.Rotation2d.fromDegrees(0))
@@ -69,6 +70,7 @@ class autoDriveTrainCommand(commands2.Command):
         self.clock.reset()
         self.clock.start()
         self.nextEventIndex=0
+        self.autoShootStartTime=None
         if self.traj is not None:
             print(self.traj.events)
 
@@ -119,7 +121,8 @@ class autoDriveTrainCommand(commands2.Command):
             self.shooterSubsys.autoShootStop()
             self.indexerSubsys.autoShootStop()
         
-        if self.intakeDown:
+        holdIntakeDownForShooter=(not self.intakeDown and self.shooterState and self.autoShootStartTime is not None and self.clock.get() < self.autoShootStartTime + auxiliaryConfig.autoShootStartToIntakeUpDelaySeconds)
+        if self.intakeDown or holdIntakeDownForShooter:
             self.intakeSubsys.autoIntakeDown()
         else:
             self.intakeSubsys.autoIntakeUp()
@@ -131,6 +134,7 @@ class autoDriveTrainCommand(commands2.Command):
 
     def end(self,interrupted):
         self.clock.stop()
+        self.autoShootStartTime=None
         self.driveSubsys.overideInput()
         self.driveSubsys.setState(0,0,0)
         self.shooterSubsys.autoShootStop()
@@ -143,6 +147,10 @@ class autoDriveTrainCommand(commands2.Command):
         return self.clock.get() >= self.totalTime
 
     def setShooting(self,shooterState):
+        if shooterState and not self.shooterState:
+            self.autoShootStartTime=self.clock.get()
+        elif not shooterState:
+            self.autoShootStartTime=None
         self.shooterState=shooterState
     def setIntakeDown(self,intakeDown):
         self.intakeDown=intakeDown

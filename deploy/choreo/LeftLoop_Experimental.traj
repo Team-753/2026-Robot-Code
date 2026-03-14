@@ -559,6 +559,6 @@
    {"name":"setIntakeDown(True)", "from":{"target":3, "targetTimestamp":2.0077, "offset":{"exp":"0 s", "val":0.0}}, "event":null},
    {"name":"setIntakeSpin(True)", "from":{"target":3, "targetTimestamp":2.0077, "offset":{"exp":"0 s", "val":0.0}}, "event":null},
    {"name":"setShooting(True)", "from":{"target":12, "targetTimestamp":10.63471, "offset":{"exp":"0 s", "val":0.0}}, "event":null},
-   {"name":"setIntakeDown(False)", "from":{"target":12, "targetTimestamp":10.63471, "offset":{"exp":"0 s", "val":0.0}}, "event":null},
+   {"name":"setIntakeDown(True)", "from":{"target":12, "targetTimestamp":10.63471, "offset":{"exp":"0 s", "val":0.0}}, "event":null},
    {"name":"setIntakeSpin(False)", "from":{"target":12, "targetTimestamp":10.63471, "offset":{"exp":"0 s", "val":0.0}}, "event":null}]
 }
