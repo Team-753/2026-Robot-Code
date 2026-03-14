@@ -18,7 +18,9 @@ class robotContainer():
         self.autoCommand=None
         self.primaryAutoCommand=None
         self.previewedTrajectoryName=None
+        self.previewedSecondTrajectoryName=None
         self.previewedFlipForRedAlliance=None
+        self.previewedSecondAutoEnabled=None
         self.autoTransitionHeadingRadians=None
         self.autoTransitionHeadingPid=wpimath.controller.ProfiledPIDControllerRadians(16,0.0002,0.3,wpimath.trajectory.TrapezoidProfileRadians.Constraints(6*pi,6*pi))
         self.autoTransitionHeadingPid.enableContinuousInput(-pi,pi)
@@ -73,6 +75,11 @@ class robotContainer():
         wpilib.SmartDashboard.putStringArray("Auto Trajectory Names",self.trajectoryNames)
         wpilib.SmartDashboard.putBoolean("Enable Second Auto",False)
         wpilib.SmartDashboard.putString("Second Auto Trajectory Selected","None")
+        wpilib.SmartDashboard.putString("Second Auto Preview Trajectory","Disabled")
+        wpilib.SmartDashboard.putString("Second Auto Preview Start Pose","Unavailable")
+        wpilib.SmartDashboard.putString("Second Auto Preview End Pose","Unavailable")
+        wpilib.SmartDashboard.putString("Second Auto Preview Error","Second auto disabled")
+        wpilib.SmartDashboard.putString("Second Auto Preview Indicator","Separate field objects")
         wpilib.SmartDashboard.putString("Auto Transition Status","Disabled")
 
     def configureTrajectoryChooser(self,chooser):
@@ -111,28 +118,21 @@ class robotContainer():
     def getTrajectoryAllianceLabel(self):
         return "Red" if self.shouldFlipTrajectoryForAlliance() else "Blue"
 
-    def updateTrajectoryPreview(self,force=False):
-        selectedTrajectoryName=self.getSelectedTrajectoryName()
-        self.getSelectedSecondTrajectoryName()
-        flipForRedAlliance=self.shouldFlipTrajectoryForAlliance()
-        if not force and selectedTrajectoryName==self.previewedTrajectoryName and flipForRedAlliance==self.previewedFlipForRedAlliance:
-            return
+    def clearPreviewObjects(self,pathObject,startObject,endObject):
+        pathObject.setPoses([])
+        startObject.setPoses([])
+        endObject.setPoses([])
 
-        self.previewedTrajectoryName=selectedTrajectoryName
-        self.previewedFlipForRedAlliance=flipForRedAlliance
-        previewPathObject=self.driveSubsystem.field.getObject("Auto Preview Path")
-        previewStartObject=self.driveSubsystem.field.getObject("Auto Preview Start")
-        previewEndObject=self.driveSubsystem.field.getObject("Auto Preview End")
-        wpilib.SmartDashboard.putString("Auto Preview Alliance",self.getTrajectoryAllianceLabel())
+    def setPreviewStatus(self,prefix,trajectoryName,startPose,endPose,errorMessage):
+        wpilib.SmartDashboard.putString(f"{prefix} Preview Trajectory",trajectoryName)
+        wpilib.SmartDashboard.putString(f"{prefix} Preview Start Pose",startPose)
+        wpilib.SmartDashboard.putString(f"{prefix} Preview End Pose",endPose)
+        wpilib.SmartDashboard.putString(f"{prefix} Preview Error",errorMessage)
 
+    def updateSingleTrajectoryPreview(self,prefix,selectedTrajectoryName,flipForRedAlliance,pathObject,startObject,endObject):
         if not selectedTrajectoryName:
-            previewPathObject.setPoses([])
-            previewStartObject.setPoses([])
-            previewEndObject.setPoses([])
-            wpilib.SmartDashboard.putString("Auto Preview Trajectory","None")
-            wpilib.SmartDashboard.putString("Auto Preview Start Pose","Unavailable")
-            wpilib.SmartDashboard.putString("Auto Preview End Pose","Unavailable")
-            wpilib.SmartDashboard.putString("Auto Preview Error","No trajectory selected")
+            self.clearPreviewObjects(pathObject,startObject,endObject)
+            self.setPreviewStatus(prefix,"None","Unavailable","Unavailable","No trajectory selected")
             return
 
         try:
@@ -141,31 +141,52 @@ class robotContainer():
             initialPose=trajectory.get_initial_pose(flipForRedAlliance)
             finalPose=trajectory.get_final_pose(flipForRedAlliance)
 
-            previewPathObject.setPoses(pathPoses)
+            pathObject.setPoses(pathPoses)
             if initialPose is not None:
-                previewStartObject.setPose(initialPose)
-                wpilib.SmartDashboard.putString("Auto Preview Start Pose",f"{initialPose.X():.3f}, {initialPose.Y():.3f}, {initialPose.rotation().degrees():.1f}")
+                startObject.setPose(initialPose)
+                startPoseLabel=f"{initialPose.X():.3f}, {initialPose.Y():.3f}, {initialPose.rotation().degrees():.1f}"
             else:
-                previewStartObject.setPoses([])
-                wpilib.SmartDashboard.putString("Auto Preview Start Pose","Unavailable")
+                startObject.setPoses([])
+                startPoseLabel="Unavailable"
 
             if finalPose is not None:
-                previewEndObject.setPose(finalPose)
-                wpilib.SmartDashboard.putString("Auto Preview End Pose",f"{finalPose.X():.3f}, {finalPose.Y():.3f}, {finalPose.rotation().degrees():.1f}")
+                endObject.setPose(finalPose)
+                endPoseLabel=f"{finalPose.X():.3f}, {finalPose.Y():.3f}, {finalPose.rotation().degrees():.1f}"
             else:
-                previewEndObject.setPoses([])
-                wpilib.SmartDashboard.putString("Auto Preview End Pose","Unavailable")
+                endObject.setPoses([])
+                endPoseLabel="Unavailable"
 
-            wpilib.SmartDashboard.putString("Auto Preview Trajectory",selectedTrajectoryName)
-            wpilib.SmartDashboard.putString("Auto Preview Error","")
+            self.setPreviewStatus(prefix,selectedTrajectoryName,startPoseLabel,endPoseLabel,"")
         except Exception as ex:
-            previewPathObject.setPoses([])
-            previewStartObject.setPoses([])
-            previewEndObject.setPoses([])
-            wpilib.SmartDashboard.putString("Auto Preview Trajectory",selectedTrajectoryName)
-            wpilib.SmartDashboard.putString("Auto Preview Start Pose","Unavailable")
-            wpilib.SmartDashboard.putString("Auto Preview End Pose","Unavailable")
-            wpilib.SmartDashboard.putString("Auto Preview Error",str(ex))
+            self.clearPreviewObjects(pathObject,startObject,endObject)
+            self.setPreviewStatus(prefix,selectedTrajectoryName,"Unavailable","Unavailable",str(ex))
+
+    def updateTrajectoryPreview(self,force=False):
+        selectedTrajectoryName=self.getSelectedTrajectoryName()
+        selectedSecondTrajectoryName=self.getSelectedSecondTrajectoryName()
+        secondAutoEnabled=self.isSecondAutoEnabled()
+        flipForRedAlliance=self.shouldFlipTrajectoryForAlliance()
+        if not force and selectedTrajectoryName==self.previewedTrajectoryName and selectedSecondTrajectoryName==self.previewedSecondTrajectoryName and secondAutoEnabled==self.previewedSecondAutoEnabled and flipForRedAlliance==self.previewedFlipForRedAlliance:
+            return
+
+        self.previewedTrajectoryName=selectedTrajectoryName
+        self.previewedSecondTrajectoryName=selectedSecondTrajectoryName
+        self.previewedFlipForRedAlliance=flipForRedAlliance
+        self.previewedSecondAutoEnabled=secondAutoEnabled
+        previewPathObject=self.driveSubsystem.field.getObject("Auto Preview Path")
+        previewStartObject=self.driveSubsystem.field.getObject("Auto Preview Start")
+        previewEndObject=self.driveSubsystem.field.getObject("Auto Preview End")
+        secondPreviewPathObject=self.driveSubsystem.field.getObject("Second Auto Preview Path")
+        secondPreviewStartObject=self.driveSubsystem.field.getObject("Second Auto Preview Start")
+        secondPreviewEndObject=self.driveSubsystem.field.getObject("Second Auto Preview End")
+        wpilib.SmartDashboard.putString("Auto Preview Alliance",self.getTrajectoryAllianceLabel())
+        self.updateSingleTrajectoryPreview("Auto",selectedTrajectoryName,flipForRedAlliance,previewPathObject,previewStartObject,previewEndObject)
+
+        if secondAutoEnabled:
+            self.updateSingleTrajectoryPreview("Second Auto",selectedSecondTrajectoryName,flipForRedAlliance,secondPreviewPathObject,secondPreviewStartObject,secondPreviewEndObject)
+        else:
+            self.clearPreviewObjects(secondPreviewPathObject,secondPreviewStartObject,secondPreviewEndObject)
+            self.setPreviewStatus("Second Auto","Disabled","Unavailable","Unavailable","Second auto disabled")
 
     def teleopInit(self):
         self.cancelAutonomousCommand()
@@ -216,6 +237,7 @@ class robotContainer():
     def beginAutoTransition(self):
         self.autoTransitionHeadingRadians=self.driveSubsystem.getRobotYaw().radians()
         self.autoTransitionHeadingPid.reset(self.autoTransitionHeadingRadians)
+        self.driveSubsystem.overideInput()
         self.driveSubsystem.setState(0,0,0)
         self.intakeSubsystem.autoGrabStop()
         self.shooterSubsystem.autoShootStart()
@@ -232,6 +254,7 @@ class robotContainer():
 
     def finishAutoTransition(self):
         self.autoTransitionHeadingRadians=None
+        self.driveSubsystem.overideInput()
         self.shooterSubsystem.autoShootStop()
         self.indexerSubsystem.autoShootStop()
         self.intakeSubsystem.autoGrabStop()
