@@ -216,6 +216,9 @@ class robotContainer():
         self.indexerSubsystem.autoShootStart()
         wpilib.SmartDashboard.putString("Auto Transition Status","Launching")
 
+    def executeAutoTransition(self):
+        self.driveSubsystem.setState(0,0,0)
+
     def finishAutoTransition(self):
         self.shooterSubsystem.autoShootStop()
         self.indexerSubsystem.autoShootStop()
@@ -223,11 +226,13 @@ class robotContainer():
         wpilib.SmartDashboard.putString("Auto Transition Status","Complete")
 
     def buildAutoTransitionCommand(self):
-        return commands2.SequentialCommandGroup(
-            commands2.InstantCommand(self.beginAutoTransition,self.driveSubsystem),
-            commands2.WaitCommand(auxiliaryConfig.autoTransitionDelaySeconds),
-            commands2.InstantCommand(self.finishAutoTransition,self.driveSubsystem),
-        )
+        return commands2.FunctionalCommand(
+            self.beginAutoTransition,
+            self.executeAutoTransition,
+            lambda interrupted: self.finishAutoTransition(),
+            lambda: False,
+            self.driveSubsystem,
+        ).withTimeout(auxiliaryConfig.autoTransitionDelaySeconds)
 
     def buildAutonomousCommand(self):
         selectedTrajectoryName=self.getSelectedTrajectoryName()
