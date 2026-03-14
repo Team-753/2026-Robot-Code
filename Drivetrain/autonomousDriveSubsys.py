@@ -131,6 +131,7 @@ class autoDriveTrainCommand(commands2.Command):
 
     def end(self,interrupted):
         self.clock.stop()
+        self.driveSubsys.overideInput()
         self.driveSubsys.setState(0,0,0)
         self.shooterSubsys.autoShootStop()
         self.indexerSubsys.autoShootStop()
