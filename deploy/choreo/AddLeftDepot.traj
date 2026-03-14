@@ -131,5 +131,5 @@
    {"name":"setIntakeDown(True)", "from":{"target":1, "targetTimestamp":1.22055, "offset":{"exp":"0 s", "val":0.0}}, "event":null},
    {"name":"setIntakeSpin(True)", "from":{"target":1, "targetTimestamp":1.22055, "offset":{"exp":"0 s", "val":0.0}}, "event":null},
    {"name":"setIntakeSpin(False)", "from":{"target":4, "targetTimestamp":4.36881, "offset":{"exp":"0 s", "val":0.0}}, "event":null},
-   {"name":"setShooting(True)", "from":{"target":4, "targetTimestamp":null, "offset":{"exp":"0 s", "val":0.0}}, "event":null}]
+   {"name":"setShooting(True)", "from":{"target":4, "targetTimestamp":4.36881, "offset":{"exp":"0 s", "val":0.0}}, "event":null}]
 }
