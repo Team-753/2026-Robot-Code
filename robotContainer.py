@@ -21,7 +21,9 @@ class robotContainer():
         self.previewedSecondTrajectoryName=None
         self.previewedFlipForRedAlliance=None
         self.previewedSecondAutoEnabled=None
+        self.autoTransitionActive=False
         self.autoTransitionHeadingRadians=None
+        self.autoTransitionStartTime=None
         self.autoTransitionHeadingPid=wpimath.controller.ProfiledPIDControllerRadians(16,0.0002,0.3,wpimath.trajectory.TrapezoidProfileRadians.Constraints(6*pi,6*pi))
         self.autoTransitionHeadingPid.enableContinuousInput(-pi,pi)
 
@@ -81,6 +83,7 @@ class robotContainer():
         wpilib.SmartDashboard.putString("Second Auto Preview Error","Second auto disabled")
         wpilib.SmartDashboard.putString("Second Auto Preview Indicator","Separate field objects")
         wpilib.SmartDashboard.putString("Auto Transition Status","Disabled")
+        wpilib.SmartDashboard.putBoolean("Auto Transition Active",False)
 
     def configureTrajectoryChooser(self,chooser):
         if self.trajectoryNames:
@@ -190,6 +193,7 @@ class robotContainer():
 
     def teleopInit(self):
         self.cancelAutonomousCommand()
+        self.setAutoTransitionActive(False)
         self.driveSubsystem.setDefaultCommand(driveTrainCommand(self.driveSubsystem,self.joystick))
         self.shooterSubsystem.teleopInit()
         self.indexerSubsystem.teleopInit()
@@ -220,6 +224,7 @@ class robotContainer():
 
     def disabledInit(self): # keep states in subsystems clean by entering disabled mode
         self.cancelAutonomousCommand()
+        self.setAutoTransitionActive(False)
         self.shooterSubsystem.setToIdle()
         self.intakeSubsystem.setToIdle()
         self.indexerSubsystem.setToIdle()
@@ -234,8 +239,14 @@ class robotContainer():
     def createAutoDriveCommand(self,trajectoryName):
         return autoDriveTrainCommand(self.shooterSubsystem,self.intakeSubsystem,self.indexerSubsystem,self.driveSubsystem,trajectoryName)
 
+    def setAutoTransitionActive(self,isActive):
+        self.autoTransitionActive=isActive
+        wpilib.SmartDashboard.putBoolean("Auto Transition Active",isActive)
+
     def beginAutoTransition(self):
+        self.setAutoTransitionActive(True)
         self.autoTransitionHeadingRadians=self.driveSubsystem.getRobotYaw().radians()
+        self.autoTransitionStartTime=wpilib.Timer.getFPGATimestamp()
         self.autoTransitionHeadingPid.reset(self.autoTransitionHeadingRadians)
         self.driveSubsystem.overideInput()
         self.driveSubsystem.setState(0,0,0)
@@ -251,9 +262,13 @@ class robotContainer():
         currentHeadingRadians=self.driveSubsystem.getRobotYaw().radians()
         holdHeadingOutput=self.autoTransitionHeadingPid.calculate(currentHeadingRadians,self.autoTransitionHeadingRadians)
         self.driveSubsystem.setState(0,0,holdHeadingOutput)
+        if self.autoTransitionStartTime is not None and wpilib.Timer.getFPGATimestamp() >= self.autoTransitionStartTime + auxiliaryConfig.autoShootStartToIntakeUpDelaySeconds:
+            self.intakeSubsystem.autoIntakeUp()
 
     def finishAutoTransition(self):
+        self.setAutoTransitionActive(False)
         self.autoTransitionHeadingRadians=None
+        self.autoTransitionStartTime=None
         self.driveSubsystem.overideInput()
         self.shooterSubsystem.autoShootStop()
         self.indexerSubsystem.autoShootStop()

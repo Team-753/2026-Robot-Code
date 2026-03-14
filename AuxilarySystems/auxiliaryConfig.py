@@ -69,4 +69,4 @@ FLipHomeDoneButtonINdex=5
 
 #Auto Transition Settings 
 autoTransitionDelaySeconds = 7 #How long we estimate it take to empty hopper
-autoShootStartToIntakeUpDelaySeconds = 2 #Delay between raising the intake and starting the motor
+autoShootStartToIntakeUpDelaySeconds = 2 #Transition-only delay from shooter start to intake up
