@@ -14,8 +14,11 @@ from AuxilarySystems import auxiliaryConfig, shooterSubsys, IndexerSubsys, Intak
 
 class robotContainer():
     def __init__(self):
+        self.autoCommand=None
+        self.primaryAutoCommand=None
         self.previewedTrajectoryName=None
         self.previewedFlipForRedAlliance=None
+        self.secondAutoTransitionDelaySeconds=0.5
 
         if swerveConfig.driveController=="Joystick"or swerveConfig.driveController=="VKBJoystick":
             self.controllerType="Joystick"
@@ -56,27 +59,47 @@ class robotContainer():
 
     def initializeTrajectoryChooser(self):
         self.trajectoryChooser=wpilib.SendableChooser()
+        self.secondTrajectoryChooser=wpilib.SendableChooser()
         self.trajectoryNames=self.getTrajectoryNames()
 
-        if self.trajectoryNames:
-            self.trajectoryChooser.setDefaultOption(self.trajectoryNames[0],self.trajectoryNames[0])
-            for name in self.trajectoryNames[1:]:
-                self.trajectoryChooser.addOption(name,name)
-        else:
-            self.trajectoryChooser.setDefaultOption("No .traj files found","")
+        self.configureTrajectoryChooser(self.trajectoryChooser)
+        self.configureTrajectoryChooser(self.secondTrajectoryChooser)
 
         wpilib.SmartDashboard.putData("Auto Trajectory",self.trajectoryChooser)
+        wpilib.SmartDashboard.putData("Second Auto Trajectory",self.secondTrajectoryChooser)
         wpilib.SmartDashboard.putStringArray("Auto Trajectory Names",self.trajectoryNames)
+        wpilib.SmartDashboard.putBoolean("Enable Second Auto",False)
+        wpilib.SmartDashboard.putString("Second Auto Trajectory Selected","None")
+        wpilib.SmartDashboard.putString("Auto Transition Status","Disabled")
 
-    def getSelectedTrajectoryName(self):
-        selected=self.trajectoryChooser.getSelected()
+    def configureTrajectoryChooser(self,chooser):
+        if self.trajectoryNames:
+            chooser.setDefaultOption(self.trajectoryNames[0],self.trajectoryNames[0])
+            for name in self.trajectoryNames[1:]:
+                chooser.addOption(name,name)
+        else:
+            chooser.setDefaultOption("No .traj files found","")
+
+    def getChooserSelection(self,chooser):
+        selected=chooser.getSelected()
         if selected is None:
             if self.trajectoryNames:
-                selected=self.trajectoryNames[0]
-            else:
-                selected=""
+                return self.trajectoryNames[0]
+            return ""
+        return selected
+
+    def getSelectedTrajectoryName(self):
+        selected=self.getChooserSelection(self.trajectoryChooser)
         wpilib.SmartDashboard.putString("Auto Trajectory Selected",selected if selected else "None")
         return selected
+
+    def getSelectedSecondTrajectoryName(self):
+        selected=self.getChooserSelection(self.secondTrajectoryChooser)
+        wpilib.SmartDashboard.putString("Second Auto Trajectory Selected",selected if selected else "None")
+        return selected
+
+    def isSecondAutoEnabled(self):
+        return wpilib.SmartDashboard.getBoolean("Enable Second Auto",False)
 
     def shouldFlipTrajectoryForAlliance(self):
         alliance=wpilib.DriverStation.getAlliance()
@@ -87,6 +110,7 @@ class robotContainer():
 
     def updateTrajectoryPreview(self,force=False):
         selectedTrajectoryName=self.getSelectedTrajectoryName()
+        self.getSelectedSecondTrajectoryName()
         flipForRedAlliance=self.shouldFlipTrajectoryForAlliance()
         if not force and selectedTrajectoryName==self.previewedTrajectoryName and flipForRedAlliance==self.previewedFlipForRedAlliance:
             return
@@ -141,27 +165,29 @@ class robotContainer():
             wpilib.SmartDashboard.putString("Auto Preview Error",str(ex))
 
     def teleopInit(self):
+        self.cancelAutonomousCommand()
         self.driveSubsystem.setDefaultCommand(driveTrainCommand(self.driveSubsystem,self.joystick))
         self.shooterSubsystem.teleopInit()
         self.indexerSubsystem.teleopInit()
         self.intakeSubsystem.teleopInit()
+        wpilib.SmartDashboard.putString("Auto Transition Status","Disabled")
         #self.flipSubsystem.teleopInit()
         print('entering teleop')
 
     def autoInit(self):
-        selectedTrajectoryName=self.getSelectedTrajectoryName()
-        self.autoCommand=autoDriveTrainCommand(self.shooterSubsystem,self.intakeSubsystem,self.indexerSubsystem,self.driveSubsystem,selectedTrajectoryName)
-        initialPose=self.autoCommand.getInitialPose()
+        self.cancelAutonomousCommand()
+        self.autoCommand=self.buildAutonomousCommand()
+        initialPose=self.primaryAutoCommand.getInitialPose()
         # Align the estimator with the chosen path so the first sample is field-correct.
         if initialPose is not None:
             self.driveSubsystem.resetPose(initialPose)
             wpilib.SmartDashboard.putString("Auto Start Pose",f"{initialPose.X():.3f}, {initialPose.Y():.3f}, {initialPose.rotation().degrees():.1f}")
         else:
             wpilib.SmartDashboard.putString("Auto Start Pose","Unavailable")
-        self.driveSubsystem.setDefaultCommand(self.autoCommand)
         self.shooterSubsystem.autoInit()
         self.intakeSubsystem.autoInit()
         self.indexerSubsystem.autoInit()
+        commands2.CommandScheduler.getInstance().schedule(self.autoCommand)
         #self.flipSubsystem.autoInit()
         print('entering auto')
     
@@ -169,11 +195,57 @@ class robotContainer():
         pass
 
     def disabledInit(self): # keep states in subsystems clean by entering disabled mode
+        self.cancelAutonomousCommand()
         self.shooterSubsystem.setToIdle()
         self.intakeSubsystem.setToIdle()
         self.indexerSubsystem.setToIdle()
         self.flipSubsystem.setToIdle()
+        wpilib.SmartDashboard.putString("Auto Transition Status","Disabled")
         print('entering disabled')
+
+    def cancelAutonomousCommand(self):
+        if self.autoCommand is not None and self.autoCommand.isScheduled():
+            self.autoCommand.cancel()
+
+    def createAutoDriveCommand(self,trajectoryName):
+        return autoDriveTrainCommand(self.shooterSubsystem,self.intakeSubsystem,self.indexerSubsystem,self.driveSubsystem,trajectoryName)
+
+    def beginSecondAutoTransition(self):
+        self.driveSubsystem.setState(0,0,0)
+        self.shooterSubsystem.autoShootStop()
+        self.indexerSubsystem.autoShootStop()
+        self.intakeSubsystem.autoGrabStop()
+        wpilib.SmartDashboard.putString("Auto Transition Status","Running")
+
+    def finishSecondAutoTransition(self):
+        self.shooterSubsystem.autoInit()
+        self.intakeSubsystem.autoInit()
+        self.indexerSubsystem.autoInit()
+        wpilib.SmartDashboard.putString("Auto Transition Status","Complete")
+
+    def buildSecondAutoTransitionCommand(self):
+        return commands2.SequentialCommandGroup(
+            commands2.InstantCommand(self.beginSecondAutoTransition,self.driveSubsystem),
+            commands2.WaitCommand(self.secondAutoTransitionDelaySeconds),
+            commands2.InstantCommand(self.finishSecondAutoTransition,self.driveSubsystem),
+        )
+
+    def buildAutonomousCommand(self):
+        selectedTrajectoryName=self.getSelectedTrajectoryName()
+        selectedSecondTrajectoryName=self.getSelectedSecondTrajectoryName()
+        self.primaryAutoCommand=self.createAutoDriveCommand(selectedTrajectoryName)
+        autoCommands=[self.primaryAutoCommand]
+
+        if self.isSecondAutoEnabled() and selectedSecondTrajectoryName:
+            autoCommands.append(self.buildSecondAutoTransitionCommand())
+            autoCommands.append(self.createAutoDriveCommand(selectedSecondTrajectoryName))
+            wpilib.SmartDashboard.putString("Auto Transition Status","Ready")
+        else:
+            wpilib.SmartDashboard.putString("Auto Transition Status","Disabled")
+
+        if len(autoCommands)==1:
+            return autoCommands[0]
+        return commands2.SequentialCommandGroup(*autoCommands)
 
     def buttonBindings(self):
 
