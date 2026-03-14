@@ -42,7 +42,8 @@
     "types": {
       "/FMSInfo": "FMSInfo",
       "/SmartDashboard/Auto Trajectory": "String Chooser",
-      "/SmartDashboard/Field": "Field2d"
+      "/SmartDashboard/Field": "Field2d",
+      "/SmartDashboard/Second Auto Trajectory": "String Chooser"
     }
   },
   "NetworkTables Info": {

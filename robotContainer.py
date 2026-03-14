@@ -1,7 +1,6 @@
 import os
 import choreo
-from math import pi
-import wpilib,commands2,wpimath,Drivetrain.swerveConfig as swerveConfig
+import wpilib,commands2,Drivetrain.swerveConfig as swerveConfig
 # disable warnings about the joystick
 wpilib.DriverStation.silenceJoystickConnectionWarning(True)
 
@@ -22,10 +21,7 @@ class robotContainer():
         self.previewedFlipForRedAlliance=None
         self.previewedSecondAutoEnabled=None
         self.autoTransitionActive=False
-        self.autoTransitionHeadingRadians=None
         self.autoTransitionStartTime=None
-        self.autoTransitionHeadingPid=wpimath.controller.ProfiledPIDControllerRadians(16,0.0002,0.3,wpimath.trajectory.TrapezoidProfileRadians.Constraints(6*pi,6*pi))
-        self.autoTransitionHeadingPid.enableContinuousInput(-pi,pi)
 
         if swerveConfig.driveController=="Joystick"or swerveConfig.driveController=="VKBJoystick":
             self.controllerType="Joystick"
@@ -245,9 +241,7 @@ class robotContainer():
 
     def beginAutoTransition(self):
         self.setAutoTransitionActive(True)
-        self.autoTransitionHeadingRadians=self.driveSubsystem.getRobotYaw().radians()
         self.autoTransitionStartTime=wpilib.Timer.getFPGATimestamp()
-        self.autoTransitionHeadingPid.reset(self.autoTransitionHeadingRadians)
         self.driveSubsystem.overideInput()
         self.driveSubsystem.setState(0,0,0)
         self.intakeSubsystem.autoGrabStop()
@@ -256,18 +250,12 @@ class robotContainer():
         wpilib.SmartDashboard.putString("Auto Transition Status","Launching")
 
     def executeAutoTransition(self):
-        if self.autoTransitionHeadingRadians is None:
-            self.driveSubsystem.setState(0,0,0)
-            return
-        currentHeadingRadians=self.driveSubsystem.getRobotYaw().radians()
-        holdHeadingOutput=self.autoTransitionHeadingPid.calculate(currentHeadingRadians,self.autoTransitionHeadingRadians)
-        self.driveSubsystem.setState(0,0,holdHeadingOutput)
+        self.driveSubsystem.setState(0,0,0)
         if self.autoTransitionStartTime is not None and wpilib.Timer.getFPGATimestamp() >= self.autoTransitionStartTime + auxiliaryConfig.autoShootStartToIntakeUpDelaySeconds:
             self.intakeSubsystem.autoIntakeUp()
 
     def finishAutoTransition(self):
         self.setAutoTransitionActive(False)
-        self.autoTransitionHeadingRadians=None
         self.autoTransitionStartTime=None
         self.driveSubsystem.overideInput()
         self.shooterSubsystem.autoShootStop()
