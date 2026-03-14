@@ -342,9 +342,9 @@
   "splits":[0]
  },
  "events":[
-   {"name":"setShooting(True)", "from":{"target":null, "targetTimestamp":null, "offset":{"exp":"0 s", "val":0.0}}, "event":null},
+   {"name":"setShooting(True)", "from":{"target":13, "targetTimestamp":12.83232, "offset":{"exp":"0 s", "val":0.0}}, "event":null},
    {"name":"setIntakeDown(True)", "from":{"target":4, "targetTimestamp":1.73379, "offset":{"exp":"0 s", "val":0.0}}, "event":null},
    {"name":"setIntakeSpin(True)", "from":{"target":4, "targetTimestamp":1.73379, "offset":{"exp":"0 s", "val":0.0}}, "event":null},
-   {"name":"setIntakeSpin(False)", "from":{"target":null, "targetTimestamp":null, "offset":{"exp":"0 s", "val":0.0}}, "event":null},
-   {"name":"setIntakeDown(False)", "from":{"target":null, "targetTimestamp":null, "offset":{"exp":"0 s", "val":0.0}}, "event":null}]
+   {"name":"setIntakeSpin(False)", "from":{"target":13, "targetTimestamp":12.83232, "offset":{"exp":"0 s", "val":0.0}}, "event":null},
+   {"name":"setIntakeDown(False)", "from":{"target":13, "targetTimestamp":12.83232, "offset":{"exp":"0 s", "val":0.0}}, "event":null}]
 }

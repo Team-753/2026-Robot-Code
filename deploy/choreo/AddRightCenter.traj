@@ -154,9 +154,9 @@
   "splits":[0]
  },
  "events":[
-   {"name":"setShooting(False)", "from":{"target":6, "targetTimestamp":5.80124, "offset":{"exp":"0 s", "val":0.0}}, "event":null},
-   {"name":"setIntakeDown(True)", "from":{"target":6, "targetTimestamp":5.80124, "offset":{"exp":"0 s", "val":0.0}}, "event":null},
    {"name":"setIntakeSpin(True)", "from":{"target":2, "targetTimestamp":1.65527, "offset":{"exp":"0 s", "val":0.0}}, "event":null},
    {"name":"setShooting(True)", "from":{"target":6, "targetTimestamp":5.80124, "offset":{"exp":"0 s", "val":0.0}}, "event":null},
-   {"name":"setIntakeDown(False)", "from":{"target":6, "targetTimestamp":5.80124, "offset":{"exp":"0 s", "val":0.0}}, "event":null}]
+   {"name":"setIntakeDown(False)", "from":{"target":6, "targetTimestamp":5.80124, "offset":{"exp":"0 s", "val":0.0}}, "event":null},
+   {"name":"setIntakeDown(True)", "from":{"target":2, "targetTimestamp":1.65527, "offset":{"exp":"0 s", "val":0.0}}, "event":null},
+   {"name":"setIntakeSping(False)", "from":{"target":6, "targetTimestamp":5.80124, "offset":{"exp":"0 s", "val":0.0}}, "event":null}]
 }
