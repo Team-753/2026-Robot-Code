@@ -15,7 +15,7 @@ shooterIndexDutyCycle = 0.7 # fixed duty cycle of the rev indexer
 shooterStartupTime = 1.0 #seconds
 
 #Indexer Subsystem config
-indexerSpeed=0.5 #1 is 100% power
+indexerSpeed=0.8 #1 is 100% power
 indexerMotorIndexNumberLIKETHEONLYMOTOR = 17
 indexerEnableBtnIdx=3 # AXIS index for enable button - matches the shooter
 
@@ -25,7 +25,7 @@ intakeSpinMotorID=20
 intakeDownPosition = 133  #these are in degrees
 intakeUpPosition = 0 #these are in degrees
 intakeUpDownEncoderOffset = 0 #how far off is the motor that moves the intake up and down(in rotations)
-intakeSpinnerSpeed = 0.8 #dutyCycle
+intakeSpinnerSpeed = 1 #dutyCycle
 intakeupdowngearratio = 1
 intakeSpinEnableBtnIdx = 3
 intakeUpdownToggleBtnIdx = 6
