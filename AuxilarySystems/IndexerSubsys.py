@@ -48,6 +48,19 @@ class indexerSubsys(commands2.Subsystem):
 
     def autoInit(self):
         self.state = 'auto'
+        self.XStart = False
+        self.XStop = False
+        self.XPressed = False
+        self.prevVal = False
+        self.XChanged = False
+        self.intakeRunning = False
+        self.shooterRunning = False
+        self.indexerLogic = False
+        self.BPressed = False
+        self.prevVal2 = False
+        self.BChanged = False
+        self.toggleshoot = False
+        self.waiting = False
         
     def setToIdle(self):
         self.state = 'idle'

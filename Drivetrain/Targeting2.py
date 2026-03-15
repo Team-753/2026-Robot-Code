@@ -9,6 +9,16 @@ from customFunctions import pythag
 #NOTICE: This targeting system assumes the metric system. 
 #Unfortunantly, Cheeseburgers-per-hour was not easy to implement into the code (plus I am lazy) -Ryan T
 
+TARGET_POINT_BLUE = (4.62507, 4.03514)
+TARGET_POINT_RED = (11.91497, 4.03514)
+
+
+def getSpeakerTargetPoint():
+    alliance = wpilib.DriverStation.getAlliance()
+    if alliance == wpilib.DriverStation.Alliance.kRed:
+        return TARGET_POINT_RED
+    return TARGET_POINT_BLUE
+
 class targetPointCommand(commands2.Command): #This class points the robot in the direction it is heading. 
     def __init__(self,driveSubsys:driveTrainSubsys,tx,ty)-> None:
         super().__init__()
@@ -31,8 +41,8 @@ class targetPointWithLeadCommand(commands2.Command): #This class is used for est
     def __init__(self,driveSubsys:driveTrainSubsys):
         super().__init__()
         self.driveSubsys = driveSubsys
-        self.TARGET_POINT_BLUE = (4.62507, 4.03514)
-        self.TARGET_POINT_RED = (11.91497,4.03514)
+        self.TARGET_POINT_BLUE = TARGET_POINT_BLUE
+        self.TARGET_POINT_RED = TARGET_POINT_RED
         self.thetaPid=wpimath.controller.ProfiledPIDControllerRadians(45,0.0007,0.15,wpimath.trajectory.TrapezoidProfileRadians.Constraints(2*pi,2*pi))
         self.thetaPid.setIntegratorRange(-1,1)
         self.thetaPid.enableContinuousInput(-pi,pi)
@@ -47,7 +57,7 @@ class targetPointWithLeadCommand(commands2.Command): #This class is used for est
 
     def _get_target_point(self): #Sets the target point based on the team we are on. 
         alliance = self._get_alliance()
-        if  not alliance == wpilib.DriverStation.Alliance.kRed:
+        if alliance == wpilib.DriverStation.Alliance.kRed:
             return [self.TARGET_POINT_RED[0],self.TARGET_POINT_RED[1]]
         return [self.TARGET_POINT_BLUE[0],self.TARGET_POINT_BLUE[1]]
     
@@ -100,8 +110,8 @@ class targetPointWithShootingCommand(commands2.Command): #This class is used for
         super().__init__()
         self.driveSubsys = driveSubsys
         self.shooterSubsys= shootSubsys
-        self.TARGET_POINT_BLUE = (4.62507, 4.03514)
-        self.TARGET_POINT_RED = (11.91497,4.03514)
+        self.TARGET_POINT_BLUE = TARGET_POINT_BLUE
+        self.TARGET_POINT_RED = TARGET_POINT_RED
         self.thetaPid=wpimath.controller.ProfiledPIDControllerRadians(45,0.0007,0.15,wpimath.trajectory.TrapezoidProfileRadians.Constraints(2*pi,2*pi))
         self.thetaPid.setIntegratorRange(-1,1)
         self.thetaPid.enableContinuousInput(-pi,pi)
@@ -116,7 +126,7 @@ class targetPointWithShootingCommand(commands2.Command): #This class is used for
 
     def _get_target_point(self): #Sets the target point based on the team we are on. 
         alliance = self._get_alliance()
-        if  not alliance == wpilib.DriverStation.Alliance.kRed:
+        if alliance == wpilib.DriverStation.Alliance.kRed:
             return [self.TARGET_POINT_RED[0],self.TARGET_POINT_RED[1]]
         return [self.TARGET_POINT_BLUE[0],self.TARGET_POINT_BLUE[1]]
     

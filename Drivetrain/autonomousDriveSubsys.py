@@ -66,6 +66,8 @@ class autoDriveTrainCommand(commands2.Command):
         self.clock=wpilib.Timer()
 
     def initialize(self):
+        self.shooterSubsys.autoInit()
+        self.indexerSubsys.autoInit()
         self.clock.reset()
         self.clock.start()
         self.nextEventIndex=0

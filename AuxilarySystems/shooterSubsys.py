@@ -57,6 +57,17 @@ class shooterSubsys(commands2.Subsystem):
 
     def autoInit(self):
         self.state = 'auto'
+        self.XPressed = False
+        self.prevVal = False
+        self.XStart = False
+        self.XStop = False
+        self.LBChanged = False
+        self.RBChanged = False
+        self.RBPressed = False
+        self.LBPressed = False
+        self.toggleshoot = False
+        self.timer2.stop()
+        self.timer2.reset()
 
     def setToIdle(self):
         self.state = 'idle'
@@ -167,4 +178,3 @@ class shooterSubsys(commands2.Subsystem):
                 print(f'current shooter velocity:{self.bigBoy1.get_velocity().value}, target velocity {self.targetVelocity}')
             self.timer.reset()
             self.timer.start()      
-

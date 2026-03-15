@@ -1,4 +1,5 @@
 import os
+from math import atan2, pi
 import choreo
 import wpilib,commands2,Drivetrain.swerveConfig as swerveConfig
 # disable warnings about the joystick
@@ -7,7 +8,7 @@ wpilib.DriverStation.silenceJoystickConnectionWarning(True)
 #IMPORT FROM Drivetrain
 from Drivetrain.swerveSubsys import driveTrainCommand,JoystickSubsys,driveTrainSubsys,XboxControllerSubsys,VKBJoystickSubsys,fieldOrientReorient,overideRobotInput,pointToVelocityVectorCommand
 from Drivetrain.autonomousDriveSubsys import autoDriveTrainCommand
-from Drivetrain.Targeting2 import targetPointCommand,targetPointWithLeadCommand
+from Drivetrain.Targeting2 import getSpeakerTargetPoint,targetPointCommand,targetPointWithLeadCommand
 
 ##IMPORT FROM AuxiliarySystems
 from AuxilarySystems import auxiliaryConfig, shooterSubsys, IndexerSubsys, IntakeSubsys, flipSubsys
@@ -22,6 +23,9 @@ class robotContainer():
         self.previewedSecondAutoEnabled=None
         self.autoTransitionActive=False
         self.autoTransitionStartTime=None
+        self.autoTransitionTargetCommand=None
+        self.autoTransitionTargetPoint=None
+        self.autoTransitionIndexerStarted=False
 
         if swerveConfig.driveController=="Joystick"or swerveConfig.driveController=="VKBJoystick":
             self.controllerType="Joystick"
@@ -239,24 +243,61 @@ class robotContainer():
         self.autoTransitionActive=isActive
         wpilib.SmartDashboard.putBoolean("Auto Transition Active",isActive)
 
+    def getAutoTransitionAimErrorDegrees(self):
+        if self.autoTransitionTargetPoint is None:
+            return None
+        robotPose=self.driveSubsystem.getPoseState()
+        targetX,targetY=self.autoTransitionTargetPoint
+        desiredRotation=atan2(robotPose.y-targetY,robotPose.x-targetX)
+        currentRotation=robotPose.rotation().radians()
+        errorRadians=(desiredRotation-currentRotation+pi)%(2*pi)-pi
+        return abs(errorRadians*180/pi)
+
+    def shouldStartAutoTransitionIndexer(self):
+        if self.autoTransitionStartTime is None:
+            return False
+        elapsedTime=wpilib.Timer.getFPGATimestamp()-self.autoTransitionStartTime
+        if elapsedTime >= auxiliaryConfig.autoTransitionIndexerFallbackDelaySeconds:
+            return True
+        aimErrorDegrees=self.getAutoTransitionAimErrorDegrees()
+        if aimErrorDegrees is None:
+            return False
+        return aimErrorDegrees <= auxiliaryConfig.autoTransitionIndexerAimToleranceDegrees
+
     def beginAutoTransition(self):
         self.setAutoTransitionActive(True)
         self.autoTransitionStartTime=wpilib.Timer.getFPGATimestamp()
+        self.shooterSubsystem.autoInit()
+        self.indexerSubsystem.autoInit()
+        targetX,targetY=getSpeakerTargetPoint()
+        self.autoTransitionTargetPoint=(targetX,targetY)
+        self.autoTransitionTargetCommand=targetPointCommand(self.driveSubsystem,targetX,targetY)
+        self.autoTransitionIndexerStarted=False
         self.driveSubsystem.overideInput()
         self.driveSubsystem.setState(0,0,0)
         self.intakeSubsystem.autoGrabStop()
         self.shooterSubsystem.autoShootStart()
-        self.indexerSubsystem.autoShootStart()
-        wpilib.SmartDashboard.putString("Auto Transition Status","Launching")
+        wpilib.SmartDashboard.putString("Auto Transition Status","Aiming")
 
     def executeAutoTransition(self):
+        if self.autoTransitionTargetCommand is not None:
+            self.autoTransitionTargetCommand.execute()
         self.driveSubsystem.setState(0,0,0)
         if self.autoTransitionStartTime is not None and wpilib.Timer.getFPGATimestamp() >= self.autoTransitionStartTime + auxiliaryConfig.autoShootStartToIntakeUpDelaySeconds:
             self.intakeSubsystem.autoIntakeUp()
+        if not self.autoTransitionIndexerStarted and self.shouldStartAutoTransitionIndexer():
+            self.indexerSubsystem.autoShootStart()
+            self.autoTransitionIndexerStarted=True
+            wpilib.SmartDashboard.putString("Auto Transition Status","Launching")
 
     def finishAutoTransition(self):
         self.setAutoTransitionActive(False)
         self.autoTransitionStartTime=None
+        self.autoTransitionIndexerStarted=False
+        self.autoTransitionTargetPoint=None
+        if self.autoTransitionTargetCommand is not None:
+            self.autoTransitionTargetCommand.end(interrupted=True)
+            self.autoTransitionTargetCommand=None
         self.driveSubsystem.overideInput()
         self.shooterSubsystem.autoShootStop()
         self.indexerSubsystem.autoShootStop()
