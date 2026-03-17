@@ -19,8 +19,8 @@ def getSpeakerTargetPoint():
         return TARGET_POINT_RED
     return TARGET_POINT_BLUE
 
-class targetPointCommand(commands2.Command): #This class points the robot in the direction it is heading. 
-    def __init__(self,driveSubsys:driveTrainSubsys,tx,ty)-> None:
+class targetPointCommand(commands2.Command): #This class points the robot so the rear shooter faces the target.
+    def __init__(self,driveSubsys:driveTrainSubsys,tx=None,ty=None)-> None:
         super().__init__()
         self.tx,self.ty=tx,ty
         self.driveSubsys=driveSubsys
@@ -29,7 +29,11 @@ class targetPointCommand(commands2.Command): #This class points the robot in the
         self.thetaPid.enableContinuousInput(-pi,pi)
     def execute(self):
         robotPose=self.driveSubsys.getPoseState()
-        desiredRotation=atan2(-self.ty+robotPose.y,-self.tx+robotPose.x)
+        if self.tx is None or self.ty is None:
+            targetX,targetY=getSpeakerTargetPoint()
+        else:
+            targetX,targetY=self.tx,self.ty
+        desiredRotation=atan2(robotPose.y-targetY,robotPose.x-targetX)
         output=self.thetaPid.calculate(robotPose.rotation().radians(),desiredRotation)
         self.driveSubsys.overideInput(rot=output)
     def end(self,interrupted):
@@ -47,6 +51,9 @@ class targetPointWithLeadCommand(commands2.Command): #This class is used for est
         self.thetaPid.setIntegratorRange(-1,1)
         self.thetaPid.enableContinuousInput(-pi,pi)
         self.thetaPid.setTolerance(0.6)
+        self.robotPose=None
+        self.lastPose=None
+        self.lastTimestamp=None
     def _get_alliance(self): #We need this information so that we dont score in the wrong hub.
         try:
             alliance = wpilib.DriverStation.getAlliance()
@@ -64,28 +71,27 @@ class targetPointWithLeadCommand(commands2.Command): #This class is used for est
     def getTOF(self):
         pass
         #print(self.lookupTable.loc[self.lookupTable["rpm"].get(1)])
-    def calucateVelocity(self): #Used to calculate the velocity of the robot so that we can adjust the target point
-        try:
-            print(pastPosition)
-            pastPosition=self.robotPose
-            pastTime=self.currentTime
-        except:
-            print("Error Storing Position to past")
+    def initialize(self):
         self.robotPose=self.driveSubsys.getPoseState()
-        self.currentTime=Timer.getFPGATimestamp()
-        try:
-            if pastPosition:
-                deltaTime=self.currentTime-pastTime
-                velx=self.robotPose.x-pastPosition.x
-                vely=self.robotPose.y-pastPosition.y
-                velx=velx*(1/deltaTime)
-                vely=vely*(1/deltaTime)
-        except:
-            velx=0
-            vely=0
-            deltaTime=0
-            print("error calculating velocity")
-        pastPosition=self.robotPose
+        self.lastPose=self.robotPose
+        self.lastTimestamp=Timer.getFPGATimestamp()
+
+    def calucateVelocity(self): #Used to calculate the velocity of the robot so that we can adjust the target point
+        self.robotPose=self.driveSubsys.getPoseState()
+        currentTime=Timer.getFPGATimestamp()
+        if self.lastPose is None or self.lastTimestamp is None:
+            self.lastPose=self.robotPose
+            self.lastTimestamp=currentTime
+            return [0.0,0.0,0.0]
+
+        deltaTime=currentTime-self.lastTimestamp
+        if deltaTime <= 1e-4:
+            return [0.0,0.0,deltaTime]
+
+        velx=(self.robotPose.x-self.lastPose.x)/deltaTime
+        vely=(self.robotPose.y-self.lastPose.y)/deltaTime
+        self.lastPose=self.robotPose
+        self.lastTimestamp=currentTime
         return [velx,vely,deltaTime]
 
     def adjustedTargetPoint(self,targetPoint,tof,velocities): #Returns the point we are looking for. 
@@ -102,6 +108,9 @@ class targetPointWithLeadCommand(commands2.Command): #This class is used for est
         self.driveSubsys.overideInput(rot=output)
             
     def end(self,interrupted):
+        self.robotPose=None
+        self.lastPose=None
+        self.lastTimestamp=None
         self.driveSubsys.overideInput()
 
 

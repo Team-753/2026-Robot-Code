@@ -26,6 +26,7 @@ class robotContainer():
         self.autoTransitionTargetCommand=None
         self.autoTransitionTargetPoint=None
         self.autoTransitionIndexerStarted=False
+        self.bindingsConfigured=False
 
         if swerveConfig.driveController=="Joystick"or swerveConfig.driveController=="VKBJoystick":
             self.controllerType="Joystick"
@@ -49,8 +50,11 @@ class robotContainer():
         self.driveSubsystem.setDefaultCommand(driveTrainCommand(self.driveSubsystem,self.joystick))
         print("containerInited")
 
-        #Set all the binding in the button bindings function
+    def ensureButtonBindings(self):
+        if self.bindingsConfigured:
+            return
         self.buttonBindings()
+        self.bindingsConfigured=True
 
     def getTrajectoryNames(self):
         choreoDir = os.path.join(wpilib.getDeployDirectory(),"choreo")
@@ -339,7 +343,7 @@ class robotContainer():
         ##Stick recenter bindings
         if swerveConfig.driveController=="Joystick":
             self.controller.button(6).whileTrue(fieldOrientReorient(self.driveSubsystem))
-            self.controller.button(2).whileTrue(commands2.RepeatCommand(targetPointWithLeadCommand(self.driveSubsystem)))
+            self.controller.button(swerveConfig.targetingButton).whileTrue(targetPointCommand(self.driveSubsystem))
             self.controller.button(1).whileTrue(commands2.RepeatCommand(pointToVelocityVectorCommand(self.driveSubsystem,self.joystick)))
         if swerveConfig.driveController=="VKBJoystick":
             self.controller.button(15).whileTrue(fieldOrientReorient(self.driveSubsystem))
