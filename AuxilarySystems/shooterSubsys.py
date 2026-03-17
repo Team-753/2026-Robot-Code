@@ -68,6 +68,11 @@ class shooterSubsys(commands2.Subsystem):
         self.toggleshoot = False
         self.timer2.stop()
         self.timer2.reset()
+        self.bigBoy1.set_control(self.brake)
+        self.bigBoy2.set_control(self.brake)
+        self.bigBoy3.set_control(self.brake)
+        self.bigBoy4.set_control(self.brake)
+        self.littleone.set(0)
 
     def setToIdle(self):
         self.state = 'idle'
@@ -79,9 +84,17 @@ class shooterSubsys(commands2.Subsystem):
             print('enabling shooter from auto')
     
     def autoShootStop(self):
-        if self.state == 'auto' and self.toggleshoot:
-            #self.XChanged = True
-            self.XStop = True
+        if self.state == 'auto':
+            self.XStart = False
+            self.XStop = False
+            self.toggleshoot = False
+            self.bigBoy1.set_control(self.brake)
+            self.bigBoy2.set_control(self.brake)
+            self.bigBoy3.set_control(self.brake)
+            self.bigBoy4.set_control(self.brake)
+            self.littleone.set(0)
+            self.timer2.stop()
+            self.timer2.reset()
             print('disabling shooter from auto')
 
     def periodic(self):

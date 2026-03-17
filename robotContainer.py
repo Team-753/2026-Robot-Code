@@ -278,6 +278,8 @@ class robotContainer():
         self.autoTransitionTargetCommand=targetPointCommand(self.driveSubsystem,targetX,targetY)
         self.autoTransitionIndexerStarted=False
         self.driveSubsystem.overideInput()
+        if self.autoTransitionTargetCommand is not None:
+            self.autoTransitionTargetCommand.execute()
         self.driveSubsystem.setState(0,0,0)
         self.intakeSubsystem.autoGrabStop()
         self.shooterSubsystem.autoShootStart()

@@ -61,6 +61,7 @@ class indexerSubsys(commands2.Subsystem):
         self.BChanged = False
         self.toggleshoot = False
         self.waiting = False
+        self.numberOne.set(0)
         
     def setToIdle(self):
         self.state = 'idle'
@@ -71,8 +72,14 @@ class indexerSubsys(commands2.Subsystem):
             print('enabling indexer from auto')
     
     def autoShootStop(self):
-        if self.state == 'auto' and self.toggleshoot:
-            self.XStop = True
+        if self.state == 'auto':
+            self.XStart = False
+            self.XStop = False
+            self.intakeRunning = False
+            self.shooterRunning = False
+            self.indexerLogic = False
+            self.toggleshoot = False
+            self.numberOne.set(0)
             print('disabling indexer from auto')
 
     def periodic(self):
