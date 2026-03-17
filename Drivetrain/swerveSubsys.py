@@ -321,10 +321,18 @@ class pointToVelocityVectorCommand(commands2.Command):
         self.thetaPid=wpimath.controller.ProfiledPIDControllerRadians(60,0.0001,0.5,wpimath.trajectory.TrapezoidProfileRadians.Constraints(4*pi,4*pi))
         self.thetaPid.setIntegratorRange(-0.2,0.2)
         self.thetaPid.enableContinuousInput(-pi,pi)
+        self.minVectorMagnitude=0.05
+        self.lastDesiredRotation=None
     def execute(self):
         robotPose=self.dt.getPoseState()
-        desiredRotation=math.atan2(-self.joystick.getX(),-self.joystick.getY())
-        output=self.thetaPid.calculate(robotPose.rotation().radians(),desiredRotation)
+        joyX=self.joystick.getX()
+        joyY=self.joystick.getY()
+        if math.hypot(joyX,joyY) > self.minVectorMagnitude:
+            self.lastDesiredRotation=math.atan2(-joyX,-joyY)
+        elif self.lastDesiredRotation is None:
+            self.lastDesiredRotation=robotPose.rotation().radians()
+        output=self.thetaPid.calculate(robotPose.rotation().radians(),self.lastDesiredRotation)
         self.dt.overideInput(rot=output)
     def end(self,interrupted):
+        self.lastDesiredRotation=None
         self.dt.overideInput()

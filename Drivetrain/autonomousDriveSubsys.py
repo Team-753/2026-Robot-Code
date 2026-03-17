@@ -26,6 +26,7 @@ class autoDriveTrainCommand(commands2.Command):
         self.totalTime=0.0
         self.flipForRedAlliance=_shouldFlipTrajectoryForAlliance()
         self.addRequirements(driveSubsys)
+        self.autoTargetCommand=None
         cont=wpimath.controller
         wpigeo=wpimath.geometry
         ##AUX VARS
@@ -113,11 +114,16 @@ class autoDriveTrainCommand(commands2.Command):
         #setIntakeSpin(bool)
         #setPointVV(bool)
         if self.shooterState:
-            val=targetPointWithLeadCommand(self.driveSubsys).execute()
+            if self.autoTargetCommand is None:
+                self.autoTargetCommand=targetPointWithLeadCommand(self.driveSubsys)
+                self.autoTargetCommand.initialize()
+            self.autoTargetCommand.execute()
             self.shooterSubsys.autoShootStart()
             self.indexerSubsys.autoShootStart()
         else:
-            targetPointWithLeadCommand(self.driveSubsys).end(interrupted=True)
+            if self.autoTargetCommand is not None:
+                self.autoTargetCommand.end(interrupted=True)
+                self.autoTargetCommand=None
             self.shooterSubsys.autoShootStop()
             self.indexerSubsys.autoShootStop()
         
@@ -133,6 +139,9 @@ class autoDriveTrainCommand(commands2.Command):
 
     def end(self,interrupted):
         self.clock.stop()
+        if self.autoTargetCommand is not None:
+            self.autoTargetCommand.end(interrupted=True)
+            self.autoTargetCommand=None
         self.driveSubsys.overideInput()
         self.driveSubsys.setState(0,0,0)
         self.shooterSubsys.autoShootStop()
@@ -150,3 +159,7 @@ class autoDriveTrainCommand(commands2.Command):
         self.intakeDown=intakeDown
     def setIntakeSpin(self,intakeSpinning):
         self.intakeSpin=intakeSpinning
+    def setIntake(self,intakeSpinning):
+        self.setIntakeSpin(intakeSpinning)
+    def setIntakeSping(self,intakeSpinning):
+        self.setIntakeSpin(intakeSpinning)
