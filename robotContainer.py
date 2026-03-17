@@ -11,7 +11,7 @@ from Drivetrain.autonomousDriveSubsys import autoDriveTrainCommand
 from Drivetrain.Targeting2 import getSpeakerTargetPoint,targetPointCommand,targetPointWithLeadCommand
 
 ##IMPORT FROM AuxiliarySystems
-from AuxilarySystems import auxiliaryConfig, shooterSubsys, IndexerSubsys, IntakeSubsys, flipSubsys
+from AuxilarySystems import auxiliaryConfig, shooterSubsys, IndexerSubsys, IntakeSubsys, flipSubsys, shooterDistanceCommand
 
 class robotContainer():
     def __init__(self):
@@ -353,6 +353,7 @@ class robotContainer():
             self.controller.a().whileTrue(fieldOrientReorient(self.driveSubsystem))
             self.controller.x().whileTrue(commands2.RepeatCommand(targetPointCommand(self.driveSubsystem,11.91497, 4.03514)))
             self.controller.rightTrigger().whileTrue(commands2.RepeatCommand(pointToVelocityVectorCommand(self.driveSubsystem,self.joystick)))
+        self.auxController.rightTrigger().whileTrue(commands2.RepeatCommand(shooterDistanceCommand.setShooterDistanceCommand(self.driveSubsystem,self.shooterSubsystem)))
         if True:
             self.auxController.povUp().whileTrue(flipSubsys.flipGrabberCommand(self.flipSubsystem,-0.5))
             self.auxController.povDown().whileTrue(flipSubsys.flipGrabberCommand(self.flipSubsystem,0.1))
