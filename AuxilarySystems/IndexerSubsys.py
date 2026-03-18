@@ -42,6 +42,7 @@ class indexerSubsys(commands2.Subsystem):
         self.waiting = False
         self.timer.reset()
         self.timer.start()
+        self.timer2.reset()
 
     def teleopInit(self):
         self.state = 'teleop'
@@ -105,6 +106,8 @@ class indexerSubsys(commands2.Subsystem):
             self.indexerLogic = False
             self.shooterRunning = False
             self.numberOne.set(0) 
+            self.timer2.stop()
+            self.timer2.reset()
 
     def executeState(self):
 
@@ -130,14 +133,26 @@ class indexerSubsys(commands2.Subsystem):
         self.indexerToggle = self.LogicPrevVal != self.indexerLogic
 
         if self.indexerToggle and self.indexerLogic:
-            print ('indexer starting motor')
-            self.numberOne.set(auxiliaryConfig.indexerSpeed)
+            print ('indexer starting motor - with wait')
+            # self.numberOne.set(auxiliaryConfig.indexerSpeed)
             self.toggleshoot= True
+            self.timer2.reset()
+            self.timer2.start()
 
         elif self.indexerToggle and not self.indexerLogic:
             print('indexer stopping motor')
             self.toggleshoot= False
             self.numberOne.set(0)
+            self.timer2.stop()
+            self.timer2.reset()
+
+        # delay loader motor from starting for shooterStartupTime seconds
+        if self.timer2.get() >= auxiliaryConfig.shooterStartupTime:
+            self.timer2.stop()
+            self.timer2.reset()
+            self.numberOne.set(auxiliaryConfig.indexerSpeed)
+            print('indexer activated')
+
                 
         # #MODIFIED "self.XChanged" ---> "(self.XChanged or self.BChanged)"
         # if (self.XStart or self.BChanged) and not self.toggleshoot:
