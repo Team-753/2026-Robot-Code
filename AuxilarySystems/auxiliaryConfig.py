@@ -34,18 +34,18 @@ intakeUpdownToggleBtnIdx = 6
 # flip configs
 graberlv0=0.0 # position of kraken when not climbing (home)
 graberlv1=0.0 #0.1 # position when climbing to lv1
-graberlv3=0.0 #0.3 # position when clibing to lv3
-flipLinPosIn = 0.0 #-1 # retracted position (home) of rev neo motor
-flipLinPosOut = 0 # extended postion (out/start) of rev neo motor
+graberlv3=0.5 #0.3 # position when clibing to lv3
+flipLinPosIn = 0 #-1 # retracted position (home) of rev neo motor
+flipLinPosOut = 1 # extended postion (out/start) of rev neo motor
 
 #Gear ratio between the Kraken motor and the rotating part of the climber. 
 #For each 506.66666 rotations of the motor, the climber rotates once.
 #(506.6666/1) 
-flipkrakenGearRatio = 506.66666
+flipkrakenGearRatio = 720.000
 
 graber_k_s_config=0.1
-graber_k_i_config=0.1
-graber_k_p_config=0.1
+graber_k_i_config=0.0001
+graber_k_p_config= 50
 graber_k_v_config=0
 graber_k_d_config=0
 graberhomespeed=0.25

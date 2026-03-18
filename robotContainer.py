@@ -203,7 +203,7 @@ class robotContainer():
         self.indexerSubsystem.teleopInit()
         self.intakeSubsystem.teleopInit()
         wpilib.SmartDashboard.putString("Auto Transition Status","Disabled")
-        #self.flipSubsystem.teleopInit()
+        self.flipSubsystem.teleopInit()
         print('entering teleop')
 
     def autoInit(self):
@@ -356,13 +356,13 @@ class robotContainer():
             self.controller.x().whileTrue(commands2.RepeatCommand(targetPointCommand(self.driveSubsystem,11.91497, 4.03514)))
             self.controller.rightTrigger().whileTrue(commands2.RepeatCommand(pointToVelocityVectorCommand(self.driveSubsystem,self.joystick)))
         self.auxController.rightTrigger().whileTrue(commands2.RepeatCommand(shooterDistanceCommand.setShooterDistanceCommand(self.driveSubsystem,self.shooterSubsystem)))
-        if True:
-            self.auxController.povUp().whileTrue(flipSubsys.flipGrabberCommand(self.flipSubsystem,-0.5))
-            self.auxController.povDown().whileTrue(flipSubsys.flipGrabberCommand(self.flipSubsystem,0.1))
-            self.auxController.povLeft().whileTrue(flipSubsys.flipTrackCommand(self.flipSubsystem,0.5))
-            self.auxController.povRight().whileTrue(flipSubsys.flipTrackCommand(self.flipSubsystem,-0.5))
+        # if True:
+        #     self.auxController.povUp().whileTrue(flipSubsys.flipGrabberCommand(self.flipSubsystem,-0.5))
+        #     self.auxController.povDown().whileTrue(flipSubsys.flipGrabberCommand(self.flipSubsystem,0.1))
+        #     self.auxController.povLeft().whileTrue(flipSubsys.flipTrackCommand(self.flipSubsystem,0.5))
+        #     self.auxController.povRight().whileTrue(flipSubsys.flipTrackCommand(self.flipSubsystem,-0.5))
 
-            pass
+        pass
 
         ##Shooter bindings
         #if auxiliaryConfig.auxController=="XboxController":
@@ -371,5 +371,5 @@ class robotContainer():
             #self.auxController.y().whileTrue(commands2.RepeatCommand(overideRobotInput(self.driveSubsystem,theta=0.1)))
             #pass
     def testInit(self):
-        #self.flipSubsystem.testInit()
+        self.flipSubsystem.testInit()
         pass

@@ -14,6 +14,7 @@ class flipsubsys(commands2.Subsystem):
         self.grabermotor=phoenix6.hardware.TalonFX(auxiliaryConfig.flipGrabMotorID)
         self.encoder = self.armmotor.getEncoder()
         self.armmotorController = self.armmotor.getClosedLoopController()
+        self.brake = controls.NeutralOut()
 
         graberconfigs = phoenix6.configs.Slot0Configs()
         graberconfigs.k_s = auxiliaryConfig.graber_k_s_config
@@ -23,16 +24,21 @@ class flipsubsys(commands2.Subsystem):
         graberconfigs.k_d = auxiliaryConfig.graber_k_d_config
         grabberFeedbackConfig = phoenix6.configs.FeedbackConfigs()
         grabberFeedbackConfig.sensor_to_mechanism_ratio = auxiliaryConfig.flipkrakenGearRatio
+        grabberCurrentConfig = phoenix6.configs.CurrentLimitsConfigs()
+        grabberCurrentConfig.stator_current_limit = 120
+        grabberCurrentConfig.stator_current_limit_enable = True
 
         self.armconfigs = rev.SparkMaxConfig()
         arm_k_p_config=rev.SparkMaxConfig() 
-        arm_k_p_config.closedLoop.P(0.1)
+        arm_k_p_config.closedLoop.P(2.3)
         arm_k_p_config.closedLoop.I(0.0)
         arm_k_p_config.closedLoop.D(0.0)
+
 
         self.armmotor.configure(self.armconfigs,rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
         self.grabermotor.configurator.apply(graberconfigs)
         self.grabermotor.configurator.apply(grabberFeedbackConfig)
+        self.grabermotor.configurator.apply(grabberCurrentConfig)
 
         # self.armrequests = controls.VelocityVoltage(0).with_slot(0)
         self.graberrequests = controls.PositionVoltage(0).with_slot(0)
@@ -139,11 +145,12 @@ class flipsubsys(commands2.Subsystem):
            self.target = auxiliaryConfig.graberlv0
            if self.target < (self.pos.value + .05) and self.target > (self.pos.value - 0.05):
                target_rotations = auxiliaryConfig.flipLinPosIn
-               self.armmotorController.setSetpoint(target_rotations, rev.SparkMax.ControlType.kPosition, rev.ClosedLoopSlot(0))
+               self.armmotorController.setSetpoint(target_rotations, rev.SparkMax.ControlType.kPosition, rev.ClosedLoopSlot.kSlot0)
                self.homepointarm = 'done'
                print ("arm moving to home")
         elif self.homepointarm == 'done':   
             self.armpos = self.encoder.getPosition()
+            # print(self.armpos)
             armtarget = auxiliaryConfig.flipLinPosIn
             if armtarget < (self.armpos + .05) and armtarget > (self.armpos - .05):
                 print("arm moved to home")
@@ -181,6 +188,7 @@ class flipsubsys(commands2.Subsystem):
             targetpos = auxiliaryConfig.graberlv1
             pos = self.grabermotor.get_position()
             if targetpos < (pos.value + .05) and targetpos > (pos.value - 0.05):
+                self.grabermotor.set_control(self.brake)
                 print("reached lv1")
                 self.enabled = False
                 self.lv1flipgo = 'none'
@@ -194,7 +202,9 @@ class flipsubsys(commands2.Subsystem):
         elif self.lv3flipgo == 'wait':
             targetpos = auxiliaryConfig.graberlv3
             pos = self.grabermotor.get_position()
+            # print(pos)
             if targetpos < (pos.value + .05) and targetpos > (pos.value - 0.05):
+                self.grabermotor.set_control(self.brake)
                 print("reached lv3")
                 self.enabled = False
                 self.lv3flipgo = 'none'
