@@ -40,7 +40,7 @@ graberlv0=0.01 # position of kraken when not climbing (home)
 graberlv1=0.0 #0.1 # position when climbing to lv1
 graberlv3=-0.51 #0.3 # position when clibing to lv3
 flipLinPosIn = 0 #-1 # retracted position (home) of rev neo motor
-flipLinPosOut = -1475 # extended postion (out/start) of rev neo motor
+flipLinPosOut = -1575 # extended postion (out/start) of rev neo motor
 
 #Gear ratio between the Kraken motor and the rotating part of the climber. 
 #For each 506.66666 rotations of the motor, the climber rotates once.
