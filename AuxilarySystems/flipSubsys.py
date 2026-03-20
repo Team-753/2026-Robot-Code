@@ -184,6 +184,7 @@ class flipsubsys(commands2.Subsystem):
                 self.armout == 'none'
   
     def lv1flip(self):
+        print('help')
         if self.lv1flipgo == 'start':
             self.grabermotor.set_control(self.graberrequests.with_position(auxiliaryConfig.graberlv1).with_feed_forward(0))
             self.lv1flipgo = 'wait'
@@ -333,12 +334,13 @@ class flipsubsys(commands2.Subsystem):
             self.pov = self.controller.getPOV()
             
             if self.pov != -1 :
-                if self.pov > 180 - 5 and self.pov < 180 + 5 :
+                if self.pov > 270 - 5 and self.pov < 270 + 5 :
                     self.Go_homePressed = True
-                elif self.pov > 270 - 5 and self.pov < 270 + 5 :
+                elif self.pov > 90 - 5 and self.pov < 90 + 5 :
                     self.Go_StartPosPressed = True
-                elif self.pov > 90 - 5 and self.pov < 90 + 5:
-                    self.lv1flipPressed = True
+                elif self.pov > 180 - 5 and self.pov < 180 + 5:
+                    #self.lv1flipPressed = True
+                    pass
                 elif self.pov > 0 - 5 and self.pov < 0 + 5:
                     self.lv3flipPressed = True
             else:
@@ -408,9 +410,9 @@ class flipsubsys(commands2.Subsystem):
             self.lv3flipgo = 'start'
             self.substate = 'lv3flip'
 
-        elif self.lv1flipChanged:
-            self.lv1flipgo = 'start'
-            self.substate = 'lv1flip'
+        # elif self.lv1flipChanged:
+        #     self.lv1flipgo = 'start'
+        #     self.substate = 'lv1flip'
 
         # if we are in a substate, execute it
         if self.substate == 'goStart':
