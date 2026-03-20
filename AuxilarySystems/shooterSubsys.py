@@ -46,14 +46,21 @@ class shooterSubsys(commands2.Subsystem):
         self.toggleshoot = False
         self.RBPressed = False
         self.LBPressed = False
+        self.autoFeedEnabled = False
         self.timer2.reset()
         self.timer.reset()
         self.timer.start()
-        self.targetVelocity = 16 # initial target velocity for all BigBoy's
-        self.VelocityIncrement = 2 # velocity increment when performing shooting test
+        self.manualTargetVelocity = auxiliaryConfig.shooterDefaultVelocityRps
+        self.autoTargetVelocity = auxiliaryConfig.shooterDefaultVelocityRps
+        self.targetVelocity = auxiliaryConfig.shooterDefaultVelocityRps
+        self.VelocityIncrement = auxiliaryConfig.shooterVelocityIncrementRps
+        self.autoVelocityEnabled = True
+        self.targetDistanceMeters = None
 
     def teleopInit(self):
         self.state = 'teleop'
+        self.autoFeedEnabled = False
+        self.refreshTargetVelocity()
 
     def autoInit(self):
         self.state = 'auto'
@@ -66,6 +73,7 @@ class shooterSubsys(commands2.Subsystem):
         self.RBPressed = False
         self.LBPressed = False
         self.toggleshoot = False
+        self.autoFeedEnabled = False
         self.timer2.stop()
         self.timer2.reset()
         self.bigBoy1.set_control(self.brake)
@@ -73,21 +81,63 @@ class shooterSubsys(commands2.Subsystem):
         self.bigBoy3.set_control(self.brake)
         self.bigBoy4.set_control(self.brake)
         self.littleone.set(0)
+        self.refreshTargetVelocity()
 
     def setToIdle(self):
         self.state = 'idle'
+
+    def setAutoVelocityEnabled(self, enabled):
+        enabled = bool(enabled)
+        if self.autoVelocityEnabled != enabled:
+            self.autoVelocityEnabled = enabled
+            mode = 'auto' if enabled else 'manual'
+            print(f'shooter velocity mode set to {mode}')
+        self.refreshTargetVelocity()
+
+    def calculateVelocityForDistance(self, distance):
+        distance = max(0.0, distance)
+        ratio = auxiliaryConfig.shooterVelocityReferenceRps / auxiliaryConfig.shooterVelocityReferenceDistanceMeters
+        return ratio * distance
+
+    def refreshTargetVelocity(self):
+        if self.autoVelocityEnabled:
+            self.targetVelocity = self.autoTargetVelocity
+        else:
+            self.targetVelocity = self.manualTargetVelocity
+
+    def applyTargetVelocity(self):
+        self.bigBoy1.set_control(self.request.with_velocity(self.targetVelocity).with_feed_forward(0.2))
+        self.bigBoy2.set_control(self.request.with_velocity(self.targetVelocity).with_feed_forward(0.2))
+        self.bigBoy3.set_control(self.request.with_velocity(self.targetVelocity).with_feed_forward(0.2))
+        self.bigBoy4.set_control(self.request.with_velocity(self.targetVelocity).with_feed_forward(0.2))
+
+    def isShooting(self):
+        return self.toggleshoot
 
     def autoShootStart(self):
         if self.state == 'auto' and not self.toggleshoot:
             #self.XChanged = True
             self.XStart = True
             print('enabling shooter from auto')
+
+    def autoFeedStart(self):
+        if self.state == 'auto' and self.toggleshoot and not self.autoFeedEnabled:
+            self.autoFeedEnabled = True
+            self.littleone.set(-1 * auxiliaryConfig.shooterIndexDutyCycle)
+            print('enabling shooter loader from auto')
+
+    def autoFeedStop(self):
+        if self.state == 'auto' and self.autoFeedEnabled:
+            self.autoFeedEnabled = False
+            self.littleone.set(0)
+            print('disabling shooter loader from auto')
     
     def autoShootStop(self):
         if self.state == 'auto':
             self.XStart = False
             self.XStop = False
             self.toggleshoot = False
+            self.autoFeedEnabled = False
             self.bigBoy1.set_control(self.brake)
             self.bigBoy2.set_control(self.brake)
             self.bigBoy3.set_control(self.brake)
@@ -131,6 +181,7 @@ class shooterSubsys(commands2.Subsystem):
 
         else:
             self.toggleshoot = False
+            self.autoFeedEnabled = False
             self.bigBoy1.set_control(self.brake)
             self.bigBoy2.set_control(self.brake)
             self.bigBoy3.set_control(self.brake)
@@ -140,22 +191,24 @@ class shooterSubsys(commands2.Subsystem):
             self.timer2.reset()
 
     def setTargetDistance(self, distance):
-        # convert distance to a target motor velocity
-        # need to fit test data with polynomial
-        self.targetVelocity = (20.0 / 9.0) * distance # 9 meters give 20 rps
+        self.targetDistanceMeters = distance
+        self.autoTargetVelocity = self.calculateVelocityForDistance(distance)
+        self.refreshTargetVelocity()
 
     def executeState(self):
     
         # for testing only, update target velocity based on user buttons
         if self.LBChanged:
-            self.targetVelocity = (self.targetVelocity + self.VelocityIncrement)
-            print (f'update target velocity to {self.targetVelocity}')
+            self.manualTargetVelocity = self.manualTargetVelocity + self.VelocityIncrement
+            self.refreshTargetVelocity()
+            print (f'update manual target velocity to {self.manualTargetVelocity}')
         if self.RBChanged:
-            self.targetVelocity = (self.targetVelocity - self.VelocityIncrement)
-            print (f'update target velocity to {self.targetVelocity}')
+            self.manualTargetVelocity = max(0, self.manualTargetVelocity - self.VelocityIncrement)
+            self.refreshTargetVelocity()
+            print (f'update manual target velocity to {self.manualTargetVelocity}')
         
         # delay loader motor from starting for shooterStartupTime seconds
-        if self.timer2.get() >= auxiliaryConfig.shooterStartupTime:
+        if self.state != 'auto' and self.timer2.get() >= auxiliaryConfig.shooterStartupTime:
             self.timer2.stop()
             self.timer2.reset()
             self.littleone.set(-1 * auxiliaryConfig.shooterIndexDutyCycle)
@@ -164,18 +217,18 @@ class shooterSubsys(commands2.Subsystem):
         # start shooter
         if self.XStart and not self.toggleshoot: # self.XChanged and not self.toggleshoot:
             self.toggleshoot = True
-            self.bigBoy1.set_control(self.request.with_velocity(self.targetVelocity).with_feed_forward(0.2))
-            self.bigBoy2.set_control(self.request.with_velocity(self.targetVelocity).with_feed_forward(0.2))
-            self.bigBoy3.set_control(self.request.with_velocity(self.targetVelocity).with_feed_forward(0.2))
-            self.bigBoy4.set_control(self.request.with_velocity(self.targetVelocity).with_feed_forward(0.2))
-            self.littleone.set(0) #auxiliaryConfig.shooterIndexDutyCycle)
-            self.timer2.reset()
-            self.timer2.start()
+            self.refreshTargetVelocity()
+            self.applyTargetVelocity()
+            self.littleone.set(0)
+            if self.state != 'auto':
+                self.timer2.reset()
+                self.timer2.start()
             print ('starting all shooter motors')
 
         # stop shooter
         elif self.XStop and self.toggleshoot: #self.XChanged and self.toggleshoot:
             self.toggleshoot = False
+            self.autoFeedEnabled = False
             print ('stopping all shooter motors')
             self.bigBoy1.set_control(self.brake)
             self.bigBoy2.set_control(self.brake)
@@ -184,6 +237,10 @@ class shooterSubsys(commands2.Subsystem):
             self.littleone.set(0)
             self.timer2.stop()
             self.timer2.reset()
+
+        if self.toggleshoot:
+            self.refreshTargetVelocity()
+            self.applyTargetVelocity()
 
         # read velocity for diagnostics
         if self.timer.get() > .99 :

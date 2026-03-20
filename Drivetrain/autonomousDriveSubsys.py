@@ -1,8 +1,8 @@
 import commands2,wpimath,wpimath.controller,wpimath.trajectory,wpimath.kinematics,wpilib
 from math import pi
 from Drivetrain.swerveSubsys import driveTrainSubsys,pointToVelocityVectorCommand
-from Drivetrain.Targeting2 import targetPointCommand,targetPointWithLeadCommand
-from AuxilarySystems import shooterSubsys,IntakeSubsys,IndexerSubsys
+from Drivetrain.Targeting2 import getSpeakerDistanceMeters,isSpeakerLocked,targetPointCommand,targetPointWithLeadCommand
+from AuxilarySystems import auxiliaryConfig,shooterSubsys,IntakeSubsys,IndexerSubsys
 import choreo
 
 
@@ -33,6 +33,10 @@ class autoDriveTrainCommand(commands2.Command):
         self.shooterState=False
         self.intakeDown=True
         self.intakeSpin=False
+        self.autoShotLockedSince=None
+        self.autoShotSpinStartTime=None
+        self.autoShotShooterStarted=False
+        self.autoShotFeedStarted=False
         #config.setReversed(True)
         #IMPORTANT STUFF
         startPos=wpigeo.Pose2d.fromFeet(0,0,wpigeo.Rotation2d.fromDegrees(0))
@@ -69,6 +73,7 @@ class autoDriveTrainCommand(commands2.Command):
     def initialize(self):
         self.shooterSubsys.autoInit()
         self.indexerSubsys.autoInit()
+        self.resetAutoShotSequence()
         self.clock.reset()
         self.clock.start()
         self.nextEventIndex=0
@@ -92,6 +97,54 @@ class autoDriveTrainCommand(commands2.Command):
             sample.omega + self.omegaPid.calculate(wpimath.geometry.Rotation2d(pose.rotation().radians()+offset).radians(), sample.heading)
         )
         return speeds
+
+    def resetAutoShotSequence(self):
+        self.autoShotLockedSince=None
+        self.autoShotSpinStartTime=None
+        self.autoShotShooterStarted=False
+        self.autoShotFeedStarted=False
+
+    def stopAutoShotSequence(self):
+        if self.autoShotShooterStarted or self.autoShotFeedStarted or self.shooterSubsys.isShooting() or self.indexerSubsys.autoFeedActive:
+            self.shooterSubsys.autoFeedStop()
+            self.indexerSubsys.autoFeedStop()
+            self.shooterSubsys.autoShootStop()
+            self.indexerSubsys.autoShootStop()
+        self.resetAutoShotSequence()
+
+    def executeAutoShotSequence(self):
+        if self.autoTargetCommand is None:
+            self.autoTargetCommand=targetPointWithLeadCommand(self.driveSubsys)
+            self.autoTargetCommand.initialize()
+
+        robotPose=self.driveSubsys.getPoseState()
+        now=wpilib.Timer.getFPGATimestamp()
+        self.shooterSubsys.setTargetDistance(getSpeakerDistanceMeters(robotPose))
+        self.autoTargetCommand.execute()
+
+        locked=isSpeakerLocked(robotPose,auxiliaryConfig.autoTargetAimToleranceDegrees)
+        if locked:
+            if self.autoShotLockedSince is None:
+                self.autoShotLockedSince=now
+        else:
+            self.autoShotLockedSince=None
+            if self.autoShotFeedStarted:
+                self.shooterSubsys.autoFeedStop()
+                self.indexerSubsys.autoFeedStop()
+                self.autoShotFeedStarted=False
+
+        if not self.autoShotShooterStarted and self.autoShotLockedSince is not None:
+            if now-self.autoShotLockedSince >= auxiliaryConfig.autoTargetLockHoldSeconds:
+                self.shooterSubsys.autoShootStart()
+                self.autoShotShooterStarted=True
+                self.autoShotSpinStartTime=now
+
+        if self.autoShotShooterStarted and locked and not self.autoShotFeedStarted and self.autoShotSpinStartTime is not None and self.autoShotLockedSince is not None:
+            if now-self.autoShotLockedSince >= auxiliaryConfig.autoTargetLockHoldSeconds and now-self.autoShotSpinStartTime >= auxiliaryConfig.shooterStartupTime:
+                self.shooterSubsys.autoFeedStart()
+                self.indexerSubsys.autoFeedStart()
+                self.autoShotFeedStarted=True
+
     def execute(self):
         if self.traj is None:
             self.driveSubsys.setState(0,0,0)
@@ -114,18 +167,12 @@ class autoDriveTrainCommand(commands2.Command):
         #setIntakeSpin(bool)
         #setPointVV(bool)
         if self.shooterState:
-            if self.autoTargetCommand is None:
-                self.autoTargetCommand=targetPointWithLeadCommand(self.driveSubsys)
-                self.autoTargetCommand.initialize()
-            self.autoTargetCommand.execute()
-            self.shooterSubsys.autoShootStart()
-            self.indexerSubsys.autoShootStart()
+            self.executeAutoShotSequence()
         else:
             if self.autoTargetCommand is not None:
                 self.autoTargetCommand.end(interrupted=True)
                 self.autoTargetCommand=None
-            self.shooterSubsys.autoShootStop()
-            self.indexerSubsys.autoShootStop()
+            self.stopAutoShotSequence()
         
         if self.intakeDown:
             self.intakeSubsys.autoIntakeDown()
@@ -144,8 +191,7 @@ class autoDriveTrainCommand(commands2.Command):
             self.autoTargetCommand=None
         self.driveSubsys.overideInput()
         self.driveSubsys.setState(0,0,0)
-        self.shooterSubsys.autoShootStop()
-        self.indexerSubsys.autoShootStop()
+        self.stopAutoShotSequence()
         self.intakeSubsys.autoGrabStop()
 
     def isFinished(self):
