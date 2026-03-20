@@ -61,10 +61,10 @@ Flip_Climb_Lv3_BtnIdx = 4
 flip_Go_Down_BtnIdx = 5
 
 # flip test mode buttons for manually setting zero positions of motors
-FLipINButtonINdex=1
-FLipOutButtonINdex=4
-FLipLeftButtonINdex=3
-FLipRightButtonINdex=2
+FLipINButtonINdex=3
+FLipOutButtonINdex=2
+FLipLeftButtonINdex=4
+FLipRightButtonINdex=1
 FLipHomeDoneButtonINdex=5
 
 #Auto Transition Settings 
