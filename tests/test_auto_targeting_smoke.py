@@ -27,7 +27,7 @@ def test_auto_transition_activates_targeting(control, robot):
         transition_path = robot.rContainer.trajectoryNames[0]
         _select_auto_path(robot, transition_path)
 
-        control.step_timing(seconds=0.2, autonomous=True, enabled=True)
+        control.step_timing(seconds=0.1, autonomous=True, enabled=True)
 
         primary_auto = robot.rContainer.primaryAutoCommand
         assert primary_auto is not None
@@ -43,7 +43,12 @@ def test_auto_transition_activates_targeting(control, robot):
         assert robot.rContainer.autoTransitionTargetPoint == getSpeakerTargetPoint()
         assert robot.rContainer.driveSubsystem.overidedInputs[2] is not None
         assert wpilib.SmartDashboard.getBoolean("Auto Transition Active", False) is True
-        assert wpilib.SmartDashboard.getString("Auto Transition Status", "") in ("Aiming", "Launching")
+        assert wpilib.SmartDashboard.getString("Auto Transition Status", "") in (
+            "Aiming",
+            "Spinning Up",
+            "Launching",
+            "Reacquiring",
+        )
 
 
 def test_auto_shooting_keeps_persistent_targeting_command(control, robot):
@@ -53,7 +58,7 @@ def test_auto_shooting_keeps_persistent_targeting_command(control, robot):
         )
         _select_auto_path(robot, trajectory_name)
 
-        control.step_timing(seconds=0.2, autonomous=True, enabled=True)
+        control.step_timing(seconds=0.1, autonomous=True, enabled=True)
 
         primary_auto = robot.rContainer.primaryAutoCommand
         assert primary_auto is not None

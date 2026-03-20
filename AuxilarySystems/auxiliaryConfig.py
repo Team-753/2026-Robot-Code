@@ -13,6 +13,10 @@ shooterVelocityUpBtnIdx=4 # raw button index for velocity up increment
 shooterVelocityDownBtnIdx=1 # raw button index for velocity down increment
 shooterIndexDutyCycle = 0.7 # fixed duty cycle of the rev indexer
 shooterStartupTime = 1.0 #seconds
+shooterDefaultVelocityRps = 16.0
+shooterVelocityIncrementRps = 2.0
+shooterVelocityReferenceDistanceMeters = 2.3
+shooterVelocityReferenceRps = 16.0
 
 
 #Indexer Subsystem config
@@ -70,5 +74,7 @@ FLipHomeDoneButtonINdex=5
 #Auto Transition Settings 
 autoTransitionDelaySeconds = 7 #How long we estimate it take to empty hopper
 autoShootStartToIntakeUpDelaySeconds = 2 #Transition-only delay from shooter start to intake up
-autoTransitionIndexerAimToleranceDegrees = 3.0 #Allow indexer feed once transition aim is within this heading error
-autoTransitionIndexerFallbackDelaySeconds = 0.75 #Feed anyway after this much transition time if aim has not settled
+autoTargetAimToleranceDegrees = 3.0 # Aim must settle inside this tolerance before auto starts the shooter
+autoTargetLockHoldSeconds = 0.2 # Require lock to stay stable for this long before auto spin-up
+autoTransitionIndexerAimToleranceDegrees = autoTargetAimToleranceDegrees
+autoTransitionIndexerFallbackDelaySeconds = 0.75 # Legacy fallback; current auto logic prefers confirmed lock before feed
