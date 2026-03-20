@@ -43,7 +43,8 @@
     {"x":{"exp":"5.507566928863525 m", "val":5.507566928863525}, "y":{"exp":"5.555515289306641 m", "val":5.555515289306641}, "heading":{"exp":"0 deg", "val":0.0}, "intervals":22, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},
     {"x":{"exp":"4.6203837394714355 m", "val":4.6203837394714355}, "y":{"exp":"5.56607723236084 m", "val":5.56607723236084}, "heading":{"exp":"0 deg", "val":0.0}, "intervals":21, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},
     {"x":{"exp":"3.7034544944763184 m", "val":3.7034544944763184}, "y":{"exp":"5.433953285217285 m", "val":5.433953285217285}, "heading":{"exp":"0 deg", "val":0.0}, "intervals":32, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},
-    {"x":{"exp":"3.345165491104126 m", "val":3.345165491104126}, "y":{"exp":"5.030878067016602 m", "val":5.030878067016602}, "heading":{"exp":"0 deg", "val":0.0}, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false}],
+    {"x":{"exp":"3.345165491104126 m", "val":3.345165491104126}, "y":{"exp":"5.030878067016602 m", "val":5.030878067016602}, "heading":{"exp":"0 deg", "val":0.0}, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":false, "overrideIntervals":false},
+    {"x":{"exp":"1.983555793762207 m", "val":1.983555793762207}, "y":{"exp":"1.945574402809143 m", "val":1.945574402809143}, "heading":{"exp":"0 deg", "val":0.0}, "intervals":40, "split":false, "fixTranslation":true, "fixHeading":true, "overrideIntervals":false}],
   "constraints":[
     {"from":"first", "to":null, "data":{"type":"StopPoint", "props":{}}, "enabled":true},
     {"from":"last", "to":null, "data":{"type":"StopPoint", "props":{}}, "enabled":true},
@@ -465,6 +466,5 @@
    {"name":"setIntakeDown(True)", "from":{"target":3, "targetTimestamp":1.4676, "offset":{"exp":"0 s", "val":0.0}}, "event":null},
    {"name":"setIntakeSpin(True)", "from":{"target":3, "targetTimestamp":1.4676, "offset":{"exp":"0 s", "val":0.0}}, "event":null},
    {"name":"setShooting(True)", "from":{"target":12, "targetTimestamp":7.02518, "offset":{"exp":"0 s", "val":0.0}}, "event":null},
-   {"name":"setIntakeDown(False)", "from":{"target":12, "targetTimestamp":7.02518, "offset":{"exp":"0 s", "val":0.0}}, "event":null},
    {"name":"setIntakeSpin(False)", "from":{"target":12, "targetTimestamp":7.02518, "offset":{"exp":"0 s", "val":0.0}}, "event":null}]
 }
