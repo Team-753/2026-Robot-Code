@@ -14,6 +14,7 @@ class flipsubsys(commands2.Subsystem):
         self.grabermotor=phoenix6.hardware.TalonFX(auxiliaryConfig.flipGrabMotorID)
         self.encoder = self.armmotor.getEncoder()
         self.armmotorController = self.armmotor.getClosedLoopController()
+        self.brake = controls.NeutralOut()
 
         graberconfigs = phoenix6.configs.Slot0Configs()
         graberconfigs.k_s = auxiliaryConfig.graber_k_s_config
@@ -21,18 +22,24 @@ class flipsubsys(commands2.Subsystem):
         graberconfigs.k_p = auxiliaryConfig.graber_k_p_config
         graberconfigs.k_i = auxiliaryConfig.graber_k_i_config
         graberconfigs.k_d = auxiliaryConfig.graber_k_d_config
+        rampconfig = phoenix6.configs.ClosedLoopRampsConfigs()
+        rampconfig.voltage_closed_loop_ramp_period = 1
         grabberFeedbackConfig = phoenix6.configs.FeedbackConfigs()
         grabberFeedbackConfig.sensor_to_mechanism_ratio = auxiliaryConfig.flipkrakenGearRatio
-
-        self.armconfigs = rev.SparkMaxConfig()
+        grabberCurrentConfig = phoenix6.configs.CurrentLimitsConfigs()
+        grabberCurrentConfig.stator_current_limit = 120
+        grabberCurrentConfig.stator_current_limit_enable = True
+  
         arm_k_p_config=rev.SparkMaxConfig() 
-        arm_k_p_config.closedLoop.P(0.1)
+        arm_k_p_config.closedLoop.P(0.8)
         arm_k_p_config.closedLoop.I(0.0)
-        arm_k_p_config.closedLoop.D(0.0)
+        arm_k_p_config.closedLoop.D(0.2)
 
-        self.armmotor.configure(self.armconfigs,rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
+        self.armmotor.configure(arm_k_p_config,rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
         self.grabermotor.configurator.apply(graberconfigs)
+        self.grabermotor.configurator.apply(rampconfig)
         self.grabermotor.configurator.apply(grabberFeedbackConfig)
+        self.grabermotor.configurator.apply(grabberCurrentConfig)
 
         # self.armrequests = controls.VelocityVoltage(0).with_slot(0)
         self.graberrequests = controls.PositionVoltage(0).with_slot(0)
@@ -95,6 +102,9 @@ class flipsubsys(commands2.Subsystem):
         self.INStart = False
         self.INStop = False
 
+        self.encoder.setPosition(0)
+        self.grabermotor.set_position(0)
+
     #def home(self):
      #   if self.homingstate == 'start' :
       #      target_rotations_per_minute = 1
@@ -139,11 +149,12 @@ class flipsubsys(commands2.Subsystem):
            self.target = auxiliaryConfig.graberlv0
            if self.target < (self.pos.value + .05) and self.target > (self.pos.value - 0.05):
                target_rotations = auxiliaryConfig.flipLinPosIn
-               self.armmotorController.setSetpoint(target_rotations, rev.SparkMax.ControlType.kPosition, rev.ClosedLoopSlot(0))
+               self.armmotorController.setSetpoint(target_rotations, rev.SparkMax.ControlType.kPosition, rev.ClosedLoopSlot.kSlot0)
                self.homepointarm = 'done'
                print ("arm moving to home")
         elif self.homepointarm == 'done':   
             self.armpos = self.encoder.getPosition()
+            print(self.armpos)
             armtarget = auxiliaryConfig.flipLinPosIn
             if armtarget < (self.armpos + .05) and armtarget > (self.armpos - .05):
                 print("arm moved to home")
@@ -170,9 +181,10 @@ class flipsubsys(commands2.Subsystem):
                 print("arm and grabber at start pos. Ready for climb.")
                 self.enabled = False
                 self.substate = 'none'
-                self.armout == 'none'
+                self.armout = 'none'
   
     def lv1flip(self):
+        print('help')
         if self.lv1flipgo == 'start':
             self.grabermotor.set_control(self.graberrequests.with_position(auxiliaryConfig.graberlv1).with_feed_forward(0))
             self.lv1flipgo = 'wait'
@@ -181,26 +193,35 @@ class flipsubsys(commands2.Subsystem):
             targetpos = auxiliaryConfig.graberlv1
             pos = self.grabermotor.get_position()
             if targetpos < (pos.value + .05) and targetpos > (pos.value - 0.05):
+                self.grabermotor.set_control(self.brake)
                 print("reached lv1")
                 self.enabled = False
                 self.lv1flipgo = 'none'
                 self.substate = 'none'
 
     def lv3flip(self):
-        if self.lv3flipgo == 'start':
-            self.grabermotor.set_control(self.graberrequests.with_position(auxiliaryConfig.graberlv3).with_feed_forward(0))
-            self.lv3flipgo = 'wait'
-            print('flipping to lv3')
-        elif self.lv3flipgo == 'wait':
-            targetpos = auxiliaryConfig.graberlv3
-            pos = self.grabermotor.get_position()
-            if targetpos < (pos.value + .05) and targetpos > (pos.value - 0.05):
-                print("reached lv3")
-                self.enabled = False
-                self.lv3flipgo = 'none'
-                self.substate = 'none'
-           
-
+        newarmpos = self.encoder.getPosition()
+        targetpos = auxiliaryConfig.flipLinPosOut
+        if targetpos < (newarmpos+ 25) and targetpos > (newarmpos - 25):
+            if self.lv3flipgo == 'start':
+                self.grabermotor.set_control(self.graberrequests.with_position(auxiliaryConfig.graberlv3).with_feed_forward(0))
+                self.lv3flipgo = 'wait'
+                print('flipping to lv3')
+            elif self.lv3flipgo == 'wait':
+                targetpos = auxiliaryConfig.graberlv3
+                pos = self.grabermotor.get_position()
+                # print(pos)
+                if targetpos < (pos.value + .01) and targetpos > (pos.value - 0.01):
+                    self.grabermotor.set_control(self.brake)
+                    print("reached lv3")
+                    self.enabled = False
+                    self.lv3flipgo = 'none'
+                    self.substate = 'none'
+        else:   
+            self.enabled = False
+            self.lv3flipgo = 'none'
+            self.substate = 'none'
+            print('ignoring flip')
     def teleopInit(self):
         self.state = 'teleop'
 
@@ -313,12 +334,13 @@ class flipsubsys(commands2.Subsystem):
             self.pov = self.controller.getPOV()
             
             if self.pov != -1 :
-                if self.pov > 180 - 5 and self.pov < 180 + 5 :
+                if self.pov > 270 - 5 and self.pov < 270 + 5 :
                     self.Go_homePressed = True
-                elif self.pov > 270 - 5 and self.pov < 270 + 5 :
+                elif self.pov > 90 - 5 and self.pov < 90 + 5 :
                     self.Go_StartPosPressed = True
-                elif self.pov > 90 - 5 and self.pov < 90 + 5:
-                    self.lv1flipPressed = True
+                elif self.pov > 180 - 5 and self.pov < 180 + 5:
+                    #self.lv1flipPressed = True
+                    pass
                 elif self.pov > 0 - 5 and self.pov < 0 + 5:
                     self.lv3flipPressed = True
             else:
@@ -388,9 +410,9 @@ class flipsubsys(commands2.Subsystem):
             self.lv3flipgo = 'start'
             self.substate = 'lv3flip'
 
-        elif self.lv1flipChanged:
-            self.lv1flipgo = 'start'
-            self.substate = 'lv1flip'
+        # elif self.lv1flipChanged:
+        #     self.lv1flipgo = 'start'
+        #     self.substate = 'lv1flip'
 
         # if we are in a substate, execute it
         if self.substate == 'goStart':

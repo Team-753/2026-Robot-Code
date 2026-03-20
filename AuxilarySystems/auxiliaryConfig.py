@@ -32,24 +32,24 @@ intakeSpinEnableBtnIdx = 3
 intakeUpdownToggleBtnIdx = 6
 
 # flip configs
-graberlv0=0.0 # position of kraken when not climbing (home)
+graberlv0=0.01 # position of kraken when not climbing (home)
 graberlv1=0.0 #0.1 # position when climbing to lv1
-graberlv3=0.0 #0.3 # position when clibing to lv3
-flipLinPosIn = 0.0 #-1 # retracted position (home) of rev neo motor
-flipLinPosOut = 0 # extended postion (out/start) of rev neo motor
+graberlv3=-0.51 #0.3 # position when clibing to lv3
+flipLinPosIn = 0 #-1 # retracted position (home) of rev neo motor
+flipLinPosOut = -1475 # extended postion (out/start) of rev neo motor
 
 #Gear ratio between the Kraken motor and the rotating part of the climber. 
 #For each 506.66666 rotations of the motor, the climber rotates once.
 #(506.6666/1) 
-flipkrakenGearRatio = 506.66666
+flipkrakenGearRatio = 720.000
 
 graber_k_s_config=0.1
-graber_k_i_config=0.1
-graber_k_p_config=0.1
+graber_k_i_config=0.0001
+graber_k_p_config= 50
 graber_k_v_config=0
 graber_k_d_config=0
 graberhomespeed=0.25
-armhomespeed=0.25
+armhomespeed=-0.5
 flipMotorID=21 # motor id for rev spark max arm motor
 flipGrabMotorID=19 # motor id for kraken rotation motor
 
@@ -61,10 +61,10 @@ Flip_Climb_Lv3_BtnIdx = 4
 flip_Go_Down_BtnIdx = 5
 
 # flip test mode buttons for manually setting zero positions of motors
-FLipINButtonINdex=1
-FLipOutButtonINdex=4
-FLipLeftButtonINdex=3
-FLipRightButtonINdex=2
+FLipINButtonINdex=3
+FLipOutButtonINdex=2
+FLipLeftButtonINdex=4
+FLipRightButtonINdex=1
 FLipHomeDoneButtonINdex=5
 
 #Auto Transition Settings 
