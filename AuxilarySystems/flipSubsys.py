@@ -181,7 +181,7 @@ class flipsubsys(commands2.Subsystem):
                 print("arm and grabber at start pos. Ready for climb.")
                 self.enabled = False
                 self.substate = 'none'
-                self.armout == 'none'
+                self.armout = 'none'
   
     def lv1flip(self):
         print('help')
