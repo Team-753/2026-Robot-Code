@@ -6,13 +6,13 @@
 #|____/_/    \_\_____/|_____\_____|  \_____\____/|_| \_|_|    |_____\_____|
 
 driveSpeed=50
-driveTurnSpeed=60
+driveTurnSpeed=50
 
 driveController="Joystick" #Options:XboxController,Joystick,VKBJoystick #NOTE ADD automatic
 driveControllerSlot=0 #USB NUMBER IN DRIVESTATION
 
-# Button to hold for targeting (raw button number for HID)
-targetingButton = 1
+# Button to hold for stationary hub targeting (raw button number for HID)
+targetingButton = 2
 
 # Starting robot pose (meters, degrees) in WPILib blue-origin field coords
 startPoseX = 2

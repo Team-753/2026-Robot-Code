@@ -42,12 +42,27 @@ class indexerSubsys(commands2.Subsystem):
         self.waiting = False
         self.timer.reset()
         self.timer.start()
+        self.timer2.reset()
 
     def teleopInit(self):
         self.state = 'teleop'
 
     def autoInit(self):
         self.state = 'auto'
+        self.XStart = False
+        self.XStop = False
+        self.XPressed = False
+        self.prevVal = False
+        self.XChanged = False
+        self.intakeRunning = False
+        self.shooterRunning = False
+        self.indexerLogic = False
+        self.BPressed = False
+        self.prevVal2 = False
+        self.BChanged = False
+        self.toggleshoot = False
+        self.waiting = False
+        self.numberOne.set(0)
         
     def setToIdle(self):
         self.state = 'idle'
@@ -58,8 +73,14 @@ class indexerSubsys(commands2.Subsystem):
             print('enabling indexer from auto')
     
     def autoShootStop(self):
-        if self.state == 'auto' and self.toggleshoot:
-            self.XStop = True
+        if self.state == 'auto':
+            self.XStart = False
+            self.XStop = False
+            self.intakeRunning = False
+            self.shooterRunning = False
+            self.indexerLogic = False
+            self.toggleshoot = False
+            self.numberOne.set(0)
             print('disabling indexer from auto')
 
     def periodic(self):
@@ -85,11 +106,13 @@ class indexerSubsys(commands2.Subsystem):
             self.indexerLogic = False
             self.shooterRunning = False
             self.numberOne.set(0) 
+            self.timer2.stop()
+            self.timer2.reset()
 
     def executeState(self):
 
         if self.BChanged:
-            print('intake toggled')
+            # print('intake toggled')
             self.intakeRunning = not self.intakeRunning
 
         if self.XStart and not self.shooterRunning:
@@ -101,23 +124,35 @@ class indexerSubsys(commands2.Subsystem):
 
         self.LogicPrevVal = self.indexerLogic
 
-        if self.shooterRunning or self.intakeRunning:
+        if self.shooterRunning:#or self.intakeRunning:
             self.indexerLogic = True
         
-        if not self.shooterRunning and not self.intakeRunning:
+        if not self.shooterRunning:# and not self.intakeRunning:
             self.indexerLogic = False
         
         self.indexerToggle = self.LogicPrevVal != self.indexerLogic
 
         if self.indexerToggle and self.indexerLogic:
-            print ('indexer starting motor')
-            self.numberOne.set(auxiliaryConfig.indexerSpeed)
+            print ('indexer starting motor - with wait')
+            # self.numberOne.set(auxiliaryConfig.indexerSpeed)
             self.toggleshoot= True
+            self.timer2.reset()
+            self.timer2.start()
 
         elif self.indexerToggle and not self.indexerLogic:
             print('indexer stopping motor')
             self.toggleshoot= False
             self.numberOne.set(0)
+            self.timer2.stop()
+            self.timer2.reset()
+
+        # delay loader motor from starting for shooterStartupTime seconds
+        if self.timer2.get() >= auxiliaryConfig.shooterStartupTime:
+            self.timer2.stop()
+            self.timer2.reset()
+            self.numberOne.set(auxiliaryConfig.indexerSpeed)
+            print('indexer activated')
+
                 
         # #MODIFIED "self.XChanged" ---> "(self.XChanged or self.BChanged)"
         # if (self.XStart or self.BChanged) and not self.toggleshoot:

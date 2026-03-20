@@ -167,18 +167,30 @@ class driveTrainSubsys(commands2.Subsystem):
             #IF JITTERING WITH CORRECT PID, REVERSE OPTIMIZE ANGLE INPUT
             self.swerveNumbers[i].optimize(wpimath.geometry.Rotation2d.fromRotations(self.swerveModules[i].getRot()))
             self.swerveModules[i].setState(self.swerveNumbers[i].angle.radians()/(2*pi),self.swerveNumbers[i].speed)
+        #print(self.swerveNumbers[0].angle.degrees(),self.swerveNumbers[1].angle.degrees(),self.swerveNumbers[2].angle.degrees(),self.swerveNumbers[3].angle.degrees())
     def getPoseState(self):
-        return self.poseEstimator.getEstimatedPosition()
+        if wpilib.DriverStation.getAlliance() == wpilib.DriverStation.Alliance.kRed:
+            currentPose = wpimath.geometry.Pose2d(self.poseEstimator.getEstimatedPosition().translation(),self.poseEstimator.getEstimatedPosition().rotation().rotateBy(wpimath.geometry.Rotation2d(pi)))
+        else:
+            currentPose = self.poseEstimator.getEstimatedPosition()
+        return currentPose
+
+    def getRobotYaw(self):
+        robotYaw = self.compass.getRotation2d()
+        alliance = wpilib.DriverStation.getAlliance()
+        if alliance == wpilib.DriverStation.Alliance.kRed:
+            return robotYaw.rotateBy(wpimath.geometry.Rotation2d(pi))
+        return robotYaw
 
     def resetPose(self,pose):
         # Reset the estimator to the selected auto start pose before autonomous begins.
-        self.poseEstimator.resetPosition(self.compass.getRotation2d(),self.getSwerveState(),pose)
+        self.poseEstimator.resetPosition(self.getRobotYaw(),self.getSwerveState(),pose)
         self.field.setRobotPose(pose)
 
     def periodic(self):
 
         time = Timer.getFPGATimestamp()
-        if wpilib.DriverStation.Alliance.kRed:
+        if wpilib.DriverStation.getAlliance()==wpilib.DriverStation.Alliance.kRed:
             robotYaw=self.compass.getRotation2d().rotateBy(wpimath.geometry.Rotation2d(pi))
         else:
             robotYaw = self.compass.getRotation2d()
@@ -205,7 +217,11 @@ class driveTrainSubsys(commands2.Subsystem):
             lockTime = time - (latency / 1000.0) #Take the locktime minus the latency (in miliseconds) to know how long in the past locking was
             self.poseEstimator.addVisionMeasurement(posedata, lockTime)
         self.poseEstimator.update(robotYaw, self.getSwerveState())
-        currentPose = self.poseEstimator.getEstimatedPosition()
+        if False:#wpilib.DriverStation.getAlliance() == wpilib.DriverStation.Alliance.kRed:
+            currentPose = wpimath.geometry.Pose2d(self.poseEstimator.getEstimatedPosition().translation(),self.poseEstimator.getEstimatedPosition().rotation().rotateBy(wpimath.geometry.Rotation2d(pi)))
+            print("red",currentPose.rotation())
+        else:
+            currentPose = self.poseEstimator.getEstimatedPosition()
         #update the pose estimator with our most up to date info on where the robot is from all the systems
 
 
@@ -305,10 +321,18 @@ class pointToVelocityVectorCommand(commands2.Command):
         self.thetaPid=wpimath.controller.ProfiledPIDControllerRadians(60,0.0001,0.5,wpimath.trajectory.TrapezoidProfileRadians.Constraints(4*pi,4*pi))
         self.thetaPid.setIntegratorRange(-0.2,0.2)
         self.thetaPid.enableContinuousInput(-pi,pi)
+        self.minVectorMagnitude=0.05
+        self.lastDesiredRotation=None
     def execute(self):
         robotPose=self.dt.getPoseState()
-        desiredRotation=math.atan2(-self.joystick.getX(),-self.joystick.getY())
-        output=self.thetaPid.calculate(robotPose.rotation().radians(),desiredRotation)
+        joyX=self.joystick.getX()
+        joyY=self.joystick.getY()
+        if math.hypot(joyX,joyY) > self.minVectorMagnitude:
+            self.lastDesiredRotation=math.atan2(-joyX,-joyY)
+        elif self.lastDesiredRotation is None:
+            self.lastDesiredRotation=robotPose.rotation().radians()
+        output=self.thetaPid.calculate(robotPose.rotation().radians(),self.lastDesiredRotation)
         self.dt.overideInput(rot=output)
     def end(self,interrupted):
+        self.lastDesiredRotation=None
         self.dt.overideInput()

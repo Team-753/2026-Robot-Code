@@ -11,6 +11,16 @@
           "open": true
         }
       },
+      "Talon FX (v6)[1]/Rotor Sensor": {
+        "header": {
+          "open": true
+        }
+      },
+      "Talon FX (v6)[2]": {
+        "header": {
+          "open": true
+        }
+      },
       "Talon FX (v6)[3]": {
         "header": {
           "open": true
@@ -32,7 +42,8 @@
     "types": {
       "/FMSInfo": "FMSInfo",
       "/SmartDashboard/Auto Trajectory": "String Chooser",
-      "/SmartDashboard/Field": "Field2d"
+      "/SmartDashboard/Field": "Field2d",
+      "/SmartDashboard/Second Auto Trajectory": "String Chooser"
     }
   },
   "NetworkTables Info": {
