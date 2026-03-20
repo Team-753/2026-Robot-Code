@@ -72,7 +72,7 @@ def test_auto_shooting_keeps_persistent_targeting_command(control, robot):
 
         assert primary_auto.shooterState is True
         assert primary_auto.autoTargetCommand is not None
-        assert primary_auto.autoTargetCommand.lastTimestamp is not None
+        assert isinstance(primary_auto.autoTargetCommand, targetPointCommand)
         assert robot.rContainer.autoTransitionActive is False
         assert robot.rContainer.driveSubsystem.overidedInputs[2] is not None
 
@@ -81,4 +81,4 @@ def test_auto_shooting_keeps_persistent_targeting_command(control, robot):
         control.step_timing(seconds=0.2, autonomous=True, enabled=True)
 
         assert primary_auto.autoTargetCommand is auto_target_command
-        assert primary_auto.autoTargetCommand.lastTimestamp is not None
+        assert isinstance(primary_auto.autoTargetCommand, targetPointCommand)

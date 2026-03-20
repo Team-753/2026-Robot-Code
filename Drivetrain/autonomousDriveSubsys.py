@@ -1,7 +1,7 @@
 import commands2,wpimath,wpimath.controller,wpimath.trajectory,wpimath.kinematics,wpilib
 from math import pi
 from Drivetrain.swerveSubsys import driveTrainSubsys,pointToVelocityVectorCommand
-from Drivetrain.Targeting2 import getSpeakerDistanceMeters,isSpeakerLocked,targetPointCommand,targetPointWithLeadCommand
+from Drivetrain.Targeting2 import getSpeakerDistanceMeters,isSpeakerLocked,targetPointCommand
 from AuxilarySystems import auxiliaryConfig,shooterSubsys,IntakeSubsys,IndexerSubsys
 import choreo
 
@@ -114,8 +114,7 @@ class autoDriveTrainCommand(commands2.Command):
 
     def executeAutoShotSequence(self):
         if self.autoTargetCommand is None:
-            self.autoTargetCommand=targetPointWithLeadCommand(self.driveSubsys)
-            self.autoTargetCommand.initialize()
+            self.autoTargetCommand=targetPointCommand(self.driveSubsys)
 
         robotPose=self.driveSubsys.getPoseState()
         now=wpilib.Timer.getFPGATimestamp()
