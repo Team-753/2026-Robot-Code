@@ -34,6 +34,7 @@ class flipsubsys(commands2.Subsystem):
         arm_k_p_config.closedLoop.P(0.8)
         arm_k_p_config.closedLoop.I(0.0)
         arm_k_p_config.closedLoop.D(0.2)
+#        arm_k_p_config.closedLoop.allowedClosedLoopError(0.1)
 
         self.armmotor.configure(arm_k_p_config,rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
         self.grabermotor.configurator.apply(graberconfigs)
