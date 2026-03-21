@@ -13,6 +13,12 @@ shooterVelocityUpBtnIdx=4 # raw button index for velocity up increment
 shooterVelocityDownBtnIdx=1 # raw button index for velocity down increment
 shooterIndexDutyCycle = 0.7 # fixed duty cycle of the rev indexer
 shooterStartupTime = 1.0 #seconds
+shooterDefaultVelocityRps = 16.0
+shooterVelocityIncrementRps = 2.0
+#These values were edited during comp. Here were the last values added before I changed it
+# Velocity: 16, Distance, 2.3
+shooterVelocityReferenceDistanceMeters = 2.3
+shooterVelocityReferenceRps = 16.3
 
 
 #Indexer Subsystem config
@@ -34,9 +40,9 @@ intakeUpdownToggleBtnIdx = 6
 # flip configs
 graberlv0=0.01 # position of kraken when not climbing (home)
 graberlv1=0.0 #0.1 # position when climbing to lv1
-graberlv3=-0.51 #0.3 # position when clibing to lv3
+graberlv3=-0.47 #0.3 # position when clibing to lv3
 flipLinPosIn = 0 #-1 # retracted position (home) of rev neo motor
-flipLinPosOut = -1475 # extended postion (out/start) of rev neo motor
+flipLinPosOut = -1575 # extended postion (out/start) of rev neo motor
 
 #Gear ratio between the Kraken motor and the rotating part of the climber. 
 #For each 506.66666 rotations of the motor, the climber rotates once.
@@ -70,5 +76,7 @@ FLipHomeDoneButtonINdex=5
 #Auto Transition Settings 
 autoTransitionDelaySeconds = 7 #How long we estimate it take to empty hopper
 autoShootStartToIntakeUpDelaySeconds = 2 #Transition-only delay from shooter start to intake up
-autoTransitionIndexerAimToleranceDegrees = 3.0 #Allow indexer feed once transition aim is within this heading error
-autoTransitionIndexerFallbackDelaySeconds = 0.75 #Feed anyway after this much transition time if aim has not settled
+autoTargetAimToleranceDegrees = 3.0 # Aim must settle inside this tolerance before auto starts the shooter
+autoTargetLockHoldSeconds = 0.2 # Require lock to stay stable for this long before auto spin-up
+autoTransitionIndexerAimToleranceDegrees = autoTargetAimToleranceDegrees
+autoTransitionIndexerFallbackDelaySeconds = 0.75 # Legacy fallback; current auto logic prefers confirmed lock before feed

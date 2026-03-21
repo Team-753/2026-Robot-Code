@@ -5,6 +5,7 @@ from Drivetrain.swerveSubsys import overideRobotInput,driveTrainSubsys
 from wpilib import Timer
 import wpilib
 import AuxilarySystems.shooterSubsys
+from AuxilarySystems import auxiliaryConfig
 from customFunctions import pythag
 #NOTICE: This targeting system assumes the metric system. 
 #Unfortunantly, Cheeseburgers-per-hour was not easy to implement into the code (plus I am lazy) -Ryan T
@@ -19,27 +20,68 @@ def getSpeakerTargetPoint():
         return TARGET_POINT_RED
     return TARGET_POINT_BLUE
 
+
+def getTargetPointDistanceMeters(robotPose, targetX, targetY):
+    return pythag(robotPose.x, robotPose.y, targetX, targetY)
+
+
+def getSpeakerDistanceMeters(robotPose):
+    targetX, targetY = getSpeakerTargetPoint()
+    return getTargetPointDistanceMeters(robotPose, targetX, targetY)
+
+
+def getTargetRotationRadians(robotPose, targetX, targetY):
+    return atan2(robotPose.y-targetY, robotPose.x-targetX)
+
+
+def getTargetAimErrorRadians(robotPose, targetX, targetY):
+    desiredRotation = getTargetRotationRadians(robotPose, targetX, targetY)
+    currentRotation = robotPose.rotation().radians()
+    return (desiredRotation-currentRotation+pi)%(2*pi)-pi
+
+
+def getTargetAimErrorDegrees(robotPose, targetX, targetY):
+    return abs(getTargetAimErrorRadians(robotPose, targetX, targetY) * 180 / pi)
+
+
+def isTargetLocked(robotPose, targetX, targetY, toleranceDegrees=None):
+    if toleranceDegrees is None:
+        toleranceDegrees = auxiliaryConfig.autoTargetAimToleranceDegrees
+    return getTargetAimErrorDegrees(robotPose, targetX, targetY) <= toleranceDegrees
+
+
+def isSpeakerLocked(robotPose, toleranceDegrees=None):
+    targetX, targetY = getSpeakerTargetPoint()
+    return isTargetLocked(robotPose, targetX, targetY, toleranceDegrees)
+
 class targetPointCommand(commands2.Command): #This class points the robot so the rear shooter faces the target.
     def __init__(self,driveSubsys:driveTrainSubsys,tx=None,ty=None)-> None:
         super().__init__()
         self.tx,self.ty=tx,ty
         self.driveSubsys=driveSubsys
         self.thetaPid=wpimath.controller.ProfiledPIDControllerRadians(45,0.1,0.1,wpimath.trajectory.TrapezoidProfileRadians.Constraints(2*pi,2*pi))
-        self.thetaPid.setIntegratorRange(-1,1)
+        self.thetaPid.setIntegratorRange(-0.1,0.1)
         self.thetaPid.enableContinuousInput(-pi,pi)
+        self.pidInitialized=False
+    def _resetController(self,robotPose):
+        self.thetaPid.reset(robotPose.rotation().radians())
+        self.pidInitialized=True
+    def initialize(self):
+        self._resetController(self.driveSubsys.getPoseState())
     def execute(self):
         robotPose=self.driveSubsys.getPoseState()
+        if not self.pidInitialized:
+            self._resetController(robotPose)
         if self.tx is None or self.ty is None:
             targetX,targetY=getSpeakerTargetPoint()
         else:
             targetX,targetY=self.tx,self.ty
-        desiredRotation=atan2(robotPose.y-targetY,robotPose.x-targetX)
+        desiredRotation=getTargetRotationRadians(robotPose,targetX,targetY)
         output=self.thetaPid.calculate(robotPose.rotation().radians(),desiredRotation)
         self.driveSubsys.overideInput(rot=output)
     def end(self,interrupted):
+        self.pidInitialized=False
         self.driveSubsys.overideInput()
-
-
 
 class targetPointWithLeadCommand(commands2.Command): #This class is used for estimating where the robot needs to look based on its velocity. 
     def __init__(self,driveSubsys:driveTrainSubsys):

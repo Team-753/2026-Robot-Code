@@ -5,10 +5,16 @@ import wpilib,commands2,Drivetrain.swerveConfig as swerveConfig
 # disable warnings about the joystick
 wpilib.DriverStation.silenceJoystickConnectionWarning(True)
 
+AUTO_PERIOD_SECONDS = 20.0
+TELEOP_PERIOD_SECONDS = 140.0
+TRANSITION_SHIFT_SECONDS = 10.0
+ALLIANCE_SHIFT_SECONDS = 25.0
+ENDGAME_PERIOD_SECONDS = 30.0
+
 #IMPORT FROM Drivetrain
 from Drivetrain.swerveSubsys import driveTrainCommand,JoystickSubsys,driveTrainSubsys,XboxControllerSubsys,VKBJoystickSubsys,fieldOrientReorient,overideRobotInput,pointToVelocityVectorCommand
 from Drivetrain.autonomousDriveSubsys import autoDriveTrainCommand
-from Drivetrain.Targeting2 import getSpeakerTargetPoint,targetPointCommand,targetPointWithLeadCommand
+from Drivetrain.Targeting2 import getSpeakerDistanceMeters,getSpeakerTargetPoint,getTargetAimErrorDegrees,isTargetLocked,targetPointCommand
 
 ##IMPORT FROM AuxiliarySystems
 from AuxilarySystems import auxiliaryConfig, shooterSubsys, IndexerSubsys, IntakeSubsys, flipSubsys, shooterDistanceCommand
@@ -26,7 +32,13 @@ class robotContainer():
         self.autoTransitionTargetCommand=None
         self.autoTransitionTargetPoint=None
         self.autoTransitionIndexerStarted=False
+        self.autoTransitionLockedSince=None
+        self.autoTransitionShooterStarted=False
+        self.autoTransitionShooterStartTime=None
+        self.autoVelocityEnabled=None
         self.bindingsConfigured=False
+        self.matchModeName=None
+        self.matchModeStartTime=None
 
         if swerveConfig.driveController=="Joystick"or swerveConfig.driveController=="VKBJoystick":
             self.controllerType="Joystick"
@@ -44,6 +56,9 @@ class robotContainer():
 
         exec("self.joystick="+str(swerveConfig.driveController)+"Subsys(self.controller)")
         self.initializeTrajectoryChooser()
+        self.initializeAutoVelocityChooser()
+        self.initializeMatchTimerDashboard()
+        self.syncDashboardControls()
         self.updateTrajectoryPreview(force=True)
         
         #Set default Command (runs over and over)
@@ -88,6 +103,107 @@ class robotContainer():
         wpilib.SmartDashboard.putString("Second Auto Preview Indicator","Separate field objects")
         wpilib.SmartDashboard.putString("Auto Transition Status","Disabled")
         wpilib.SmartDashboard.putBoolean("Auto Transition Active",False)
+
+    def initializeAutoVelocityChooser(self):
+        self.autoVelocityChooser=wpilib.SendableChooser()
+        self.autoVelocityChooser.setDefaultOption("ON",True)
+        self.autoVelocityChooser.addOption("OFF",False)
+        wpilib.SmartDashboard.putData("Auto Velocity",self.autoVelocityChooser)
+
+    def initializeMatchTimerDashboard(self):
+        wpilib.SmartDashboard.putString("Match Mode","Disabled")
+        wpilib.SmartDashboard.putString("Match Segment","Disabled")
+        wpilib.SmartDashboard.putString("Current Shift","Disabled")
+        wpilib.SmartDashboard.putString("Match Time Source","Local")
+        wpilib.SmartDashboard.putNumber("Match Time Remaining (s)",0.0)
+        wpilib.SmartDashboard.putNumber("Segment Time Remaining (s)",0.0)
+        wpilib.SmartDashboard.putNumber("Current Shift Time Remaining (s)",0.0)
+        wpilib.SmartDashboard.putNumber("DriverStation Match Time (s)",-1.0)
+        wpilib.SmartDashboard.putBoolean("Endgame Active",False)
+
+    def getAutoVelocityEnabled(self):
+        selected=self.autoVelocityChooser.getSelected()
+        if selected is None:
+            return True
+        return bool(selected)
+
+    def syncDashboardControls(self):
+        selected=self.getAutoVelocityEnabled()
+        if self.autoVelocityEnabled != selected:
+            self.autoVelocityEnabled=selected
+        self.shooterSubsystem.setAutoVelocityEnabled(selected)
+
+    def getCurrentMatchMode(self):
+        if wpilib.DriverStation.isAutonomousEnabled():
+            return "Autonomous"
+        if wpilib.DriverStation.isTeleopEnabled():
+            return "Teleop"
+        if wpilib.DriverStation.isTestEnabled():
+            return "Test"
+        if wpilib.DriverStation.isDisabled():
+            return "Disabled"
+        return "Unknown"
+
+    def getMatchModeDurationSeconds(self,modeName):
+        if modeName=="Autonomous":
+            return AUTO_PERIOD_SECONDS
+        if modeName=="Teleop":
+            return TELEOP_PERIOD_SECONDS
+        return None
+
+    def getModeRemainingFromLocalTimer(self,now,modeName):
+        modeDuration=self.getMatchModeDurationSeconds(modeName)
+        if modeDuration is None or self.matchModeStartTime is None:
+            return 0.0
+        elapsed=max(0.0,now-self.matchModeStartTime)
+        return max(0.0,modeDuration-elapsed)
+
+    def getSegmentState(self,modeName,modeRemainingSeconds):
+        if modeName=="Autonomous":
+            return "Autonomous",modeRemainingSeconds
+        if modeName=="Teleop":
+            if modeRemainingSeconds > TELEOP_PERIOD_SECONDS - TRANSITION_SHIFT_SECONDS:
+                return "Transition Shift",modeRemainingSeconds - (TELEOP_PERIOD_SECONDS - TRANSITION_SHIFT_SECONDS)
+            if modeRemainingSeconds > ENDGAME_PERIOD_SECONDS + (ALLIANCE_SHIFT_SECONDS * 3):
+                return "Shift 1",modeRemainingSeconds - (ENDGAME_PERIOD_SECONDS + (ALLIANCE_SHIFT_SECONDS * 3))
+            if modeRemainingSeconds > ENDGAME_PERIOD_SECONDS + (ALLIANCE_SHIFT_SECONDS * 2):
+                return "Shift 2",modeRemainingSeconds - (ENDGAME_PERIOD_SECONDS + (ALLIANCE_SHIFT_SECONDS * 2))
+            if modeRemainingSeconds > ENDGAME_PERIOD_SECONDS + ALLIANCE_SHIFT_SECONDS:
+                return "Shift 3",modeRemainingSeconds - (ENDGAME_PERIOD_SECONDS + ALLIANCE_SHIFT_SECONDS)
+            if modeRemainingSeconds > ENDGAME_PERIOD_SECONDS:
+                return "Shift 4",modeRemainingSeconds - ENDGAME_PERIOD_SECONDS
+            return "End Game",modeRemainingSeconds
+        if modeName=="Test":
+            return "Test",0.0
+        if modeName=="Disabled":
+            return "Disabled",0.0
+        return "Unknown",0.0
+
+    def updateMatchTimerDashboard(self):
+        now=wpilib.Timer.getFPGATimestamp()
+        modeName=self.getCurrentMatchMode()
+        if modeName != self.matchModeName:
+            self.matchModeName=modeName
+            self.matchModeStartTime=now
+
+        driverStationMatchTime=float(wpilib.DriverStation.getMatchTime())
+        if self.getMatchModeDurationSeconds(modeName) is not None and driverStationMatchTime >= 0.0:
+            modeRemainingSeconds=driverStationMatchTime
+            timeSource="DriverStation"
+        else:
+            modeRemainingSeconds=self.getModeRemainingFromLocalTimer(now,modeName)
+            timeSource="Local"
+
+        segmentName,segmentRemainingSeconds=self.getSegmentState(modeName,modeRemainingSeconds)
+        wpilib.SmartDashboard.putString("Match Mode",modeName)
+        wpilib.SmartDashboard.putString("Match Segment",segmentName)
+        wpilib.SmartDashboard.putString("Current Shift",segmentName)
+        wpilib.SmartDashboard.putString("Match Time Source",timeSource)
+        wpilib.SmartDashboard.putNumber("Match Time Remaining (s)",modeRemainingSeconds)
+        wpilib.SmartDashboard.putNumber("Segment Time Remaining (s)",segmentRemainingSeconds)
+        wpilib.SmartDashboard.putNumber("Current Shift Time Remaining (s)",segmentRemainingSeconds)
+        wpilib.SmartDashboard.putNumber("DriverStation Match Time (s)",driverStationMatchTime)
+        wpilib.SmartDashboard.putBoolean("Endgame Active",segmentName=="End Game")
 
     def configureTrajectoryChooser(self,chooser):
         if self.trajectoryNames:
@@ -198,6 +314,7 @@ class robotContainer():
     def teleopInit(self):
         self.cancelAutonomousCommand()
         self.setAutoTransitionActive(False)
+        self.syncDashboardControls()
         self.driveSubsystem.setDefaultCommand(driveTrainCommand(self.driveSubsystem,self.joystick))
         self.shooterSubsystem.teleopInit()
         self.indexerSubsystem.teleopInit()
@@ -208,6 +325,7 @@ class robotContainer():
 
     def autoInit(self):
         self.cancelAutonomousCommand()
+        self.syncDashboardControls()
         self.autoCommand=self.buildAutonomousCommand()
         initialPose=self.primaryAutoCommand.getInitialPose()
         # Align the estimator with the chosen path so the first sample is field-correct.
@@ -229,6 +347,7 @@ class robotContainer():
     def disabledInit(self): # keep states in subsystems clean by entering disabled mode
         self.cancelAutonomousCommand()
         self.setAutoTransitionActive(False)
+        self.syncDashboardControls()
         self.shooterSubsystem.setToIdle()
         self.intakeSubsystem.setToIdle()
         self.indexerSubsystem.setToIdle()
@@ -252,21 +371,38 @@ class robotContainer():
             return None
         robotPose=self.driveSubsystem.getPoseState()
         targetX,targetY=self.autoTransitionTargetPoint
-        desiredRotation=atan2(robotPose.y-targetY,robotPose.x-targetX)
-        currentRotation=robotPose.rotation().radians()
-        errorRadians=(desiredRotation-currentRotation+pi)%(2*pi)-pi
-        return abs(errorRadians*180/pi)
+        return getTargetAimErrorDegrees(robotPose,targetX,targetY)
+
+    def resetAutoTransitionShotState(self):
+        self.autoTransitionIndexerStarted=False
+        self.autoTransitionLockedSince=None
+        self.autoTransitionShooterStarted=False
+        self.autoTransitionShooterStartTime=None
 
     def shouldStartAutoTransitionIndexer(self):
-        if self.autoTransitionStartTime is None:
+        if self.autoTransitionTargetPoint is None:
             return False
-        elapsedTime=wpilib.Timer.getFPGATimestamp()-self.autoTransitionStartTime
-        if elapsedTime >= auxiliaryConfig.autoTransitionIndexerFallbackDelaySeconds:
-            return True
-        aimErrorDegrees=self.getAutoTransitionAimErrorDegrees()
-        if aimErrorDegrees is None:
+        robotPose=self.driveSubsystem.getPoseState()
+        targetX,targetY=self.autoTransitionTargetPoint
+        if not isTargetLocked(robotPose,targetX,targetY,auxiliaryConfig.autoTargetAimToleranceDegrees):
+            self.autoTransitionLockedSince=None
             return False
-        return aimErrorDegrees <= auxiliaryConfig.autoTransitionIndexerAimToleranceDegrees
+        now=wpilib.Timer.getFPGATimestamp()
+        if self.autoTransitionLockedSince is None:
+            self.autoTransitionLockedSince=now
+            return False
+        if not self.autoTransitionShooterStarted:
+            if now-self.autoTransitionLockedSince >= auxiliaryConfig.autoTargetLockHoldSeconds:
+                self.shooterSubsystem.autoShootStart()
+                self.autoTransitionShooterStarted=True
+                self.autoTransitionShooterStartTime=now
+                wpilib.SmartDashboard.putString("Auto Transition Status","Spinning Up")
+            return False
+        if self.autoTransitionShooterStartTime is None:
+            return False
+        if now-self.autoTransitionLockedSince < auxiliaryConfig.autoTargetLockHoldSeconds:
+            return False
+        return now-self.autoTransitionShooterStartTime >= auxiliaryConfig.shooterStartupTime
 
     def beginAutoTransition(self):
         self.setAutoTransitionActive(True)
@@ -276,35 +412,47 @@ class robotContainer():
         targetX,targetY=getSpeakerTargetPoint()
         self.autoTransitionTargetPoint=(targetX,targetY)
         self.autoTransitionTargetCommand=targetPointCommand(self.driveSubsystem,targetX,targetY)
-        self.autoTransitionIndexerStarted=False
+        self.resetAutoTransitionShotState()
         self.driveSubsystem.overideInput()
         if self.autoTransitionTargetCommand is not None:
             self.autoTransitionTargetCommand.execute()
         self.driveSubsystem.setState(0,0,0)
         self.intakeSubsystem.autoGrabStop()
-        self.shooterSubsystem.autoShootStart()
         wpilib.SmartDashboard.putString("Auto Transition Status","Aiming")
 
     def executeAutoTransition(self):
         if self.autoTransitionTargetCommand is not None:
             self.autoTransitionTargetCommand.execute()
         self.driveSubsystem.setState(0,0,0)
-        if self.autoTransitionStartTime is not None and wpilib.Timer.getFPGATimestamp() >= self.autoTransitionStartTime + auxiliaryConfig.autoShootStartToIntakeUpDelaySeconds:
+        robotPose=self.driveSubsystem.getPoseState()
+        self.shooterSubsystem.setTargetDistance(getSpeakerDistanceMeters(robotPose))
+        if self.autoTransitionShooterStarted and self.autoTransitionShooterStartTime is not None and wpilib.Timer.getFPGATimestamp() >= self.autoTransitionShooterStartTime + auxiliaryConfig.autoShootStartToIntakeUpDelaySeconds:
             self.intakeSubsystem.autoIntakeUp()
         if not self.autoTransitionIndexerStarted and self.shouldStartAutoTransitionIndexer():
-            self.indexerSubsystem.autoShootStart()
+            self.shooterSubsystem.autoFeedStart()
+            self.indexerSubsystem.autoFeedStart()
             self.autoTransitionIndexerStarted=True
             wpilib.SmartDashboard.putString("Auto Transition Status","Launching")
+        elif self.autoTransitionIndexerStarted:
+            targetX,targetY=self.autoTransitionTargetPoint
+            if not isTargetLocked(robotPose,targetX,targetY,auxiliaryConfig.autoTargetAimToleranceDegrees):
+                self.autoTransitionLockedSince=None
+                self.shooterSubsystem.autoFeedStop()
+                self.indexerSubsystem.autoFeedStop()
+                self.autoTransitionIndexerStarted=False
+                wpilib.SmartDashboard.putString("Auto Transition Status","Reacquiring")
 
     def finishAutoTransition(self):
         self.setAutoTransitionActive(False)
         self.autoTransitionStartTime=None
-        self.autoTransitionIndexerStarted=False
+        self.resetAutoTransitionShotState()
         self.autoTransitionTargetPoint=None
         if self.autoTransitionTargetCommand is not None:
             self.autoTransitionTargetCommand.end(interrupted=True)
             self.autoTransitionTargetCommand=None
         self.driveSubsystem.overideInput()
+        self.shooterSubsystem.autoFeedStop()
+        self.indexerSubsystem.autoFeedStop()
         self.shooterSubsystem.autoShootStop()
         self.indexerSubsystem.autoShootStop()
         self.intakeSubsystem.autoGrabStop()
@@ -349,7 +497,7 @@ class robotContainer():
             self.controller.button(1).whileTrue(commands2.RepeatCommand(pointToVelocityVectorCommand(self.driveSubsystem,self.joystick)))
         if swerveConfig.driveController=="VKBJoystick":
             self.controller.button(15).whileTrue(fieldOrientReorient(self.driveSubsystem))
-            self.controller.button(3).whileTrue(commands2.RepeatCommand(targetPointWithLeadCommand(self.driveSubsystem)))
+            self.controller.button(3).whileTrue(commands2.RepeatCommand(targetPointCommand(self.driveSubsystem)))
             self.controller.button(1).whileTrue(commands2.RepeatCommand(pointToVelocityVectorCommand(self.driveSubsystem,self.joystick)))
         if swerveConfig.driveController=="XboxController":
             self.controller.a().whileTrue(fieldOrientReorient(self.driveSubsystem))

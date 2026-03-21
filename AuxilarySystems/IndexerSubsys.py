@@ -40,6 +40,7 @@ class indexerSubsys(commands2.Subsystem):
         #END CHRIS MOD
         self.toggleshoot = False
         self.waiting = False
+        self.autoFeedActive = False
         self.timer.reset()
         self.timer.start()
         self.timer2.reset()
@@ -62,6 +63,7 @@ class indexerSubsys(commands2.Subsystem):
         self.BChanged = False
         self.toggleshoot = False
         self.waiting = False
+        self.autoFeedActive = False
         self.numberOne.set(0)
         
     def setToIdle(self):
@@ -80,8 +82,31 @@ class indexerSubsys(commands2.Subsystem):
             self.shooterRunning = False
             self.indexerLogic = False
             self.toggleshoot = False
+            self.autoFeedActive = False
             self.numberOne.set(0)
             print('disabling indexer from auto')
+
+    def autoFeedStart(self):
+        if self.state == 'auto' and not self.autoFeedActive:
+            self.autoFeedActive = True
+            self.shooterRunning = True
+            self.indexerLogic = True
+            self.toggleshoot = True
+            self.timer2.stop()
+            self.timer2.reset()
+            self.numberOne.set(auxiliaryConfig.indexerSpeed)
+            print('enabling indexer feed from auto')
+
+    def autoFeedStop(self):
+        if self.state == 'auto' and self.autoFeedActive:
+            self.autoFeedActive = False
+            self.shooterRunning = False
+            self.indexerLogic = False
+            self.toggleshoot = False
+            self.timer2.stop()
+            self.timer2.reset()
+            self.numberOne.set(0)
+            print('disabling indexer feed from auto')
 
     def periodic(self):
 
@@ -97,6 +122,11 @@ class indexerSubsys(commands2.Subsystem):
             #CHRIS MOD END
             self.executeState()
         elif self.state == 'auto':
+            if self.autoFeedActive:
+                self.numberOne.set(auxiliaryConfig.indexerSpeed)
+                self.XStart = False
+                self.XStop = False
+                return
             self.executeState()
             self.XStart = False
             self.XStop = False
@@ -105,6 +135,7 @@ class indexerSubsys(commands2.Subsystem):
             self.intakeRunning = False
             self.indexerLogic = False
             self.shooterRunning = False
+            self.autoFeedActive = False
             self.numberOne.set(0) 
             self.timer2.stop()
             self.timer2.reset()
