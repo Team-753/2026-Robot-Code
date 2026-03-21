@@ -4,16 +4,20 @@ import wpilib
 import wpimath.geometry
 
 from AuxilarySystems import auxiliaryConfig
-from Drivetrain.Targeting2 import getSpeakerTargetPoint
+from Drivetrain.Targeting2 import getSpeakerTargetPoint, targetPointCommand
 from robotContainer import robotContainer
 
 
 class _FakeDriveSubsystem:
     def __init__(self, pose):
         self.pose = pose
+        self.overidedInputs = [None, None, None]
 
     def getPoseState(self):
         return self.pose
+
+    def overideInput(self, x=None, y=None, rot=None):
+        self.overidedInputs = [x, y, rot]
 
 
 class _FakeShooterSubsystem:
@@ -63,3 +67,14 @@ def test_transition_waits_for_lock_hold_and_spinup(monkeypatch):
 
     current_time[0] += 0.02
     assert container.shouldStartAutoTransitionIndexer() is True
+
+
+def test_target_point_command_resets_profiled_pid_before_first_execute():
+    targetX, targetY = getSpeakerTargetPoint()
+    drive = _FakeDriveSubsystem(_build_locked_pose(targetX, targetY))
+    command = targetPointCommand(drive, targetX, targetY)
+
+    command.execute()
+
+    assert drive.overidedInputs[2] is not None
+    assert abs(drive.overidedInputs[2]) < 1.0
