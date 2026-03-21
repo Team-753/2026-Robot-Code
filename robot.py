@@ -6,6 +6,7 @@ class myRobot(commands2.TimedCommandRobot):
     def robotInit(self):
         self.rContainer=robotContainer()
     def robotPeriodic(self):
+        self.rContainer.updateMatchTimerDashboard()
         self.rContainer.ensureButtonBindings()
         self.rContainer.syncDashboardControls()
         self.rContainer.updateTrajectoryPreview()

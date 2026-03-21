@@ -5,6 +5,12 @@ import wpilib,commands2,Drivetrain.swerveConfig as swerveConfig
 # disable warnings about the joystick
 wpilib.DriverStation.silenceJoystickConnectionWarning(True)
 
+AUTO_PERIOD_SECONDS = 20.0
+TELEOP_PERIOD_SECONDS = 140.0
+TRANSITION_SHIFT_SECONDS = 10.0
+ALLIANCE_SHIFT_SECONDS = 25.0
+ENDGAME_PERIOD_SECONDS = 30.0
+
 #IMPORT FROM Drivetrain
 from Drivetrain.swerveSubsys import driveTrainCommand,JoystickSubsys,driveTrainSubsys,XboxControllerSubsys,VKBJoystickSubsys,fieldOrientReorient,overideRobotInput,pointToVelocityVectorCommand
 from Drivetrain.autonomousDriveSubsys import autoDriveTrainCommand
@@ -31,6 +37,8 @@ class robotContainer():
         self.autoTransitionShooterStartTime=None
         self.autoVelocityEnabled=None
         self.bindingsConfigured=False
+        self.matchModeName=None
+        self.matchModeStartTime=None
 
         if swerveConfig.driveController=="Joystick"or swerveConfig.driveController=="VKBJoystick":
             self.controllerType="Joystick"
@@ -49,6 +57,7 @@ class robotContainer():
         exec("self.joystick="+str(swerveConfig.driveController)+"Subsys(self.controller)")
         self.initializeTrajectoryChooser()
         self.initializeAutoVelocityChooser()
+        self.initializeMatchTimerDashboard()
         self.syncDashboardControls()
         self.updateTrajectoryPreview(force=True)
         
@@ -101,6 +110,17 @@ class robotContainer():
         self.autoVelocityChooser.addOption("OFF",False)
         wpilib.SmartDashboard.putData("Auto Velocity",self.autoVelocityChooser)
 
+    def initializeMatchTimerDashboard(self):
+        wpilib.SmartDashboard.putString("Match Mode","Disabled")
+        wpilib.SmartDashboard.putString("Match Segment","Disabled")
+        wpilib.SmartDashboard.putString("Current Shift","Disabled")
+        wpilib.SmartDashboard.putString("Match Time Source","Local")
+        wpilib.SmartDashboard.putNumber("Match Time Remaining (s)",0.0)
+        wpilib.SmartDashboard.putNumber("Segment Time Remaining (s)",0.0)
+        wpilib.SmartDashboard.putNumber("Current Shift Time Remaining (s)",0.0)
+        wpilib.SmartDashboard.putNumber("DriverStation Match Time (s)",-1.0)
+        wpilib.SmartDashboard.putBoolean("Endgame Active",False)
+
     def getAutoVelocityEnabled(self):
         selected=self.autoVelocityChooser.getSelected()
         if selected is None:
@@ -112,6 +132,78 @@ class robotContainer():
         if self.autoVelocityEnabled != selected:
             self.autoVelocityEnabled=selected
         self.shooterSubsystem.setAutoVelocityEnabled(selected)
+
+    def getCurrentMatchMode(self):
+        if wpilib.DriverStation.isAutonomousEnabled():
+            return "Autonomous"
+        if wpilib.DriverStation.isTeleopEnabled():
+            return "Teleop"
+        if wpilib.DriverStation.isTestEnabled():
+            return "Test"
+        if wpilib.DriverStation.isDisabled():
+            return "Disabled"
+        return "Unknown"
+
+    def getMatchModeDurationSeconds(self,modeName):
+        if modeName=="Autonomous":
+            return AUTO_PERIOD_SECONDS
+        if modeName=="Teleop":
+            return TELEOP_PERIOD_SECONDS
+        return None
+
+    def getModeRemainingFromLocalTimer(self,now,modeName):
+        modeDuration=self.getMatchModeDurationSeconds(modeName)
+        if modeDuration is None or self.matchModeStartTime is None:
+            return 0.0
+        elapsed=max(0.0,now-self.matchModeStartTime)
+        return max(0.0,modeDuration-elapsed)
+
+    def getSegmentState(self,modeName,modeRemainingSeconds):
+        if modeName=="Autonomous":
+            return "Autonomous",modeRemainingSeconds
+        if modeName=="Teleop":
+            if modeRemainingSeconds > TELEOP_PERIOD_SECONDS - TRANSITION_SHIFT_SECONDS:
+                return "Transition Shift",modeRemainingSeconds - (TELEOP_PERIOD_SECONDS - TRANSITION_SHIFT_SECONDS)
+            if modeRemainingSeconds > ENDGAME_PERIOD_SECONDS + (ALLIANCE_SHIFT_SECONDS * 3):
+                return "Shift 1",modeRemainingSeconds - (ENDGAME_PERIOD_SECONDS + (ALLIANCE_SHIFT_SECONDS * 3))
+            if modeRemainingSeconds > ENDGAME_PERIOD_SECONDS + (ALLIANCE_SHIFT_SECONDS * 2):
+                return "Shift 2",modeRemainingSeconds - (ENDGAME_PERIOD_SECONDS + (ALLIANCE_SHIFT_SECONDS * 2))
+            if modeRemainingSeconds > ENDGAME_PERIOD_SECONDS + ALLIANCE_SHIFT_SECONDS:
+                return "Shift 3",modeRemainingSeconds - (ENDGAME_PERIOD_SECONDS + ALLIANCE_SHIFT_SECONDS)
+            if modeRemainingSeconds > ENDGAME_PERIOD_SECONDS:
+                return "Shift 4",modeRemainingSeconds - ENDGAME_PERIOD_SECONDS
+            return "End Game",modeRemainingSeconds
+        if modeName=="Test":
+            return "Test",0.0
+        if modeName=="Disabled":
+            return "Disabled",0.0
+        return "Unknown",0.0
+
+    def updateMatchTimerDashboard(self):
+        now=wpilib.Timer.getFPGATimestamp()
+        modeName=self.getCurrentMatchMode()
+        if modeName != self.matchModeName:
+            self.matchModeName=modeName
+            self.matchModeStartTime=now
+
+        driverStationMatchTime=float(wpilib.DriverStation.getMatchTime())
+        if self.getMatchModeDurationSeconds(modeName) is not None and driverStationMatchTime >= 0.0:
+            modeRemainingSeconds=driverStationMatchTime
+            timeSource="DriverStation"
+        else:
+            modeRemainingSeconds=self.getModeRemainingFromLocalTimer(now,modeName)
+            timeSource="Local"
+
+        segmentName,segmentRemainingSeconds=self.getSegmentState(modeName,modeRemainingSeconds)
+        wpilib.SmartDashboard.putString("Match Mode",modeName)
+        wpilib.SmartDashboard.putString("Match Segment",segmentName)
+        wpilib.SmartDashboard.putString("Current Shift",segmentName)
+        wpilib.SmartDashboard.putString("Match Time Source",timeSource)
+        wpilib.SmartDashboard.putNumber("Match Time Remaining (s)",modeRemainingSeconds)
+        wpilib.SmartDashboard.putNumber("Segment Time Remaining (s)",segmentRemainingSeconds)
+        wpilib.SmartDashboard.putNumber("Current Shift Time Remaining (s)",segmentRemainingSeconds)
+        wpilib.SmartDashboard.putNumber("DriverStation Match Time (s)",driverStationMatchTime)
+        wpilib.SmartDashboard.putBoolean("Endgame Active",segmentName=="End Game")
 
     def configureTrajectoryChooser(self,chooser):
         if self.trajectoryNames:
