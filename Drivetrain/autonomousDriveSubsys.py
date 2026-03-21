@@ -3,8 +3,8 @@ import re
 from math import pi
 from Drivetrain.swerveSubsys import driveTrainSubsys,pointToVelocityVectorCommand
 import Drivetrain.swerveConfig as swerveConfig
-from Drivetrain.Targeting2 import getSpeakerDistanceMeters,isSpeakerLocked,targetPointCommand
-from AuxilarySystems import auxiliaryConfig,shooterSubsys,IntakeSubsys,IndexerSubsys
+from Drivetrain.Targeting2 import isSpeakerLocked,targetPointCommand
+from AuxilarySystems import auxiliaryConfig,shooterSubsys,IntakeSubsys,IndexerSubsys,shooterDistanceCommand
 import choreo
 
 _AUTO_EVENT_PATTERN = re.compile(r"^\s*([A-Za-z_][A-Za-z0-9_]*)\((True|False)\)\s*$")
@@ -135,7 +135,7 @@ class autoDriveTrainCommand(commands2.Command):
 
         robotPose=self.driveSubsys.getPoseState()
         now=wpilib.Timer.getFPGATimestamp()
-        self.shooterSubsys.setTargetDistance(getSpeakerDistanceMeters(robotPose))
+        shooterDistanceCommand.updateShooterDistanceFromDrivePose(self.driveSubsys,self.shooterSubsys)
         self.autoTargetCommand.execute()
 
         locked=isSpeakerLocked(robotPose,auxiliaryConfig.autoTargetAimToleranceDegrees)

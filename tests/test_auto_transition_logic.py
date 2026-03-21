@@ -1,5 +1,6 @@
 from math import atan2
 
+import commands2
 import wpilib
 import wpimath.geometry
 
@@ -78,3 +79,46 @@ def test_target_point_command_resets_profiled_pid_before_first_execute():
 
     assert drive.overidedInputs[2] is not None
     assert abs(drive.overidedInputs[2]) < 1.0
+
+
+def test_second_auto_only_loads_when_enabled(monkeypatch):
+    container = robotContainer.__new__(robotContainer)
+    container.getSelectedTrajectoryName = lambda: "Primary"
+    container.getSelectedSecondTrajectoryName = lambda: "Second"
+    container.isSecondAutoEnabled = lambda: False
+    container.createAutoDriveCommand = lambda name: f"drive:{name}"
+    container.buildAutoTransitionCommand = lambda: "transition"
+
+    monkeypatch.setattr(
+        "robotContainer.commands2.SequentialCommandGroup",
+        lambda *commands: list(commands),
+    )
+    monkeypatch.setattr(wpilib.SmartDashboard, "putString", lambda *args, **kwargs: None)
+
+    auto_command = container.buildAutonomousCommand()
+
+    assert auto_command == ["drive:Primary", "transition"]
+
+
+def test_second_auto_loads_when_enabled(monkeypatch):
+    container = robotContainer.__new__(robotContainer)
+    container.getSelectedTrajectoryName = lambda: "Primary"
+    container.getSelectedSecondTrajectoryName = lambda: "Second"
+    container.isSecondAutoEnabled = lambda: True
+    container.createAutoDriveCommand = lambda name: f"drive:{name}"
+    container.buildAutoTransitionCommand = lambda: "transition"
+
+    monkeypatch.setattr(
+        "robotContainer.commands2.SequentialCommandGroup",
+        lambda *commands: list(commands),
+    )
+    monkeypatch.setattr(wpilib.SmartDashboard, "putString", lambda *args, **kwargs: None)
+
+    auto_command = container.buildAutonomousCommand()
+
+    assert auto_command == [
+        "drive:Primary",
+        "transition",
+        "drive:Second",
+        "transition",
+    ]

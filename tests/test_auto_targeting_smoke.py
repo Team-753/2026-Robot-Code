@@ -3,6 +3,7 @@ import math
 import choreo
 import wpilib
 
+from AuxilarySystems import auxiliaryConfig
 from Drivetrain.Targeting2 import getSpeakerTargetPoint, targetPointCommand
 
 
@@ -82,3 +83,34 @@ def test_auto_shooting_keeps_persistent_targeting_command(control, robot):
 
         assert primary_auto.autoTargetCommand is auto_target_command
         assert isinstance(primary_auto.autoTargetCommand, targetPointCommand)
+
+
+def test_auto_transition_launches_shot(control, robot):
+    with control.run_robot():
+        transition_path = robot.rContainer.trajectoryNames[0]
+        _select_auto_path(robot, transition_path)
+
+        control.step_timing(seconds=0.1, autonomous=True, enabled=True)
+
+        primary_auto = robot.rContainer.primaryAutoCommand
+        assert primary_auto is not None
+
+        transition_launch_seconds = (
+            primary_auto.totalTime
+            + auxiliaryConfig.autoTargetLockHoldSeconds
+            + auxiliaryConfig.shooterStartupTime
+            + 1.0
+        )
+        control.step_timing(
+            seconds=transition_launch_seconds,
+            autonomous=True,
+            enabled=True,
+        )
+
+        assert robot.rContainer.autoTransitionActive is True
+        assert robot.rContainer.autoTransitionShooterStarted is True
+        assert robot.rContainer.shooterSubsystem.toggleshoot is True
+        assert robot.rContainer.autoTransitionIndexerStarted is True
+        assert robot.rContainer.shooterSubsystem.autoFeedEnabled is True
+        assert robot.rContainer.indexerSubsystem.autoFeedActive is True
+        assert wpilib.SmartDashboard.getString("Auto Transition Status", "") == "Launching"

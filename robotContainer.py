@@ -12,7 +12,7 @@ ALLIANCE_SHIFT_SECONDS = 25.0
 ENDGAME_PERIOD_SECONDS = 30.0
 
 #IMPORT FROM Drivetrain
-from Drivetrain.swerveSubsys import driveTrainCommand,JoystickSubsys,driveTrainSubsys,XboxControllerSubsys,VKBJoystickSubsys,fieldOrientReorient,overideRobotInput,pointToVelocityVectorCommand
+from Drivetrain.swerveSubsys import driveTrainCommand,JoystickSubsys,driveTrainSubsys,XboxControllerSubsys,VKBJoystickSubsys,fieldOrientReorient,overideRobotInput,pointToVelocityVectorCommand,setSwerveXMode
 from Drivetrain.autonomousDriveSubsys import autoDriveTrainCommand
 from Drivetrain.Targeting2 import getSpeakerDistanceMeters,getSpeakerTargetPoint,getTargetAimErrorDegrees,isTargetLocked,targetPointCommand
 
@@ -495,6 +495,7 @@ class robotContainer():
             self.controller.button(6).whileTrue(fieldOrientReorient(self.driveSubsystem))
             self.controller.button(swerveConfig.targetingButton).whileTrue(targetPointCommand(self.driveSubsystem))
             self.controller.button(1).whileTrue(commands2.RepeatCommand(pointToVelocityVectorCommand(self.driveSubsystem,self.joystick)))
+            self.controller.button(3).whileTrue(setSwerveXMode(self.driveSubsystem))
         if swerveConfig.driveController=="VKBJoystick":
             self.controller.button(15).whileTrue(fieldOrientReorient(self.driveSubsystem))
             self.controller.button(3).whileTrue(commands2.RepeatCommand(targetPointCommand(self.driveSubsystem)))
