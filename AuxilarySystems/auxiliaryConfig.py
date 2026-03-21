@@ -76,7 +76,7 @@ FLipHomeDoneButtonINdex=5
 #Auto Transition Settings 
 autoTransitionDelaySeconds = 7 #How long we estimate it take to empty hopper
 autoShootStartToIntakeUpDelaySeconds = 4 #Transition-only delay from shooter start to intake up
-autoTargetAimToleranceDegrees = 3.0 # Aim must settle inside this tolerance before auto starts the shooter
+autoTargetAimToleranceDegrees = 4.0 # Aim must settle inside this tolerance before auto starts the shooter
 autoTargetLockHoldSeconds = 0.2 # Require lock to stay stable for this long before auto spin-up
 autoTransitionIndexerAimToleranceDegrees = autoTargetAimToleranceDegrees
 autoTransitionIndexerFallbackDelaySeconds = 0.75 # Legacy fallback; current auto logic prefers confirmed lock before feed

@@ -31,10 +31,10 @@ class flipsubsys(commands2.Subsystem):
         grabberCurrentConfig.stator_current_limit_enable = True
   
         arm_k_p_config=rev.SparkMaxConfig() 
-        arm_k_p_config.closedLoop.P(0.8)
+        arm_k_p_config.closedLoop.P(1)
         arm_k_p_config.closedLoop.I(0.0)
         arm_k_p_config.closedLoop.D(0.2)
-#        arm_k_p_config.closedLoop.allowedClosedLoopError(0.1)
+        arm_k_p_config.closedLoop.allowedClosedLoopError(0.5)
 
         self.armmotor.configure(arm_k_p_config,rev.ResetMode.kResetSafeParameters, rev.PersistMode.kPersistParameters)
         self.grabermotor.configurator.apply(graberconfigs)

@@ -36,7 +36,7 @@ def getTargetRotationRadians(robotPose, targetX, targetY):
 
 def getTargetAimErrorRadians(robotPose, targetX, targetY):
     desiredRotation = getTargetRotationRadians(robotPose, targetX, targetY)
-    currentRotation = robotPose.rotation().radians()
+    currentRotation = wpimath.geometry.Rotation2d(robotPose.rotation().radians()+pi).radians()
     return (desiredRotation-currentRotation+pi)%(2*pi)-pi
 
 

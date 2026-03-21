@@ -140,6 +140,7 @@ class autoDriveTrainCommand(commands2.Command):
         if not self.autoShotShooterStarted and self.autoShotLockedSince is not None:
             if now-self.autoShotLockedSince >= auxiliaryConfig.autoTargetLockHoldSeconds:
                 self.shooterSubsys.autoShootStart()
+                self.indexerSubsys.autoFeedStart()
                 self.autoShotShooterStarted=True
                 self.autoShotSpinStartTime=now
 
