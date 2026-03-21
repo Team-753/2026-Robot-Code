@@ -1,22 +1,10 @@
 import commands2,wpimath,wpimath.controller,wpimath.trajectory,wpimath.kinematics,wpilib
-import re
 from math import pi
 from Drivetrain.swerveSubsys import driveTrainSubsys,pointToVelocityVectorCommand
 import Drivetrain.swerveConfig as swerveConfig
 from Drivetrain.Targeting2 import isSpeakerLocked,targetPointCommand
 from AuxilarySystems import auxiliaryConfig,shooterSubsys,IntakeSubsys,IndexerSubsys,shooterDistanceCommand
 import choreo
-
-_AUTO_EVENT_PATTERN = re.compile(r"^\s*([A-Za-z_][A-Za-z0-9_]*)\((True|False)\)\s*$")
-_AUTO_EVENT_ALIASES = {
-    "setIntake": "setIntakeSpin",
-    "setIntakeSping": "setIntakeSpin",
-}
-_SUPPORTED_AUTO_EVENT_HANDLERS = {
-    "setShooting",
-    "setIntakeDown",
-    "setIntakeSpin",
-}
 
 
 def _shouldFlipTrajectoryForAlliance():
@@ -162,20 +150,20 @@ class autoDriveTrainCommand(commands2.Command):
                 self.autoShotFeedStarted=True
 
     def runEventExpression(self,eventExpression):
-        eventExpression="" if eventExpression is None else str(eventExpression)
-        match=_AUTO_EVENT_PATTERN.fullmatch(eventExpression)
-        if match is None:
+        eventExpression="" if eventExpression is None else str(eventExpression).strip()
+        openParenIndex=eventExpression.find("(")
+        if openParenIndex <= 0 or not eventExpression.endswith(")"):
             wpilib.SmartDashboard.putString("Auto Last Event Error",f"Unsupported autonomous event: {eventExpression}")
             return False
 
-        handlerName,valueText=match.groups()
-        handlerName=_AUTO_EVENT_ALIASES.get(handlerName,handlerName)
-        if handlerName not in _SUPPORTED_AUTO_EVENT_HANDLERS:
+        handlerName=eventExpression[:openParenIndex].strip()
+        valueText=eventExpression[openParenIndex+1:-1].strip()
+        if valueText not in ("True","False"):
             wpilib.SmartDashboard.putString("Auto Last Event Error",f"Unsupported autonomous event: {eventExpression}")
             return False
 
         handler=getattr(self,handlerName,None)
-        if handler is None:
+        if not callable(handler) or handlerName.startswith("_"):
             wpilib.SmartDashboard.putString("Auto Last Event Error",f"Missing autonomous handler for event: {eventExpression}")
             return False
 
