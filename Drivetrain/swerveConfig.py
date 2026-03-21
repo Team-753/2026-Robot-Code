@@ -19,9 +19,6 @@ startPoseX = 2
 startPoseY = 4
 startPoseDeg = 0.0
 
-# Hold the final autonomous goal briefly so the robot can finish settling.
-autoFinishBufferSeconds = 0.5
-
 
 
 
