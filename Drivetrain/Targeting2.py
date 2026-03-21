@@ -60,7 +60,7 @@ class targetPointCommand(commands2.Command): #This class points the robot so the
         self.tx,self.ty=tx,ty
         self.driveSubsys=driveSubsys
         self.thetaPid=wpimath.controller.ProfiledPIDControllerRadians(45,0.1,0.1,wpimath.trajectory.TrapezoidProfileRadians.Constraints(2*pi,2*pi))
-        self.thetaPid.setIntegratorRange(-1,1)
+        self.thetaPid.setIntegratorRange(-0.1,0.1)
         self.thetaPid.enableContinuousInput(-pi,pi)
     def execute(self):
         robotPose=self.driveSubsys.getPoseState()
@@ -73,8 +73,6 @@ class targetPointCommand(commands2.Command): #This class points the robot so the
         self.driveSubsys.overideInput(rot=output)
     def end(self,interrupted):
         self.driveSubsys.overideInput()
-
-
 
 class targetPointWithLeadCommand(commands2.Command): #This class is used for estimating where the robot needs to look based on its velocity. 
     def __init__(self,driveSubsys:driveTrainSubsys):

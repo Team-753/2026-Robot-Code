@@ -15,8 +15,10 @@ shooterIndexDutyCycle = 0.7 # fixed duty cycle of the rev indexer
 shooterStartupTime = 1.0 #seconds
 shooterDefaultVelocityRps = 16.0
 shooterVelocityIncrementRps = 2.0
+#These values were edited during comp. Here were the last values added before I changed it
+# Velocity: 16, Distance, 2.3
 shooterVelocityReferenceDistanceMeters = 2.3
-shooterVelocityReferenceRps = 16.0
+shooterVelocityReferenceRps = 16.3
 
 
 #Indexer Subsystem config
@@ -38,7 +40,7 @@ intakeUpdownToggleBtnIdx = 6
 # flip configs
 graberlv0=0.01 # position of kraken when not climbing (home)
 graberlv1=0.0 #0.1 # position when climbing to lv1
-graberlv3=-0.51 #0.3 # position when clibing to lv3
+graberlv3=-0.47 #0.3 # position when clibing to lv3
 flipLinPosIn = 0 #-1 # retracted position (home) of rev neo motor
 flipLinPosOut = -1575 # extended postion (out/start) of rev neo motor
 

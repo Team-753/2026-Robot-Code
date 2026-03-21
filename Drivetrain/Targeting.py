@@ -12,8 +12,8 @@ class targetPointCommand(commands2.Command):
     def __init__(self,driveSubsys:driveTrainSubsys):
         super().__init__()
         self.driveSubsys = driveSubsys
-        self.TARGET_POINT_BLUE = (11.91497, 4.03514)
-        self.TARGET_POINT_RED = (4.62507, 4.03514)
+        self.TARGET_POINT_BLUE = (4.62507, 4.03514)
+        self.TARGET_POINT_RED = (11.91497, 4.03514)
         self.thetaPid=wpimath.controller.ProfiledPIDControllerRadians(65,0.06,0.1,wpimath.trajectory.TrapezoidProfileRadians.Constraints(2*pi,2*pi))
         self.thetaPid.setIntegratorRange(-1,1)
         self.thetaPid.enableContinuousInput(-pi,pi)
