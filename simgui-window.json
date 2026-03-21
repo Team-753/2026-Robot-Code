@@ -19,12 +19,21 @@
     "###FMS": {
       "Collapsed": "0",
       "Pos": "6,675",
+<<<<<<< HEAD
       "Size": "388,176"
     },
     "###Joysticks": {
       "Collapsed": "0",
       "Pos": "312,357",
       "Size": "1156,91"
+=======
+      "Size": "77,32"
+    },
+    "###Joysticks": {
+      "Collapsed": "0",
+      "Pos": "312,581",
+      "Size": "123,32"
+>>>>>>> 10b282c07c33f8422875ad9486e6fb57af46f1f8
     },
     "###Keyboard 0 Settings": {
       "Collapsed": "0",
@@ -48,13 +57,22 @@
     },
     "###System Joysticks": {
       "Collapsed": "0",
+<<<<<<< HEAD
       "Pos": "13,357",
       "Size": "273,290"
+=======
+      "Pos": "6,437",
+      "Size": "177,32"
+>>>>>>> 10b282c07c33f8422875ad9486e6fb57af46f1f8
     },
     "###Timing": {
       "Collapsed": "0",
       "Pos": "6,187",
+<<<<<<< HEAD
       "Size": "188,186"
+=======
+      "Size": "100,32"
+>>>>>>> 10b282c07c33f8422875ad9486e6fb57af46f1f8
     },
     "Debug##Default": {
       "Collapsed": "0",
@@ -64,7 +82,11 @@
     "Robot State": {
       "Collapsed": "0",
       "Pos": "5,20",
+<<<<<<< HEAD
       "Size": "137,152"
+=======
+      "Size": "118,32"
+>>>>>>> 10b282c07c33f8422875ad9486e6fb57af46f1f8
     }
   }
 }
