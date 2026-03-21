@@ -24,7 +24,7 @@ class shooterSubsys(commands2.Subsystem):
         big_config.k_s = 0.3
         big_config.k_v = 0.63
         rampconfig = phoenix6.configs.ClosedLoopRampsConfigs()
-        rampconfig.voltage_closed_loop_ramp_period = 0.5
+        rampconfig.voltage_closed_loop_ramp_period = 0.8
         self.bigBoy1.configurator.apply(big_config)
         self.bigBoy2.configurator.apply(big_config)
         self.bigBoy3.configurator.apply(big_config)
