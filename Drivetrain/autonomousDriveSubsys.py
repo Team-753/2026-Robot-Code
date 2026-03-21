@@ -1,10 +1,22 @@
 import commands2,wpimath,wpimath.controller,wpimath.trajectory,wpimath.kinematics,wpilib
+import re
 from math import pi
 from Drivetrain.swerveSubsys import driveTrainSubsys,pointToVelocityVectorCommand
 import Drivetrain.swerveConfig as swerveConfig
 from Drivetrain.Targeting2 import getSpeakerDistanceMeters,isSpeakerLocked,targetPointCommand
 from AuxilarySystems import auxiliaryConfig,shooterSubsys,IntakeSubsys,IndexerSubsys
 import choreo
+
+_AUTO_EVENT_PATTERN = re.compile(r"^\s*([A-Za-z_][A-Za-z0-9_]*)\((True|False)\)\s*$")
+_AUTO_EVENT_ALIASES = {
+    "setIntake": "setIntakeSpin",
+    "setIntakeSping": "setIntakeSpin",
+}
+_SUPPORTED_AUTO_EVENT_HANDLERS = {
+    "setShooting",
+    "setIntakeDown",
+    "setIntakeSpin",
+}
 
 
 def _shouldFlipTrajectoryForAlliance():
@@ -71,6 +83,8 @@ class autoDriveTrainCommand(commands2.Command):
             wpilib.SmartDashboard.putString("Auto Trajectory Loaded","None")
             wpilib.SmartDashboard.putString("Auto Trajectory Alliance","Unknown")
             wpilib.SmartDashboard.putString("Auto Trajectory Error","")
+        wpilib.SmartDashboard.putString("Auto Last Event","")
+        wpilib.SmartDashboard.putString("Auto Last Event Error","")
         self.clock=wpilib.Timer()
 
     def initialize(self):
@@ -147,12 +161,35 @@ class autoDriveTrainCommand(commands2.Command):
                 self.indexerSubsys.autoFeedStart()
                 self.autoShotFeedStarted=True
 
+    def runEventExpression(self,eventExpression):
+        eventExpression="" if eventExpression is None else str(eventExpression)
+        match=_AUTO_EVENT_PATTERN.fullmatch(eventExpression)
+        if match is None:
+            wpilib.SmartDashboard.putString("Auto Last Event Error",f"Unsupported autonomous event: {eventExpression}")
+            return False
+
+        handlerName,valueText=match.groups()
+        handlerName=_AUTO_EVENT_ALIASES.get(handlerName,handlerName)
+        if handlerName not in _SUPPORTED_AUTO_EVENT_HANDLERS:
+            wpilib.SmartDashboard.putString("Auto Last Event Error",f"Unsupported autonomous event: {eventExpression}")
+            return False
+
+        handler=getattr(self,handlerName,None)
+        if handler is None:
+            wpilib.SmartDashboard.putString("Auto Last Event Error",f"Missing autonomous handler for event: {eventExpression}")
+            return False
+
+        handler(valueText == "True")
+        wpilib.SmartDashboard.putString("Auto Last Event",eventExpression)
+        wpilib.SmartDashboard.putString("Auto Last Event Error","")
+        return True
+
     def execute(self):
         if self.traj is None:
             self.driveSubsys.setState(0,0,0)
             return
         while self.nextEventIndex < len(self.eventList) and self.clock.get() >= self.eventList[self.nextEventIndex][0]:
-            exec("self."+str(self.eventList[self.nextEventIndex][1]))
+            self.runEventExpression(self.eventList[self.nextEventIndex][1])
             self.nextEventIndex+=1
         sampleTime=min(self.clock.get(),self.trajectoryTotalTime)
         self.goal=self.traj.sample_at(sampleTime,self.flipForRedAlliance)
