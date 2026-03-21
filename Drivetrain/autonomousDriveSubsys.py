@@ -152,6 +152,7 @@ class autoDriveTrainCommand(commands2.Command):
             self.driveSubsys.setState(0,0,0)
             return
         while self.nextEventIndex < len(self.eventList) and self.clock.get() >= self.eventList[self.nextEventIndex][0]:
+            print("DOING NEXT EVENT",self.eventList[self.nextEventIndex][1])
             exec("self."+str(self.eventList[self.nextEventIndex][1]))
             self.nextEventIndex+=1
         sampleTime=min(self.clock.get(),self.trajectoryTotalTime)

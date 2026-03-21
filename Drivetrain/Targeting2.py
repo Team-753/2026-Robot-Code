@@ -59,12 +59,12 @@ class targetPointCommand(commands2.Command): #This class points the robot so the
         super().__init__()
         self.tx,self.ty=tx,ty
         self.driveSubsys=driveSubsys
-        self.thetaPid=wpimath.controller.ProfiledPIDControllerRadians(45,0.1,0.1,wpimath.trajectory.TrapezoidProfileRadians.Constraints(2*pi,2*pi))
+        self.thetaPid=wpimath.controller.ProfiledPIDControllerRadians(45,0.05,0.1,wpimath.trajectory.TrapezoidProfileRadians.Constraints(2*pi,2*pi))
         self.thetaPid.setIntegratorRange(-0.1,0.1)
         self.thetaPid.enableContinuousInput(-pi,pi)
         self.pidInitialized=False
     def _resetController(self,robotPose):
-        self.thetaPid.reset(robotPose.rotation().radians())
+        self.thetaPid.reset(robotPose.rotation().radians()+pi)
         self.pidInitialized=True
     def initialize(self):
         self._resetController(self.driveSubsys.getPoseState())
@@ -77,7 +77,8 @@ class targetPointCommand(commands2.Command): #This class points the robot so the
         else:
             targetX,targetY=self.tx,self.ty
         desiredRotation=getTargetRotationRadians(robotPose,targetX,targetY)
-        output=self.thetaPid.calculate(robotPose.rotation().radians(),desiredRotation)
+        output=self.thetaPid.calculate(wpimath.geometry.Rotation2d(robotPose.rotation().radians()+pi).radians(),desiredRotation)
+        print(output)
         self.driveSubsys.overideInput(rot=output)
     def end(self,interrupted):
         self.pidInitialized=False

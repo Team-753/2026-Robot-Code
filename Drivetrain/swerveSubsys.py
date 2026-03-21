@@ -166,7 +166,7 @@ class driveTrainSubsys(commands2.Subsystem):
             print(self.swerveModules[0].getRot(),self.swerveModules[1].getRot(),self.swerveModules[2].getRot(),self.swerveModules[3].getRot())
         if self.XMode: 
             for i in range(4):
-                self.swerveNumbers[i].angle=wpimath.geometry.Rotation2d((pi/4)+((pi/2)*i))
+                self.swerveNumbers[i].angle=wpimath.geometry.Rotation2d((pi/4)+(pi/2)*(i+1))
                 self.swerveNumbers[i].speed=0
         for i in range(4):
             #IF JITTERING WITH CORRECT PID, REVERSE OPTIMIZE ANGLE INPUT
