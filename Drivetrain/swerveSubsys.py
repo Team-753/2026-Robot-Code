@@ -108,6 +108,7 @@ class driveTrainSubsys(commands2.Subsystem):
         self.overidedInputs=[None,None,None]
         self.resetCompass=False
         self.swerveModules = []
+        self.XMode=False
         for i in range(4):
             self.swerveModules.append(swerveSubsys(swerveConfig.swerveDriveIds[i],swerveConfig.swerveTurnIds[i],swerveConfig.swerveEncoderIds[i],swerveConfig.swerveCanivoreName))
         if swerveConfig.robotCompassType=="pidgeon":
@@ -163,6 +164,10 @@ class driveTrainSubsys(commands2.Subsystem):
         self.swerveNumbers=self.swerveKinematics.toSwerveModuleStates(wpimath.kinematics.ChassisSpeeds.fromFieldRelativeSpeeds(inputs[0],inputs[1],inputs[2],-self.compass.getRotation2d()))#FIELD ALIGN
         if swerveConfig.debugOffsets:
             print(self.swerveModules[0].getRot(),self.swerveModules[1].getRot(),self.swerveModules[2].getRot(),self.swerveModules[3].getRot())
+        if self.XMode: 
+            for i in range(4):
+                self.swerveNumbers[i].angle=wpimath.geometry.Rotation2d((pi/4)+((pi/2)*i))
+                self.swerveNumbers[i].speed=0
         for i in range(4):
             #IF JITTERING WITH CORRECT PID, REVERSE OPTIMIZE ANGLE INPUT
             self.swerveNumbers[i].optimize(wpimath.geometry.Rotation2d.fromRotations(self.swerveModules[i].getRot()))
@@ -246,6 +251,8 @@ class driveTrainSubsys(commands2.Subsystem):
         self.overidedInputs[0]=x
         self.overidedInputs[1]=y
         self.overidedInputs[2]=rot
+    def setXMode(self,bool):
+        self.XMode=bool
 ##DIFFERENT INPUT DEVICE CONFIGS
 class XboxControllerSubsys(commands2.Subsystem):
     def __init__(self,joystick=commands2.button.CommandXboxController):
@@ -332,3 +339,11 @@ class pointToVelocityVectorCommand(commands2.Command):
     def end(self,interrupted):
         self.lastDesiredRotation=None
         self.dt.overideInput()
+
+class setSwerveXMode(commands2.Command):
+    def __init__(self,driveSubsys:driveTrainSubsys):
+        self.dt=driveSubsys
+    def execute(self):
+        self.dt.setXMode(True)
+    def end(self,interrupted):
+        self.dt.setXMode(False)
