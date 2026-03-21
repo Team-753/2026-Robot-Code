@@ -1,6 +1,7 @@
 import commands2,wpimath,wpimath.controller,wpimath.trajectory,wpimath.kinematics,wpilib
 from math import pi
 from Drivetrain.swerveSubsys import driveTrainSubsys,pointToVelocityVectorCommand
+import Drivetrain.swerveConfig as swerveConfig
 from Drivetrain.Targeting2 import getSpeakerDistanceMeters,isSpeakerLocked,targetPointCommand
 from AuxilarySystems import auxiliaryConfig,shooterSubsys,IntakeSubsys,IndexerSubsys
 import choreo
@@ -23,6 +24,7 @@ class autoDriveTrainCommand(commands2.Command):
         self.indexerSubsys=indexerSubsys
         self.traj=None
         self.initialPose=None
+        self.trajectoryTotalTime=0.0
         self.totalTime=0.0
         self.flipForRedAlliance=_shouldFlipTrajectoryForAlliance()
         self.addRequirements(driveSubsys)
@@ -51,7 +53,8 @@ class autoDriveTrainCommand(commands2.Command):
             try:
                 self.traj=choreo.load_swerve_trajectory(trajectoryName)
                 self.initialPose=self.traj.get_initial_pose(self.flipForRedAlliance)
-                self.totalTime=self.traj.get_total_time()
+                self.trajectoryTotalTime=self.traj.get_total_time()
+                self.totalTime=self.trajectoryTotalTime+swerveConfig.autoFinishBufferSeconds
                 for eventMarker in self.traj.events:
                     self.eventList.append((eventMarker.timestamp,eventMarker.event))
                 wpilib.SmartDashboard.putString("Auto Trajectory Loaded",trajectoryName)
@@ -151,7 +154,8 @@ class autoDriveTrainCommand(commands2.Command):
         while self.nextEventIndex < len(self.eventList) and self.clock.get() >= self.eventList[self.nextEventIndex][0]:
             exec("self."+str(self.eventList[self.nextEventIndex][1]))
             self.nextEventIndex+=1
-        self.goal=self.traj.sample_at(self.clock.get(),self.flipForRedAlliance)
+        sampleTime=min(self.clock.get(),self.trajectoryTotalTime)
+        self.goal=self.traj.sample_at(sampleTime,self.flipForRedAlliance)
         speeds=self.getSpeeds(self.goal)
         #NOTE EXPLAIN LATER
         alliance = wpilib.DriverStation.getAlliance()
