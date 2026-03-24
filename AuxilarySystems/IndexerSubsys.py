@@ -45,6 +45,27 @@ class indexerSubsys(commands2.Subsystem):
         self.timer.start()
         self.timer2.reset()
 
+    def _setShooterRunningState(self, enabled):
+        enabled = bool(enabled)
+        logicPrev = self.indexerLogic
+        self.shooterRunning = enabled
+        self.indexerLogic = self.shooterRunning
+
+        if logicPrev == self.indexerLogic:
+            return
+
+        if self.indexerLogic:
+            print('indexer starting motor - with wait')
+            self.toggleshoot= True
+            self.timer2.reset()
+            self.timer2.start()
+        else:
+            print('indexer stopping motor')
+            self.toggleshoot= False
+            self.numberOne.set(0)
+            self.timer2.stop()
+            self.timer2.reset()
+
     def teleopInit(self):
         self.state = 'teleop'
 
@@ -108,6 +129,11 @@ class indexerSubsys(commands2.Subsystem):
             self.numberOne.set(0)
             print('disabling indexer feed from auto')
 
+    def setLinkedShooterEnabled(self, enabled):
+        if self.state != 'teleop':
+            return
+        self._setShooterRunningState(enabled)
+
     def periodic(self):
 
         if self.state == 'teleop':
@@ -148,34 +174,10 @@ class indexerSubsys(commands2.Subsystem):
 
         if self.XStart and not self.shooterRunning:
             print('shooter enabled')
-            self.shooterRunning = True
+            self._setShooterRunningState(True)
         if self.XStop and self.shooterRunning:
             print('shooter disabled')
-            self.shooterRunning = False
-
-        self.LogicPrevVal = self.indexerLogic
-
-        if self.shooterRunning:#or self.intakeRunning:
-            self.indexerLogic = True
-        
-        if not self.shooterRunning:# and not self.intakeRunning:
-            self.indexerLogic = False
-        
-        self.indexerToggle = self.LogicPrevVal != self.indexerLogic
-
-        if self.indexerToggle and self.indexerLogic:
-            print ('indexer starting motor - with wait')
-            # self.numberOne.set(auxiliaryConfig.indexerSpeed)
-            self.toggleshoot= True
-            self.timer2.reset()
-            self.timer2.start()
-
-        elif self.indexerToggle and not self.indexerLogic:
-            print('indexer stopping motor')
-            self.toggleshoot= False
-            self.numberOne.set(0)
-            self.timer2.stop()
-            self.timer2.reset()
+            self._setShooterRunningState(False)
 
         # delay loader motor from starting for shooterStartupTime seconds
         if self.timer2.get() >= auxiliaryConfig.shooterStartupTime:

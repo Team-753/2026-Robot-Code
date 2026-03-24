@@ -135,10 +135,10 @@ class driveTrainSubsys(commands2.Subsystem):
         lengthN = swerveConfig.swerveBaseLength/2
 
         self.swerveKinematics = wpimath.kinematics.SwerveDrive4Kinematics(
-            wpimath.geometry.Translation2d(-lengthN/2,widthN/2),
-            wpimath.geometry.Translation2d(-lengthN/2,-widthN/2),
-            wpimath.geometry.Translation2d(lengthN/2,-widthN/2),
-            wpimath.geometry.Translation2d(lengthN/2,widthN/2))
+            wpimath.geometry.Translation2d(-lengthN,widthN),
+            wpimath.geometry.Translation2d(-lengthN,-widthN),
+            wpimath.geometry.Translation2d(lengthN,-widthN),
+            wpimath.geometry.Translation2d(lengthN,widthN))
 
         self.poseEstimator = estimator.SwerveDrive4PoseEstimator(
             self.swerveKinematics,
