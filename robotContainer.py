@@ -1,0 +1,188 @@
+import os
+import choreo
+import wpilib,commands2,Drivetrain.swerveConfig as swerveConfig
+# disable warnings about the joystick
+wpilib.DriverStation.silenceJoystickConnectionWarning(True)
+
+#IMPORT FROM Drivetrain
+from Drivetrain.swerveSubsys import driveTrainCommand,JoystickSubsys,driveTrainSubsys,XboxControllerSubsys,VKBJoystickSubsys,fieldOrientReorient,overideRobotInput,pointToVelocityVectorCommand
+from Drivetrain.autonomousDriveSubsys import autoDriveTrainCommand
+from Drivetrain.Targeting2 import targetPointCommand,targetPointWithLeadCommand
+
+##IMPORT FROM AuxiliarySystems
+from AuxilarySystems import auxiliaryConfig, shooterSubsys, IndexerSubsys, IntakeSubsys, flipSubsys
+
+class robotContainer():
+    def __init__(self):
+        self.previewedTrajectoryName=None
+
+        if swerveConfig.driveController=="Joystick"or swerveConfig.driveController=="VKBJoystick":
+            self.controllerType="Joystick"
+        elif swerveConfig.driveController=="XboxController":
+            self.controllerType="XboxController"
+        exec("self.controller=commands2.button.Command"+str(self.controllerType)+"("+str(swerveConfig.driveControllerSlot)+")")
+        exec("self.auxController=commands2.button.Command"+str(auxiliaryConfig.auxController)+"("+str(auxiliaryConfig.auxControllerSlot)+")")
+        #Declare Subystems
+        self.driveSubsystem=driveTrainSubsys()
+        
+        self.shooterSubsystem=shooterSubsys.shooterSubsys()
+        self.indexerSubsystem=IndexerSubsys.indexerSubsys()
+        self.intakeSubsystem=IntakeSubsys.intakeSubsys()
+        #self.flipSubsystem=flipSubsys.flipsubsys()
+
+        exec("self.joystick="+str(swerveConfig.driveController)+"Subsys(self.controller)")
+        self.initializeTrajectoryChooser()
+        self.updateTrajectoryPreview(force=True)
+        
+        #Set default Command (runs over and over)
+        self.driveSubsystem.setDefaultCommand(driveTrainCommand(self.driveSubsystem,self.joystick))
+        print("containerInited")
+
+        #Set all the binding in the button bindings function
+        self.buttonBindings()
+
+    def getTrajectoryNames(self):
+        choreoDir = os.path.join(wpilib.getDeployDirectory(),"choreo")
+        if not os.path.isdir(choreoDir):
+            return []
+
+        names=[]
+        for fileName in os.listdir(choreoDir):
+            filePath=os.path.join(choreoDir,fileName)
+            if os.path.isfile(filePath) and fileName.lower().endswith(".traj"):
+                names.append(os.path.splitext(fileName)[0])
+        return sorted(names)
+
+    def initializeTrajectoryChooser(self):
+        self.trajectoryChooser=wpilib.SendableChooser()
+        self.trajectoryNames=self.getTrajectoryNames()
+
+        if self.trajectoryNames:
+            self.trajectoryChooser.setDefaultOption(self.trajectoryNames[0],self.trajectoryNames[0])
+            for name in self.trajectoryNames[1:]:
+                self.trajectoryChooser.addOption(name,name)
+        else:
+            self.trajectoryChooser.setDefaultOption("No .traj files found","")
+
+        wpilib.SmartDashboard.putData("Auto Trajectory",self.trajectoryChooser)
+        wpilib.SmartDashboard.putStringArray("Auto Trajectory Names",self.trajectoryNames)
+
+    def getSelectedTrajectoryName(self):
+        selected=self.trajectoryChooser.getSelected()
+        if selected is None:
+            if self.trajectoryNames:
+                selected=self.trajectoryNames[0]
+            else:
+                selected=""
+        wpilib.SmartDashboard.putString("Auto Trajectory Selected",selected if selected else "None")
+        return selected
+
+    def updateTrajectoryPreview(self,force=False):
+        selectedTrajectoryName=self.getSelectedTrajectoryName()
+        if not force and selectedTrajectoryName==self.previewedTrajectoryName:
+            return
+
+        self.previewedTrajectoryName=selectedTrajectoryName
+        previewPathObject=self.driveSubsystem.field.getObject("Auto Preview Path")
+        previewStartObject=self.driveSubsystem.field.getObject("Auto Preview Start")
+        previewEndObject=self.driveSubsystem.field.getObject("Auto Preview End")
+
+        if not selectedTrajectoryName:
+            previewPathObject.setPoses([])
+            previewStartObject.setPoses([])
+            previewEndObject.setPoses([])
+            wpilib.SmartDashboard.putString("Auto Preview Trajectory","None")
+            wpilib.SmartDashboard.putString("Auto Preview Start Pose","Unavailable")
+            wpilib.SmartDashboard.putString("Auto Preview End Pose","Unavailable")
+            wpilib.SmartDashboard.putString("Auto Preview Error","No trajectory selected")
+            return
+
+        try:
+            trajectory=choreo.load_swerve_trajectory(selectedTrajectoryName)
+            pathPoses=[sample.get_pose() for sample in trajectory.samples]
+            initialPose=trajectory.get_initial_pose()
+            finalPose=trajectory.get_final_pose()
+
+            previewPathObject.setPoses(pathPoses)
+            if initialPose is not None:
+                previewStartObject.setPose(initialPose)
+                wpilib.SmartDashboard.putString("Auto Preview Start Pose",f"{initialPose.X():.3f}, {initialPose.Y():.3f}, {initialPose.rotation().degrees():.1f}")
+            else:
+                previewStartObject.setPoses([])
+                wpilib.SmartDashboard.putString("Auto Preview Start Pose","Unavailable")
+
+            if finalPose is not None:
+                previewEndObject.setPose(finalPose)
+                wpilib.SmartDashboard.putString("Auto Preview End Pose",f"{finalPose.X():.3f}, {finalPose.Y():.3f}, {finalPose.rotation().degrees():.1f}")
+            else:
+                previewEndObject.setPoses([])
+                wpilib.SmartDashboard.putString("Auto Preview End Pose","Unavailable")
+
+            wpilib.SmartDashboard.putString("Auto Preview Trajectory",selectedTrajectoryName)
+            wpilib.SmartDashboard.putString("Auto Preview Error","")
+        except Exception as ex:
+            previewPathObject.setPoses([])
+            previewStartObject.setPoses([])
+            previewEndObject.setPoses([])
+            wpilib.SmartDashboard.putString("Auto Preview Trajectory",selectedTrajectoryName)
+            wpilib.SmartDashboard.putString("Auto Preview Start Pose","Unavailable")
+            wpilib.SmartDashboard.putString("Auto Preview End Pose","Unavailable")
+            wpilib.SmartDashboard.putString("Auto Preview Error",str(ex))
+
+    def teleopInit(self):
+        self.driveSubsystem.setDefaultCommand(driveTrainCommand(self.driveSubsystem,self.joystick))
+        self.shooterSubsystem.teleopInit()
+        self.indexerSubsystem.teleopInit()
+        self.intakeSubsystem.teleopInit()
+        #self.flipSubsystem.teleopInit()
+        print('entering teleop')
+
+    def autoInit(self):
+        selectedTrajectoryName=self.getSelectedTrajectoryName()
+        self.autoCommand=autoDriveTrainCommand(self.shooterSubsystem,self.intakeSubsystem,self.indexerSubsystem,self.driveSubsystem,selectedTrajectoryName)
+        initialPose=self.autoCommand.getInitialPose()
+        # Align the estimator with the chosen path so the first sample is field-correct.
+        if initialPose is not None:
+            self.driveSubsystem.resetPose(initialPose)
+            wpilib.SmartDashboard.putString("Auto Start Pose",f"{initialPose.X():.3f}, {initialPose.Y():.3f}, {initialPose.rotation().degrees():.1f}")
+        else:
+            wpilib.SmartDashboard.putString("Auto Start Pose","Unavailable")
+        self.driveSubsystem.setDefaultCommand(self.autoCommand)
+        self.shooterSubsystem.autoInit()
+        self.intakeSubsystem.autoInit()
+        self.indexerSubsystem.autoInit()
+        #self.flipSubsystem.autoInit()
+        print('entering auto')
+    
+    def autoPeriodic(self):
+        pass
+
+    def disabledInit(self): # keep states in subsystems clean by entering disabled mode
+        self.shooterSubsystem.setToIdle()
+        self.intakeSubsystem.setToIdle()
+        self.indexerSubsystem.setToIdle()
+        #self.flipSubsystem.setToIdle()
+        print('entering disabled')
+
+    def buttonBindings(self):
+
+        ##Stick recenter bindings
+        if swerveConfig.driveController=="Joystick":
+            self.controller.button(6).whileTrue(fieldOrientReorient(self.driveSubsystem))
+            self.controller.button(2).whileTrue(commands2.RepeatCommand(targetPointCommand(self.driveSubsystem,11.91497, 4.03514)))
+            self.controller.button(1).whileTrue(commands2.RepeatCommand(pointToVelocityVectorCommand(self.driveSubsystem,self.joystick)))
+        if swerveConfig.driveController=="VKBJoystick":
+            self.controller.button(15).whileTrue(fieldOrientReorient(self.driveSubsystem))
+            self.controller.button(3).whileTrue(commands2.RepeatCommand(targetPointWithLeadCommand(self.driveSubsystem)))
+            self.controller.button(1).whileTrue(commands2.RepeatCommand(pointToVelocityVectorCommand(self.driveSubsystem,self.joystick)))
+        if swerveConfig.driveController=="XboxController":
+            self.controller.a().whileTrue(fieldOrientReorient(self.driveSubsystem))
+            self.controller.x().whileTrue(commands2.RepeatCommand(targetPointCommand(self.driveSubsystem,11.91497, 4.03514)))
+            self.controller.rightTrigger().whileTrue(commands2.RepeatCommand(pointToVelocityVectorCommand(self.driveSubsystem,self.joystick)))
+
+        ##Shooter bindings
+        #if auxiliaryConfig.auxController=="XboxController":
+            #self.auxController.x().whileTrue(commands2.RepeatCommand(targetPointCommand(self.driveSubsystem,4.62507, 4.03514)))
+           # self.auxController.x().whileTrue(commands2.RepeatCommand(targetPointCommand(self.driveSubsystem,4.62507, 4.03514)))
+            #self.auxController.y().whileTrue(commands2.RepeatCommand(overideRobotInput(self.driveSubsystem,theta=0.1)))
+            #pass
