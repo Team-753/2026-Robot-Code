@@ -106,10 +106,9 @@ class autoDriveTrainCommand(commands2.Command):
             self.indexerSubsys.autoShootStop()
         
         if self.intakeDown:
-            pass
-            #commands2.RepeatCommand(targetPointCommand(self.driveSubsys,1,1))
+            self.intakeSubsys.autoIntakeDown()
         else:
-            #targetPointWithLeadCommand(self.driveSubsys).end(interrupted=True)
+            self.intakeSubsys.autoIntakeUp()
             pass
         
         if self.intakeSpin:
