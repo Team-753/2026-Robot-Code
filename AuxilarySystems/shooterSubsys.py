@@ -38,7 +38,9 @@ class shooterSubsys(commands2.Subsystem):
         self.brake = controls.NeutralOut()
         self.XPressed = False
         self.prevVal = False
-        self.XChanged = False
+        #self.XChanged = False
+        self.XStart = False
+        self.XStop = False
         self.LBChanged = False
         self.RBChanged = False
         self.toggleshoot = False
@@ -61,12 +63,14 @@ class shooterSubsys(commands2.Subsystem):
 
     def autoShootStart(self):
         if self.state == 'auto' and not self.toggleshoot:
-            self.XChanged = True
+            #self.XChanged = True
+            self.XStart = True
             print('enabling shooter from auto')
     
     def autoShootStop(self):
         if self.state == 'auto' and self.toggleshoot:
-            self.XChanged = True
+            #self.XChanged = True
+            self.XStop = True
             print('disabling shooter from auto')
 
     def periodic(self):
@@ -75,7 +79,9 @@ class shooterSubsys(commands2.Subsystem):
             # update inputs from user buttons
             self.prevVal = self.XPressed
             self.XPressed = self.controller.getRawAxis(auxiliaryConfig.shooterEnableBtnIdx)
-            self.XChanged = (self.prevVal < 0.5 and self.XPressed > 0.5) or (self.prevVal > 0.5 and self.XPressed < 0.5)
+            #self.XChanged = (self.prevVal < 0.5 and self.XPressed > 0.5) or (self.prevVal > 0.5 and self.XPressed < 0.5)
+            self.XStart = self.prevVal < 0.5 and self.XPressed > 0.5
+            self.XStop = self.prevVal > 0.5 and self.XPressed < 0.5
 
             self.prevVal2 = self.LBPressed
             self.LBPressed = self.controller.getRawButton(auxiliaryConfig.shooterVelocityUpBtnIdx)
@@ -95,7 +101,9 @@ class shooterSubsys(commands2.Subsystem):
             self.executeState()
 
             # make sure to set XChanged back to false after execution
-            self.XChanged = False
+            #self.XChanged = False
+            self.XStart = False
+            self.XStop = False
 
         else:
             self.toggleshoot = False
@@ -104,11 +112,13 @@ class shooterSubsys(commands2.Subsystem):
             self.bigBoy3.set_control(self.brake)
             self.bigBoy4.set_control(self.brake)
             self.littleone.set(0)
+            self.timer2.stop()
+            self.timer2.reset()
 
     def setTargetDistance(self, distance):
         # convert distance to a target motor velocity
         # need to fit test data with polynomial
-        self.targetVelocity = (20.0 / 9.0) * distance # 9 meters give 20 rps
+        self.targetVelocity = (20.0 / 9.0) * distance # 9 meters give 20 rps but it actually gives like 98 because of black magic
 
     def executeState(self):
     
@@ -128,7 +138,7 @@ class shooterSubsys(commands2.Subsystem):
             print('loader activated')
 
         # start shooter
-        if self.XChanged and not self.toggleshoot:
+        if self.XStart and not self.toggleshoot: # self.XChanged and not self.toggleshoot:
             self.toggleshoot = True
             self.bigBoy1.set_control(self.request.with_velocity(self.targetVelocity).with_feed_forward(0.2))
             self.bigBoy2.set_control(self.request.with_velocity(self.targetVelocity).with_feed_forward(0.2))
@@ -140,7 +150,7 @@ class shooterSubsys(commands2.Subsystem):
             print ('starting all shooter motors')
 
         # stop shooter
-        elif self.XChanged and self.toggleshoot:
+        elif self.XStop and self.toggleshoot: #self.XChanged and self.toggleshoot:
             self.toggleshoot = False
             print ('stopping all shooter motors')
             self.bigBoy1.set_control(self.brake)
@@ -157,4 +167,3 @@ class shooterSubsys(commands2.Subsystem):
                 print(f'current shooter velocity:{self.bigBoy1.get_velocity().value}, target velocity {self.targetVelocity}')
             self.timer.reset()
             self.timer.start()      
-
