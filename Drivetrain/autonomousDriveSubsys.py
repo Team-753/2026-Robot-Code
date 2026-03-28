@@ -44,9 +44,9 @@ class autoDriveTrainCommand(commands2.Command):
         startPos=wpigeo.Pose2d.fromFeet(0,0,wpigeo.Rotation2d.fromDegrees(0))
         endPos=wpigeo.Pose2d.fromFeet(20,0,wpigeo.Rotation2d.fromDegrees(0))
         self.holoCont=cont.HolonomicDriveController(cont.PIDController(2.5,0.1,0),cont.PIDController(2.5,0.1,0),cont.ProfiledPIDControllerRadians(0.3,0,0,wpimath.trajectory.TrapezoidProfileRadians.Constraints(pi,pi)))
-        self.xPid=cont.PIDController(16,0.05,0.15)
-        self.yPid=cont.PIDController(16,0.05,0.15)
-        self.omegaPid=cont.ProfiledPIDControllerRadians(20,0.0002,0.5,wpimath.trajectory.TrapezoidProfileRadians.Constraints(6*pi,6*pi))
+        self.xPid=cont.PIDController(20,0.1,0.15)
+        self.yPid=cont.PIDController(20,0.1,0.15)
+        self.omegaPid=cont.ProfiledPIDControllerRadians(75,0.075,0.35,wpimath.trajectory.TrapezoidProfileRadians.Constraints(3*pi,3*pi))
         self.omegaPid.enableContinuousInput(-pi,pi)
         # Load the selected Choreo path once so auto can fail safe if the selection is missing.
         if trajectoryName:
