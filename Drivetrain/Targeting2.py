@@ -36,7 +36,7 @@ def getTargetRotationRadians(robotPose, targetX, targetY):
 
 def getTargetAimErrorRadians(robotPose, targetX, targetY):
     desiredRotation = getTargetRotationRadians(robotPose, targetX, targetY)
-    currentRotation = wpimath.geometry.Rotation2d(robotPose.rotation().radians()+pi).radians()
+    currentRotation = robotPose.rotation().radians()
     return (desiredRotation-currentRotation+pi)%(2*pi)-pi
 
 
@@ -64,7 +64,7 @@ class targetPointCommand(commands2.Command): #This class points the robot so the
         self.thetaPid.enableContinuousInput(-pi,pi)
         self.pidInitialized=False
     def _resetController(self,robotPose):
-        self.thetaPid.reset(robotPose.rotation().radians()+pi)
+        self.thetaPid.reset(robotPose.rotation().radians())
         self.pidInitialized=True
     def initialize(self):
         self._resetController(self.driveSubsys.getPoseState())
@@ -77,7 +77,7 @@ class targetPointCommand(commands2.Command): #This class points the robot so the
         else:
             targetX,targetY=self.tx,self.ty
         desiredRotation=getTargetRotationRadians(robotPose,targetX,targetY)
-        output=self.thetaPid.calculate(wpimath.geometry.Rotation2d(robotPose.rotation().radians()+pi).radians(),desiredRotation)
+        output=self.thetaPid.calculate(robotPose.rotation().radians(),desiredRotation)
         print(output)
         self.driveSubsys.overideInput(rot=output)
     def end(self,interrupted):

@@ -1,3 +1,5 @@
+from math import pi
+
 # ____           _____ _____ _____    _____ ____  _   _ ______ _____ _____ 
 #|  _ \   /\    / ____|_   _/ ____|  / ____/ __ \| \ | |  ____|_   _/ ____|
 #| |_) | /  \  | (___   | || |      | |   | |  | |  \| | |__    | || |  __ 
@@ -52,6 +54,8 @@ swerveEncoderIds=[3,6,9,12]#2,5,8,0] #EXTERNAL ENCODERS, NOT MOTORS
 swerveDriveRatio=(6.2)#NOT NECESSARY FOR ROBOT MOVEMENT, ONLY FOR ACCURATE AUTO #quack 8.14 #wiwo 5.68 #
 swerveWheelDiameter=(0.1016) #METERS
 swerveTurnRatio=(1)  #NECECCARY IF NOT USING A CANCODER #quack 12.8
+driveMotorFreeSpeedRps = 6380 / 60  # TalonFX / Kraken X60 free speed
+swerveMaxWheelSpeedMps = (driveMotorFreeSpeedRps / swerveDriveRatio) * (swerveWheelDiameter * pi)
 
 #MEASURE FROM POINT WHEEL CONTACTS GROUND
 swerveBaseWidth=(0.61) #METERS

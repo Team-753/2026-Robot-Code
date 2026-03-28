@@ -186,9 +186,9 @@ class autoDriveTrainCommand(commands2.Command):
         #NOTE EXPLAIN LATER
         alliance = wpilib.DriverStation.getAlliance()
         if alliance == wpilib.DriverStation.Alliance.kRed:
-            self.driveSubsys.setState(-speeds.vx,speeds.vy,speeds.omega)
+            self.driveSubsys.setStateMeters(-speeds.vx,speeds.vy,speeds.omega)
         else:
-            self.driveSubsys.setState(speeds.vx,-speeds.vy,speeds.omega)
+            self.driveSubsys.setStateMeters(speeds.vx,-speeds.vy,speeds.omega)
 
         #LIST OF COMMANDS
         #setShooting(bool)

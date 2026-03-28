@@ -15,6 +15,18 @@ import wpimath.trajectory
 import Drivetrain.swerveConfig as swerveConfig
 from customFunctions import curveControl,vectorCurve
 import navx
+
+
+def wheelSpeedMetersPerSecondToRotationsPerSecond(speedMetersPerSecond):
+    return speedMetersPerSecond / (swerveConfig.swerveWheelDiameter * pi)
+
+
+def desaturateWheelSpeedsMetersPerSecond(moduleStates):
+    return wpimath.kinematics.SwerveDrive4Kinematics.desaturateWheelSpeeds(
+        moduleStates, swerveConfig.swerveMaxWheelSpeedMps
+    )
+
+
 class swerveSubsys():
     def __init__(self,driveID,turnID,turnSensorID=None,swerveCanivoreName=None):
         if not swerveCanivoreName:
@@ -135,10 +147,10 @@ class driveTrainSubsys(commands2.Subsystem):
         lengthN = swerveConfig.swerveBaseLength/2
 
         self.swerveKinematics = wpimath.kinematics.SwerveDrive4Kinematics(
-            wpimath.geometry.Translation2d(-lengthN,widthN),
-            wpimath.geometry.Translation2d(-lengthN,-widthN),
-            wpimath.geometry.Translation2d(lengthN,-widthN),
-            wpimath.geometry.Translation2d(lengthN,widthN))
+            wpimath.geometry.Translation2d(-lengthN/2,widthN/2),
+            wpimath.geometry.Translation2d(-lengthN/2,-widthN/2),
+            wpimath.geometry.Translation2d(lengthN/2,-widthN/2),
+            wpimath.geometry.Translation2d(lengthN/2,widthN/2))
 
         self.poseEstimator = estimator.SwerveDrive4PoseEstimator(
             self.swerveKinematics,
@@ -153,15 +165,44 @@ class driveTrainSubsys(commands2.Subsystem):
         )
     
     def setState(self,fb,lr,rot):
+        inputs=self._getRequestedInputs(fb,lr,rot)
+        if self.resetCompass:
+            self.compass.reset()
+
+        self._applyModuleStates(
+            self._buildFieldRelativeModuleStates(inputs[0],inputs[1],inputs[2])
+        )
+
+    def setStateMeters(self,fb,lr,rot):
+        inputs=self._getRequestedInputs(fb,lr,rot)
+        if self.resetCompass:
+            self.compass.reset()
+
+        self._applyModuleStates(
+            self._buildFieldRelativeModuleStates(inputs[0],inputs[1],inputs[2]),
+            convertMetersPerSecondToWheelRps=True,
+            desaturateWheelSpeeds=True,
+        )
+
+    def _getRequestedInputs(self,fb,lr,rot):
         inputs=[fb,lr,rot]
         for i in range(3):
             if self.overidedInputs[i]!=None:
                 inputs[i]=self.overidedInputs[i]
                 print("overide",i)
-        if self.resetCompass:
-            self.compass.reset()
-        
-        self.swerveNumbers=self.swerveKinematics.toSwerveModuleStates(wpimath.kinematics.ChassisSpeeds.fromFieldRelativeSpeeds(inputs[0],inputs[1],inputs[2],-self.compass.getRotation2d()))#FIELD ALIGN
+        return inputs
+
+    def _buildFieldRelativeModuleStates(self,fb,lr,rot):
+        return self.swerveKinematics.toSwerveModuleStates(
+            wpimath.kinematics.ChassisSpeeds.fromFieldRelativeSpeeds(
+                fb,lr,rot,-self.compass.getRotation2d()
+            )
+        )
+
+    def _applyModuleStates(self,swerveNumbers,convertMetersPerSecondToWheelRps=False,desaturateWheelSpeeds=False):
+        if desaturateWheelSpeeds:
+            swerveNumbers=desaturateWheelSpeedsMetersPerSecond(swerveNumbers)
+        self.swerveNumbers=list(swerveNumbers)
         if swerveConfig.debugOffsets:
             print(self.swerveModules[0].getRot(),self.swerveModules[1].getRot(),self.swerveModules[2].getRot(),self.swerveModules[3].getRot())
         if self.XMode: 
@@ -171,7 +212,10 @@ class driveTrainSubsys(commands2.Subsystem):
         for i in range(4):
             #IF JITTERING WITH CORRECT PID, REVERSE OPTIMIZE ANGLE INPUT
             self.swerveNumbers[i].optimize(wpimath.geometry.Rotation2d.fromRotations(self.swerveModules[i].getRot()))
-            self.swerveModules[i].setState(self.swerveNumbers[i].angle.radians()/(2*pi),self.swerveNumbers[i].speed)
+            driveSpeed=self.swerveNumbers[i].speed
+            if convertMetersPerSecondToWheelRps:
+                driveSpeed=wheelSpeedMetersPerSecondToRotationsPerSecond(driveSpeed)
+            self.swerveModules[i].setState(self.swerveNumbers[i].angle.radians()/(2*pi),driveSpeed)
         #print(self.swerveNumbers[0].angle.degrees(),self.swerveNumbers[1].angle.degrees(),self.swerveNumbers[2].angle.degrees(),self.swerveNumbers[3].angle.degrees())
     def getPoseState(self):
         if wpilib.DriverStation.getAlliance() == wpilib.DriverStation.Alliance.kRed:
