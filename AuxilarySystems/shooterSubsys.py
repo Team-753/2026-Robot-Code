@@ -97,7 +97,7 @@ class shooterSubsys(commands2.Subsystem):
     def calculateVelocityForDistance(self, distance):
         distance = max(0.0, distance)
         ratio = auxiliaryConfig.shooterVelocityReferenceRps / auxiliaryConfig.shooterVelocityReferenceDistanceMeters
-        return pow(ratio * distance,1.1)
+        return pow(ratio * distance,1.05)
 
     def refreshTargetVelocity(self):
         if self.autoVelocityEnabled:
