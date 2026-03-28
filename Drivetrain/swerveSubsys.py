@@ -234,7 +234,6 @@ class driveTrainSubsys(commands2.Subsystem):
     def resetPose(self,pose):
         # Reset the estimator to the selected auto start pose before autonomous begins.
         self.poseEstimator.resetPosition(self.getRobotYaw(),self.getSwerveState(),pose)
-        self.field.setRobotPose(pose)
 
     def periodic(self):
 
