@@ -59,7 +59,7 @@ class targetPointCommand(commands2.Command): #This class points the robot so the
         super().__init__()
         self.tx,self.ty=tx,ty
         self.driveSubsys=driveSubsys
-        self.thetaPid=wpimath.controller.ProfiledPIDControllerRadians(80,0.075,0.3,wpimath.trajectory.TrapezoidProfileRadians.Constraints(4*pi,4*pi))
+        self.thetaPid=wpimath.controller.ProfiledPIDControllerRadians(70,0.07,0.3,wpimath.trajectory.TrapezoidProfileRadians.Constraints(4*pi,4*pi))
         self.thetaPid.setIntegratorRange(-0.2,0.2)
         self.thetaPid.enableContinuousInput(-pi,pi)
         self.pidInitialized=False
