@@ -14,7 +14,7 @@ driveController="Joystick" #Options:XboxController,Joystick,VKBJoystick #NOTE AD
 driveControllerSlot=0 #USB NUMBER IN DRIVESTATION
 
 # Button to hold for stationary hub targeting (raw button number for HID)
-targetingButton = 2
+targetingButton = 1
 
 # Starting robot pose (meters, degrees) in WPILib blue-origin field coords
 startPoseX = 2
