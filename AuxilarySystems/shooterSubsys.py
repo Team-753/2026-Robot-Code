@@ -41,6 +41,7 @@ class shooterSubsys(commands2.Subsystem):
         #self.XChanged = False
         self.XStart = False
         self.XStop = False
+        self.YPressed = False
         self.LBChanged = False
         self.RBChanged = False
         self.toggleshoot = False
@@ -68,6 +69,7 @@ class shooterSubsys(commands2.Subsystem):
         self.prevVal = False
         self.XStart = False
         self.XStop = False
+        self.YPressed = False
         self.LBChanged = False
         self.RBChanged = False
         self.RBPressed = False
@@ -169,6 +171,11 @@ class shooterSubsys(commands2.Subsystem):
             self.RBPressed = self.controller.getRawButton(auxiliaryConfig.shooterVelocityDownBtnIdx)
             self.RBChanged = self.prevVal3 == False and self.RBPressed == True
 
+            self.prevVal4 = self.YPressed
+            self.YPressed = self.controller.getRawButton(auxiliaryConfig.intakeSpinEnableBtnIdx)
+            self.intakeStart = self.prevVal4 == False and self.YPressed == True
+            self.intakeStop = self.prevVal4 == True and self.YPressed == False
+
             # execute drive
             self.executeState()
 
@@ -241,6 +248,16 @@ class shooterSubsys(commands2.Subsystem):
             self.littleone.set(0)
             self.timer2.stop()
             self.timer2.reset()
+        
+        #slow loader backwards run during intake
+        elif self.intakeStart and not self.toggleshoot:
+            self.littleone.set(-0.05)
+            print('testing slow backspin enable')
+        
+        #slow loader backwards run during intake disable
+        elif self.intakeStop:
+            self.littleone.set(0)
+            print('testing slow backspin disable')
 
         if self.toggleshoot:
             self.refreshTargetVelocity()
