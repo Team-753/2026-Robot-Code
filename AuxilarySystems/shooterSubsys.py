@@ -100,7 +100,7 @@ class shooterSubsys(commands2.Subsystem):
         distance = max(0.0, distance)
         ratio = auxiliaryConfig.shooterVelocityReferenceRps / auxiliaryConfig.shooterVelocityReferenceDistanceMeters
         if distance/auxiliaryConfig.shooterVelocityReferenceDistanceMeters>1.0:
-            rpm=(ratio*distance)*1.25
+            rpm=(ratio*distance)
         else:
             rpm=pow((ratio*distance),1.05)
         return rpm
