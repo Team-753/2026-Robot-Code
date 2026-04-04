@@ -189,7 +189,6 @@ class driveTrainSubsys(commands2.Subsystem):
         for i in range(3):
             if self.overidedInputs[i]!=None:
                 inputs[i]=self.overidedInputs[i]
-                print("overide",i)
         return inputs
 
     def _buildFieldRelativeModuleStates(self,fb,lr,rot):
