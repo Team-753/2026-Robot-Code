@@ -252,12 +252,16 @@ class shooterSubsys(commands2.Subsystem):
         #slow loader backwards run during intake
         elif self.intakeStart and not self.toggleshoot:
             self.littleone.set(0.05)
-            print('testing slow backspin enable')
+            print('loader slow backspin enable')
         
         #slow loader backwards run during intake disable
-        elif self.intakeStop:
+        elif self.intakeStop and not self.toggleshoot:
             self.littleone.set(0)
-            print('testing slow backspin disable')
+            print('loader slow backspin disable')
+        
+        elif self.intakeStop and self.toggleshoot:
+            self.littleone.set(-1*auxiliaryConfig.shooterIndexDutyCycle)
+            print('loader backspin switched to frontspin')
 
         if self.toggleshoot:
             self.refreshTargetVelocity()
@@ -265,7 +269,7 @@ class shooterSubsys(commands2.Subsystem):
 
         # read velocity for diagnostics
         if self.timer.get() > .99 :
-            if self.toggleshoot :
-                print(f'current shooter velocity:{self.bigBoy1.get_velocity().value}, target velocity {self.targetVelocity}')
+            #if self.toggleshoot :
+                #print(f'current shooter velocity:{self.bigBoy1.get_velocity().value}, target velocity {self.targetVelocity}')
             self.timer.reset()
             self.timer.start()      
