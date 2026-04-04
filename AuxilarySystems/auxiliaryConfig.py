@@ -12,9 +12,9 @@ shooterEnableBtnIdx=3 # AXIS index for enable button
 shooterVelocityUpBtnIdx=4 # raw button index for velocity up increment
 shooterVelocityDownBtnIdx=1 # raw button index for velocity down increment
 shooterIndexDutyCycle = 0.7 # fixed duty cycle of the rev indexer
-shooterStartupTime = 0.5 #seconds
+shooterStartupTime = 0.75 #seconds
 shooterDefaultVelocityRps = 16.0
-shooterVelocityIncrementRps = 2.0
+shooterVelocityIncrementRps = 0.1
 #These values were edited during comp. Here were the last values added before I changed it
 # Velocity: 16, Distance, 2.3
 shooterVelocityReferenceDistanceMeters = 2.3

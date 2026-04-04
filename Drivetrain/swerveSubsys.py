@@ -274,8 +274,8 @@ class driveTrainSubsys(commands2.Subsystem):
 
 
         self.field.setRobotPose(currentPose) #update the position of the robot on the field in shuffleboard for debugging
-        wpilib.SmartDashboard.putNumber("Pose X", currentPose.x_feet)
-        wpilib.SmartDashboard.putNumber("Pose Y", currentPose.y_feet)
+        wpilib.SmartDashboard.putNumber("Pose X", currentPose.x)
+        wpilib.SmartDashboard.putNumber("Pose Y", currentPose.y)
         wpilib.SmartDashboard.putNumber("Pose Deg", currentPose.rotation().degrees())
         wpilib.SmartDashboard.putNumber("Gyro degrees", robotYaw.degrees())
 
