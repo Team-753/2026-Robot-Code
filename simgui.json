@@ -42,6 +42,7 @@
     "types": {
       "/FMSInfo": "FMSInfo",
       "/SmartDashboard/Auto Trajectory": "String Chooser",
+      "/SmartDashboard/Auto Velocity": "String Chooser",
       "/SmartDashboard/Field": "Field2d",
       "/SmartDashboard/Second Auto Trajectory": "String Chooser"
     }

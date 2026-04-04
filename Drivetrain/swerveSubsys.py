@@ -15,6 +15,18 @@ import wpimath.trajectory
 import Drivetrain.swerveConfig as swerveConfig
 from customFunctions import curveControl,vectorCurve
 import navx
+
+
+def wheelSpeedMetersPerSecondToRotationsPerSecond(speedMetersPerSecond):
+    return speedMetersPerSecond / (swerveConfig.swerveWheelDiameter * pi)
+
+
+def desaturateWheelSpeedsMetersPerSecond(moduleStates):
+    return wpimath.kinematics.SwerveDrive4Kinematics.desaturateWheelSpeeds(
+        moduleStates, swerveConfig.swerveMaxWheelSpeedMps
+    )
+
+
 class swerveSubsys():
     def __init__(self,driveID,turnID,turnSensorID=None,swerveCanivoreName=None):
         if not swerveCanivoreName:
@@ -108,6 +120,7 @@ class driveTrainSubsys(commands2.Subsystem):
         self.overidedInputs=[None,None,None]
         self.resetCompass=False
         self.swerveModules = []
+        self.XMode=False
         for i in range(4):
             self.swerveModules.append(swerveSubsys(swerveConfig.swerveDriveIds[i],swerveConfig.swerveTurnIds[i],swerveConfig.swerveEncoderIds[i],swerveConfig.swerveCanivoreName))
         if swerveConfig.robotCompassType=="pidgeon":
@@ -152,21 +165,56 @@ class driveTrainSubsys(commands2.Subsystem):
         )
     
     def setState(self,fb,lr,rot):
+        inputs=self._getRequestedInputs(fb,lr,rot)
+        if self.resetCompass:
+            self.compass.reset()
+
+        self._applyModuleStates(
+            self._buildFieldRelativeModuleStates(inputs[0],inputs[1],inputs[2])
+        )
+
+    def setStateMeters(self,fb,lr,rot):
+        inputs=self._getRequestedInputs(fb,lr,rot)
+        if self.resetCompass:
+            self.compass.reset()
+
+        self._applyModuleStates(
+            self._buildFieldRelativeModuleStates(inputs[0],inputs[1],inputs[2]),
+            convertMetersPerSecondToWheelRps=True,
+            desaturateWheelSpeeds=True,
+        )
+
+    def _getRequestedInputs(self,fb,lr,rot):
         inputs=[fb,lr,rot]
         for i in range(3):
             if self.overidedInputs[i]!=None:
                 inputs[i]=self.overidedInputs[i]
-                print("overide",i)
-        if self.resetCompass:
-            self.compass.reset()
-        
-        self.swerveNumbers=self.swerveKinematics.toSwerveModuleStates(wpimath.kinematics.ChassisSpeeds.fromFieldRelativeSpeeds(inputs[0],inputs[1],inputs[2],-self.compass.getRotation2d()))#FIELD ALIGN
+        return inputs
+
+    def _buildFieldRelativeModuleStates(self,fb,lr,rot):
+        return self.swerveKinematics.toSwerveModuleStates(
+            wpimath.kinematics.ChassisSpeeds.fromFieldRelativeSpeeds(
+                fb,lr,rot,-self.compass.getRotation2d()
+            )
+        )
+
+    def _applyModuleStates(self,swerveNumbers,convertMetersPerSecondToWheelRps=False,desaturateWheelSpeeds=False):
+        if desaturateWheelSpeeds:
+            swerveNumbers=desaturateWheelSpeedsMetersPerSecond(swerveNumbers)
+        self.swerveNumbers=list(swerveNumbers)
         if swerveConfig.debugOffsets:
             print(self.swerveModules[0].getRot(),self.swerveModules[1].getRot(),self.swerveModules[2].getRot(),self.swerveModules[3].getRot())
+        if self.XMode: 
+            for i in range(4):
+                self.swerveNumbers[i].angle=wpimath.geometry.Rotation2d((pi/4)+(pi/2)*(i+1))
+                self.swerveNumbers[i].speed=0
         for i in range(4):
             #IF JITTERING WITH CORRECT PID, REVERSE OPTIMIZE ANGLE INPUT
             self.swerveNumbers[i].optimize(wpimath.geometry.Rotation2d.fromRotations(self.swerveModules[i].getRot()))
-            self.swerveModules[i].setState(self.swerveNumbers[i].angle.radians()/(2*pi),self.swerveNumbers[i].speed)
+            driveSpeed=self.swerveNumbers[i].speed
+            if convertMetersPerSecondToWheelRps:
+                driveSpeed=wheelSpeedMetersPerSecondToRotationsPerSecond(driveSpeed)
+            self.swerveModules[i].setState(self.swerveNumbers[i].angle.radians()/(2*pi),driveSpeed)
         #print(self.swerveNumbers[0].angle.degrees(),self.swerveNumbers[1].angle.degrees(),self.swerveNumbers[2].angle.degrees(),self.swerveNumbers[3].angle.degrees())
     def getPoseState(self):
         if wpilib.DriverStation.getAlliance() == wpilib.DriverStation.Alliance.kRed:
@@ -185,7 +233,6 @@ class driveTrainSubsys(commands2.Subsystem):
     def resetPose(self,pose):
         # Reset the estimator to the selected auto start pose before autonomous begins.
         self.poseEstimator.resetPosition(self.getRobotYaw(),self.getSwerveState(),pose)
-        self.field.setRobotPose(pose)
 
     def periodic(self):
 
@@ -217,11 +264,7 @@ class driveTrainSubsys(commands2.Subsystem):
             lockTime = time - (latency / 1000.0) #Take the locktime minus the latency (in miliseconds) to know how long in the past locking was
             self.poseEstimator.addVisionMeasurement(posedata, lockTime)
         self.poseEstimator.update(robotYaw, self.getSwerveState())
-        if False:#wpilib.DriverStation.getAlliance() == wpilib.DriverStation.Alliance.kRed:
-            currentPose = wpimath.geometry.Pose2d(self.poseEstimator.getEstimatedPosition().translation(),self.poseEstimator.getEstimatedPosition().rotation().rotateBy(wpimath.geometry.Rotation2d(pi)))
-            print("red",currentPose.rotation())
-        else:
-            currentPose = self.poseEstimator.getEstimatedPosition()
+        currentPose = self.poseEstimator.getEstimatedPosition()
         #update the pose estimator with our most up to date info on where the robot is from all the systems
 
 
@@ -231,8 +274,8 @@ class driveTrainSubsys(commands2.Subsystem):
 
 
         self.field.setRobotPose(currentPose) #update the position of the robot on the field in shuffleboard for debugging
-        wpilib.SmartDashboard.putNumber("Pose X", currentPose.x_feet)
-        wpilib.SmartDashboard.putNumber("Pose Y", currentPose.y_feet)
+        wpilib.SmartDashboard.putNumber("Pose X", currentPose.x)
+        wpilib.SmartDashboard.putNumber("Pose Y", currentPose.y)
         wpilib.SmartDashboard.putNumber("Pose Deg", currentPose.rotation().degrees())
         wpilib.SmartDashboard.putNumber("Gyro degrees", robotYaw.degrees())
 
@@ -250,6 +293,8 @@ class driveTrainSubsys(commands2.Subsystem):
         self.overidedInputs[0]=x
         self.overidedInputs[1]=y
         self.overidedInputs[2]=rot
+    def setXMode(self,bool):
+        self.XMode=bool
 ##DIFFERENT INPUT DEVICE CONFIGS
 class XboxControllerSubsys(commands2.Subsystem):
     def __init__(self,joystick=commands2.button.CommandXboxController):
@@ -336,3 +381,11 @@ class pointToVelocityVectorCommand(commands2.Command):
     def end(self,interrupted):
         self.lastDesiredRotation=None
         self.dt.overideInput()
+
+class setSwerveXMode(commands2.Command):
+    def __init__(self,driveSubsys:driveTrainSubsys):
+        self.dt=driveSubsys
+    def execute(self):
+        self.dt.setXMode(True)
+    def end(self,interrupted):
+        self.dt.setXMode(False)

@@ -40,9 +40,31 @@ class indexerSubsys(commands2.Subsystem):
         #END CHRIS MOD
         self.toggleshoot = False
         self.waiting = False
+        self.autoFeedActive = False
         self.timer.reset()
         self.timer.start()
         self.timer2.reset()
+
+    def _setShooterRunningState(self, enabled):
+        enabled = bool(enabled)
+        logicPrev = self.indexerLogic
+        self.shooterRunning = enabled
+        self.indexerLogic = self.shooterRunning
+
+        if logicPrev == self.indexerLogic:
+            return
+
+        if self.indexerLogic:
+            print('indexer starting motor - with wait')
+            self.toggleshoot= True
+            self.timer2.reset()
+            self.timer2.start()
+        else:
+            print('indexer stopping motor')
+            self.toggleshoot= False
+            self.numberOne.set(0)
+            self.timer2.stop()
+            self.timer2.reset()
 
     def teleopInit(self):
         self.state = 'teleop'
@@ -62,6 +84,7 @@ class indexerSubsys(commands2.Subsystem):
         self.BChanged = False
         self.toggleshoot = False
         self.waiting = False
+        self.autoFeedActive = False
         self.numberOne.set(0)
         
     def setToIdle(self):
@@ -80,8 +103,36 @@ class indexerSubsys(commands2.Subsystem):
             self.shooterRunning = False
             self.indexerLogic = False
             self.toggleshoot = False
+            self.autoFeedActive = False
             self.numberOne.set(0)
             print('disabling indexer from auto')
+
+    def autoFeedStart(self):
+        if self.state == 'auto' and not self.autoFeedActive:
+            self.autoFeedActive = True
+            self.shooterRunning = True
+            self.indexerLogic = True
+            self.toggleshoot = True
+            self.timer2.stop()
+            self.timer2.reset()
+            self.numberOne.set(auxiliaryConfig.indexerSpeed)
+            print('enabling indexer feed from auto')
+
+    def autoFeedStop(self):
+        if self.state == 'auto' and self.autoFeedActive:
+            self.autoFeedActive = False
+            self.shooterRunning = False
+            self.indexerLogic = False
+            self.toggleshoot = False
+            self.timer2.stop()
+            self.timer2.reset()
+            self.numberOne.set(0)
+            print('disabling indexer feed from auto')
+
+    def setLinkedShooterEnabled(self, enabled):
+        if self.state != 'teleop':
+            return
+        self._setShooterRunningState(enabled)
 
     def periodic(self):
 
@@ -97,6 +148,11 @@ class indexerSubsys(commands2.Subsystem):
             #CHRIS MOD END
             self.executeState()
         elif self.state == 'auto':
+            if self.autoFeedActive:
+                self.numberOne.set(auxiliaryConfig.indexerSpeed)
+                self.XStart = False
+                self.XStop = False
+                return
             self.executeState()
             self.XStart = False
             self.XStop = False
@@ -105,6 +161,7 @@ class indexerSubsys(commands2.Subsystem):
             self.intakeRunning = False
             self.indexerLogic = False
             self.shooterRunning = False
+            self.autoFeedActive = False
             self.numberOne.set(0) 
             self.timer2.stop()
             self.timer2.reset()
@@ -117,34 +174,10 @@ class indexerSubsys(commands2.Subsystem):
 
         if self.XStart and not self.shooterRunning:
             print('shooter enabled')
-            self.shooterRunning = True
+            self._setShooterRunningState(True)
         if self.XStop and self.shooterRunning:
             print('shooter disabled')
-            self.shooterRunning = False
-
-        self.LogicPrevVal = self.indexerLogic
-
-        if self.shooterRunning:#or self.intakeRunning:
-            self.indexerLogic = True
-        
-        if not self.shooterRunning:# and not self.intakeRunning:
-            self.indexerLogic = False
-        
-        self.indexerToggle = self.LogicPrevVal != self.indexerLogic
-
-        if self.indexerToggle and self.indexerLogic:
-            print ('indexer starting motor - with wait')
-            # self.numberOne.set(auxiliaryConfig.indexerSpeed)
-            self.toggleshoot= True
-            self.timer2.reset()
-            self.timer2.start()
-
-        elif self.indexerToggle and not self.indexerLogic:
-            print('indexer stopping motor')
-            self.toggleshoot= False
-            self.numberOne.set(0)
-            self.timer2.stop()
-            self.timer2.reset()
+            self._setShooterRunningState(False)
 
         # delay loader motor from starting for shooterStartupTime seconds
         if self.timer2.get() >= auxiliaryConfig.shooterStartupTime:
