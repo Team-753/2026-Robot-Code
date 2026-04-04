@@ -251,7 +251,7 @@ class shooterSubsys(commands2.Subsystem):
         
         #slow loader backwards run during intake
         elif self.intakeStart and not self.toggleshoot:
-            self.littleone.set(-0.05)
+            self.littleone.set(0.05)
             print('testing slow backspin enable')
         
         #slow loader backwards run during intake disable

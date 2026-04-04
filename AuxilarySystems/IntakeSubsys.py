@@ -186,7 +186,7 @@ class intakeSubsys(commands2.Subsystem):
             
 
         if self.timer.get() > .99 :
-            print (f'intake encoder {self.updown.getAbsoluteEncoder().getPosition()}')
+            #print (f'intake encoder {self.updown.getAbsoluteEncoder().getPosition()}')
             self.timer.reset()
             self.timer.start()
 
