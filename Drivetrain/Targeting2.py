@@ -9,7 +9,6 @@ from AuxilarySystems import auxiliaryConfig
 from customFunctions import pythag
 #NOTICE: This targeting system assumes the metric system. 
 #Unfortunantly, Cheeseburgers-per-hour was not easy to implement into the code (plus I am lazy) -Ryan T
-
 TARGET_POINT_BLUE = (4.62507, 4.03514)
 TARGET_POINT_RED = (11.91497, 4.03514)
 
@@ -31,7 +30,11 @@ def getSpeakerDistanceMeters(robotPose):
 
 
 def getTargetRotationRadians(robotPose, targetX, targetY):
-    return atan2(robotPose.y-targetY, robotPose.x-targetX)
+    if wpilib.DriverStation.Alliance.kRed == wpilib.DriverStation.getAlliance():
+        offset=pi
+    else:
+        offset=0
+    return wpimath.geometry.Rotation2d(atan2(robotPose.y-targetY, robotPose.x-targetX)+offset).radians()
 
 
 def getTargetAimErrorRadians(robotPose, targetX, targetY):
@@ -71,7 +74,8 @@ class targetPointCommand(commands2.Command): #This class points the robot so the
     def execute(self):
         robotPose=self.driveSubsys.getPoseState()
         if not self.pidInitialized:
-            self._resetController(robotPose)
+            #self._resetController(robotPose)
+            pass
         if self.tx is None or self.ty is None:
             targetX,targetY=getSpeakerTargetPoint()
         else:

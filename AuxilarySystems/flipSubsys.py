@@ -170,6 +170,7 @@ class flipsubsys(commands2.Subsystem):
             self.armout = 'wait'
         elif self.armout == 'wait':
             armpos= self.encoder.getPosition()
+            #print(armpos)
             armtarget = auxiliaryConfig.flipLinPosOut
             if armtarget < (armpos + .05) and armtarget > (armpos - 0.05):
                 self.grabermotor.set_control(self.graberrequests.with_position(auxiliaryConfig.graberlv0).with_feed_forward(0))
@@ -231,6 +232,9 @@ class flipsubsys(commands2.Subsystem):
 
     def setToIdle(self):
         self.state = 'idle'
+
+    def DisabledInit (self):
+        self.state = 'disabled'
 
     def testInit(self):
         self.state = 'test'

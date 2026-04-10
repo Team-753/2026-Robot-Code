@@ -12,13 +12,14 @@ shooterEnableBtnIdx=3 # AXIS index for enable button
 shooterVelocityUpBtnIdx=4 # raw button index for velocity up increment
 shooterVelocityDownBtnIdx=1 # raw button index for velocity down increment
 shooterIndexDutyCycle = 0.7 # fixed duty cycle of the rev indexer
-shooterStartupTime = 0.75 #seconds
+shooterStartupTime = 0.85 #seconds
 shooterDefaultVelocityRps = 16.0
-shooterVelocityIncrementRps = 0.1
+shooterVelocityIncrementRps = 0.5
 #These values were edited during comp. Here were the last values added before I changed it
 # Velocity: 16, Distance, 2.3
-shooterVelocityReferenceDistanceMeters = 2.3
-shooterVelocityReferenceRps = 16.3
+shooterVelocityReferenceDistanceMeters = 2.14
+#13.9
+shooterVelocityReferenceRps = 12.9
 
 
 #Indexer Subsystem config
@@ -42,7 +43,7 @@ graberlv0=0.01 # position of kraken when not climbing (home)
 graberlv1=0.0 #0.1 # position when climbing to lv1
 graberlv3=-0.47 #0.3 # position when clibing to lv3
 flipLinPosIn = 0 #-1 # retracted position (home) of rev neo motor
-flipLinPosOut = -1575 # extended postion (out/start) of rev neo motor
+flipLinPosOut = -820 # extended postion (out/start) of rev neo motor
 
 #Gear ratio between the Kraken motor and the rotating part of the climber. 
 #For each 506.66666 rotations of the motor, the climber rotates once.
@@ -75,7 +76,7 @@ FLipHomeDoneButtonINdex=5
 
 #Auto Transition Settings 
 autoTransitionDelaySeconds = 6 #How long we estimate it take to empty hopper
-autoShootStartToIntakeUpDelaySeconds = 4 #Transition-only delay from shooter start to intake up
+autoShootStartToIntakeUpDelaySeconds = 3.5 #Transition-only delay from shooter start to intake up
 autoTargetAimToleranceDegrees = 8.0 # Aim must settle inside this tolerance before auto starts the shooter
 autoTargetLockHoldSeconds = 0.2 # Require lock to stay stable for this long before auto spin-up
 autoTransitionIndexerAimToleranceDegrees = autoTargetAimToleranceDegrees

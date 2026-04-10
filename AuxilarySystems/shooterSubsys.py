@@ -16,6 +16,8 @@ class shooterSubsys(commands2.Subsystem):
         self.bigBoy3 = phoenix6.hardware.TalonFX(auxiliaryConfig.shooterMotorID3)
         self.bigBoy4 = phoenix6.hardware.TalonFX(auxiliaryConfig.shooterMotorID4)
         self.littleone = rev.SparkMax(auxiliaryConfig.shooterIndexMotorID,rev.SparkMax.MotorType.kBrushless)
+
+        wpilib.SmartDashboard.putNumber("Distance:", 0.0)
         
         big_config = phoenix6.configs.Slot0Configs()
         big_config.k_p = 0.1
@@ -48,6 +50,8 @@ class shooterSubsys(commands2.Subsystem):
         self.RBPressed = False
         self.LBPressed = False
         self.autoFeedEnabled = False
+        self.intakeStart= False
+        self.intakeStop = False
         self.timer2.reset()
         self.timer.reset()
         self.timer.start()
@@ -99,8 +103,12 @@ class shooterSubsys(commands2.Subsystem):
     def calculateVelocityForDistance(self, distance):
         distance = max(0.0, distance)
         ratio = auxiliaryConfig.shooterVelocityReferenceRps / auxiliaryConfig.shooterVelocityReferenceDistanceMeters
-        if distance/auxiliaryConfig.shooterVelocityReferenceDistanceMeters>1.0:
-            rpm=(ratio*distance)
+        wpilib.SmartDashboard.putNumber("Distance:", distance)
+        print(distance)
+        if distance>1.9:
+            rpm=(((ratio*distance)-1.9)*0.9)+(1.9*1.05)
+        elif distance<1.9:
+            rpm=(ratio*distance)*1.05
         else:
             rpm=pow((ratio*distance),1.05)
         return rpm
