@@ -28,9 +28,11 @@ class indexerSubsys(commands2.Subsystem):
         self.XPressed = False
         self.prevVal = False
         self.XChanged = False
+        self.thirdButton = False
         self.intakeRunning = False
         self.shooterRunning = False
         self.indexerLogic = False
+        self.postponeReverse = False
         self.XStart = False
         self.XStop = False
         #CHRIS MOD
@@ -144,8 +146,15 @@ class indexerSubsys(commands2.Subsystem):
             #CHRIS MOD
             self.prevVal2 = self.BPressed
             self.BPressed = self.controller.getRawButton(auxiliaryConfig.intakeSpinEnableBtnIdx)
-            self.BChanged = self.prevVal2 == False and self.BPressed == True
+            self.BStart = self.prevVal2 == False and self.BPressed == True
+            self.BStop = self.prevVal2 and not self.BPressed
             #CHRIS MOD END
+
+            self.prevVal3 = self.thirdButton
+            self.thirdButton = self.controller.getRawButton(auxiliaryConfig.intakeSpinBackwardsBtnIdx)
+            self.reverseStart = self.thirdButton and not self.prevVal3
+            self.reverseStop = not self.thirdButton and self.prevVal3
+
             self.executeState()
         elif self.state == 'auto':
             if self.autoFeedActive:
@@ -168,9 +177,32 @@ class indexerSubsys(commands2.Subsystem):
 
     def executeState(self):
 
-        if self.BChanged:
-            # print('intake toggled')
-            self.intakeRunning = not self.intakeRunning
+        if self.BStart:
+            # print('intake enabled')
+            self.intakeRunning = True
+        
+        if self.reverseStart and not self.intakeRunning:
+            print('reverse indexer 1')
+            self.numberOne.set(-1 * auxiliaryConfig.indexerSpeed)
+        
+        if self.reverseStart and self.intakeRunning:
+            self.postponeReverse = True
+
+        if self.BStop:
+            # print('intake disabled')
+            self.intakeRunning = False
+            if self.postponeReverse:
+                print('reverse indexer 2')
+                self.numberOne.set(-1 * auxiliaryConfig.indexerSpeed)
+                self.postponeReverse = False
+        
+        if self.reverseStop and self.intakeRunning:
+            self.postponeReverse = False
+        
+        if self.reverseStop and not self.intakeRunning:
+            print('unreverse indexer')
+            self.postponeReverse = False
+            self.numberOne.set(0)
 
         if self.XStart and not self.shooterRunning:
             print('shooter enabled')

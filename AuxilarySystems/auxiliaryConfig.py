@@ -37,6 +37,7 @@ intakeSpinnerSpeed = 1 #dutyCycle
 intakeupdowngearratio = 1
 intakeSpinEnableBtnIdx = 3
 intakeUpdownToggleBtnIdx = 6
+intakeSpinBackwardsBtnIdx = 2
 
 # flip configs
 graberlv0=0.01 # position of kraken when not climbing (home)
