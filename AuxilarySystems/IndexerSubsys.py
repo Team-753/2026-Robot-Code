@@ -35,6 +35,10 @@ class indexerSubsys(commands2.Subsystem):
         self.postponeReverse = False
         self.XStart = False
         self.XStop = False
+        self.BStart = False
+        self.BStop = False
+        self.reverseStart = False
+        self.reverseStop = False
         #CHRIS MOD
         self.BPressed = False
         self.prevVal2 = False

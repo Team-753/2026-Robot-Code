@@ -29,9 +29,9 @@ def estimate(array,point):
                 dX=array[i+1][0]-array[i][0]
                 dY=array[i+1][1]-array[i][1]
                 slope=dY/dX
-                dX2=array[i][0]-point
+                dX2=point-array[i][0]
                 dY2=dX2*slope
-                output=dY2+array[i][0]
+                output=dY2+array[i][1]
                 return output
     return 0
 def pythag(x1,y1,x2,y2):

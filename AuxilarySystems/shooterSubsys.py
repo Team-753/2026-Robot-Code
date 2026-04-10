@@ -4,7 +4,7 @@ import phoenix6
 from phoenix6 import configs, controls
 import rev
 from AuxilarySystems import auxiliaryConfig
-
+from customFunctions import estimate
 class shooterSubsys(commands2.Subsystem):
     def __init__(self):
         super().__init__()
@@ -105,12 +105,14 @@ class shooterSubsys(commands2.Subsystem):
         ratio = auxiliaryConfig.shooterVelocityReferenceRps / auxiliaryConfig.shooterVelocityReferenceDistanceMeters
         wpilib.SmartDashboard.putNumber("Distance:", distance)
         print(distance)
-        if distance>1.9:
-            rpm=(((ratio*distance)-1.9)*0.9)+(1.9*1.05)
-        elif distance<1.9:
-            rpm=(ratio*distance)*1.05
-        else:
-            rpm=pow((ratio*distance),1.05)
+        #if distance>1.9:
+        #    rpm=(((ratio*distance)-1.9)*0.9)+(1.9*1.05)
+        #elif distance<1.9:
+        #    rpm=(ratio*distance)*1.05
+        #else:
+        #    rpm=pow((ratio*distance),1.05)
+        rpm=estimate(auxiliaryConfig.shooterReferenceTable,distance)
+        wpilib.SmartDashboard.putNumber("RPM:", rpm)
         return rpm
 
     def refreshTargetVelocity(self):

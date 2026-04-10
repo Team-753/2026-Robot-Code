@@ -14,13 +14,13 @@ shooterVelocityDownBtnIdx=1 # raw button index for velocity down increment
 shooterIndexDutyCycle = 0.7 # fixed duty cycle of the rev indexer
 shooterStartupTime = 0.85 #seconds
 shooterDefaultVelocityRps = 16.0
-shooterVelocityIncrementRps = 0.5
+shooterVelocityIncrementRps = 0.1
 #These values were edited during comp. Here were the last values added before I changed it
 # Velocity: 16, Distance, 2.3
 shooterVelocityReferenceDistanceMeters = 2.14
 #13.9
 shooterVelocityReferenceRps = 12.9
-
+shooterReferenceTable=[[0,12.3],[1.67,12.6],[1.82,12.8],[2.06,13.8],[2.73,14.3],[100,15]]
 
 #Indexer Subsystem config
 indexerSpeed=0.8 #1 is 100% power
