@@ -38,6 +38,7 @@ intakeupdowngearratio = 1
 intakeSpinEnableBtnIdx = 3
 intakeSpinBackwardsBtnIdx = 2 #B
 intakeUpdownToggleBtnIdx = 6
+intakeSpinBackwardsBtnIdx = 2
 
 # flip configs
 graberlv0=0.01 # position of kraken when not climbing (home)
