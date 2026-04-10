@@ -65,6 +65,10 @@ class intakeSubsys(commands2.Subsystem):
         self.APressed = False
         self.prevVal2 = False
         self.AChanged = False
+        self.prevVal4 = False
+        self.BPressed= False
+        self.BStart = False
+        self.BStop = False
         # Assume intake starts in the down position so first toggle goes up.
         self.intakeIsDown = False
         self.timer.reset()
@@ -122,6 +126,11 @@ class intakeSubsys(commands2.Subsystem):
             self.APressed = self._getRawButtonSafe(auxiliaryConfig.intakeUpdownToggleBtnIdx)
             self.AChanged = self.prevVal2 == False and self.APressed == True
 
+            self.prevVal4 = self.BPressed
+            self.BPressed = self._getRawButtonSafe(auxiliaryConfig.intakeSpinBackwardsBtnIdx)
+            self.BStart = self.prevVal4 == False and self.BPressed == True
+            self.BStop = self.prevVal4 == True and self.BPressed == False
+
             self.prevVal3 = self.inRange
             AbsEncoderConverted = 0#self.convertAbsRotations(self.AbsEncoder.get())
             self.inRange = True # (AbsEncoderConverted < auxiliaryConfig.intakeDownPosition/360 + 15/360) and (AbsEncoderConverted > auxiliaryConfig.intakeDownPosition/360 - 5/360)
@@ -159,6 +168,16 @@ class intakeSubsys(commands2.Subsystem):
             self.spin.set(0)
             self.spinToggle = False
             print('intake stop spinning')
+
+        if self.BStart and self.inRange:
+            self.spin.set(auxiliaryConfig.intakeSpinnerSpeed)
+            self.spinToggle = True
+            print("intake spinning backwards")
+
+        if self.BStop or not self.inRange:
+            self.spin.set(0)
+            self.spinToggle = False
+            print("Intake not spinning backwards")
 
         if self.AChanged:
             if self.intakeIsDown:

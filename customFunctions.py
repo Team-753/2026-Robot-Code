@@ -22,5 +22,17 @@ def thresholdEqual(value,desiredValue,buffer):
     if (desiredValue-buffer)<=value<=(desiredValue+buffer):
         return True
     return False
+def estimate(array,point):
+    for i in range(len(array)):
+        if i != len(array):
+            if array[i][0]<point and array[i+1][0]>point:
+                dX=array[i+1][0]-array[i][0]
+                dY=array[i+1][1]-array[i][1]
+                slope=dY/dX
+                dX2=array[i][0]-point
+                dY2=dX2*slope
+                output=dY2+array[i][0]
+                return output
+    return 0
 def pythag(x1,y1,x2,y2):
     return sqrt(((x1-x2)**2)+((y1-y2)**2))
